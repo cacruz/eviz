@@ -205,7 +205,7 @@ class Autoviz:
         Raises:
             ValueError: If no factories are found for the specified sources.
         """
-        self.logger.info("Autoviz initialization")
+        self.logger.debug("Autoviz initialization")
         # Add this workaround to simplify working within a Jupyter notebook, that is, to avoid
         # having to pass a Namespace() object, we create args with the appropriate defaults
         if not self.args:
@@ -227,10 +227,8 @@ class Autoviz:
             self.args)  # Use ConfigManager instead of Config
 
     def run(self):
-        """
-        Execute the visualization process.
-        """
         _start_time = time.time()
+        self.logger.info("Execute the visualization process")
         self._config_manager.input_config.start_time = _start_time
 
         self._check_input_files()
@@ -242,11 +240,10 @@ class Autoviz:
             self._config_manager.input_config._enable_integration = True
 
         try:
-            self.logger.info("Processing configuration using adapter")
             self.config_adapter.process_configuration()
 
             # Load custom MPL style used for figures
-            self.logger.info(f"Loading style: {self._config_manager.fig_style}")
+            self.logger.debug(f"Loading style: {self._config_manager.fig_style}")
             load_style(self._config_manager.fig_style)  
 
             all_data_sources = {}
@@ -283,7 +280,7 @@ class Autoviz:
                 model = factory.create_root_instance(self._config_manager)
 
                 if hasattr(model, 'set_map_params') and self._config_manager.map_params:
-                    self.logger.info(
+                    self.logger.debug(
                         f"Setting map_params with {len(self._config_manager.map_params)} entries")
                     model.set_map_params(self._config_manager.map_params)
                 else:
