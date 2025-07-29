@@ -318,21 +318,21 @@ class Figure(mfigure.Figure):
                 # Check for projection at the top level of the field spec
                 if 'projection' in self.config_manager.spec_data[self.field_name]:
                     projection_name = self.config_manager.spec_data[self.field_name]['projection']
-                    map_projection = self.get_projection(projection_name)
+                    map_projection = self._get_projection(projection_name)
                     self._logger.debug(f"Using projection '{projection_name}' for field {self.field_name}")
                 # Also check in the plot-type specific section
                 elif 'projection' in self.config_manager.spec_data[self.field_name].get(f"{self.plot_type[:2]}plot", {}):
                     projection_name = self.config_manager.spec_data[self.field_name][f"{self.plot_type[:2]}plot"]['projection']
-                    map_projection = self.get_projection(projection_name)
+                    map_projection = self._get_projection(projection_name)
                     self._logger.debug(f"Using projection '{projection_name}' for field {self.field_name}")
 
         # If no projection found from field_name, check ax_opts
         if map_projection is None and 'projection' in self._ax_opts:
-            map_projection = self.get_projection(self._ax_opts['projection'])
+            map_projection = self._get_projection(self._ax_opts['projection'])
 
         # Default to PlateCarree if no projection specified
         if map_projection is None:
-            map_projection = self.get_projection()
+            map_projection = self._get_projection()
 
         for i in range(self._subplots[0]):
             for j in range(self._subplots[1]):
@@ -380,7 +380,7 @@ class Figure(mfigure.Figure):
         plt.figure(self.number)  # Make sure this figure is active
         plt.show(*args, **kwargs)
         
-    def get_projection(self, projection=None) -> Optional[ccrs.Projection]:
+    def _get_projection(self, projection=None) -> Optional[ccrs.Projection]:
         """Get projection parameter."""
         # Default values for extent and central coordinates
         extent = [-180, 180, -90, 90]  # global default
@@ -654,247 +654,6 @@ class Figure(mfigure.Figure):
             else:
                 self._ax_opts['create_clevs'] = True
 
-    def plot_text(self, field_name, ax, pid, level=None, data=None, *args, **kwargs):
-        """Add text to a map.
-
-        Parameters:
-            field_name (str): Name of the field
-            ax (Axes or list of Axes): Axes object(s)
-            pid (str): Plot type identifier
-            level (int): Vertical level (optional, default=None)
-            data (Any): xarray Data for basic stats (optional)
-            *args: Additional positional arguments for customization
-            **kwargs: Additional keyword arguments for customization
-        """
-        if isinstance(ax, list):  # Check if ax is a list
-            for single_ax in ax:
-                self._plot_text(field_name, single_ax, pid, level, data, **kwargs)
-        else:
-            self._plot_text(field_name, ax, pid, level, data, **kwargs)
-
-    def _plot_text(self, field_name, ax, pid, level=None, data=None, **kwargs):
-        """Add text to a single axes."""
-        font_size = None
-        title_size = None
-        
-        # Extract properties from rc_params
-        if 'rc_params' in self.ax_opts:
-            font_size = self.ax_opts['rc_params'].get('font.size', None)
-            title_size = self.ax_opts['rc_params'].get('axes.titlesize', None)
-        else:
-            self.ax_opts['rc_params'] = {}
-        fontsize = font_size or pu.subplot_title_font_size(self._subplots)
-        title_fontsize = title_size or fontsize
-        loc = kwargs.get('location', 'left')
-
-        findex = self.config_manager.findex
-        sname = self.config_manager.config.map_params[findex]['source_name']
-        geom = pu.get_subplot_geometry(ax) if self.config_manager.compare or self.config_manager.compare_diff else None
-
-        # Handle plot titles for comparison cases
-        if self.config_manager.compare or self.config_manager.compare_diff:
-            title_string = 'Placeholder'
-            if geom and geom[0] == (3, 1):  # (3,1) subplot structure
-                if geom[1:] == (0, 1, 1, 1):  # Bottom plot
-                    title_string = "Difference (top - middle)"
-                elif geom[1:] in [(1, 1, 0, 1), (0, 1, 0, 1)]:  # Top/Middle plots
-                    title_string = self._set_axes_title(findex)
-            elif self._subplots == (2, 2):  # (2,2) subplot structure
-                if geom[1:] == (0, 1, 1, 0):
-                    title_string = "Difference (left - right)"
-                elif geom[1:] == (0, 0, 1, 1):  # Extra diff plot
-                    diff_labels = {
-                        "percd": ("% Diff", "%"),
-                        "percc": ("% Change", "%"),
-                        "ratio": ("Ratio Diff", "ratio"),
-                    }
-                    diff_type = self.config_manager.extra_diff_plot
-                    title_string, self._ax_opts['clabel'] = diff_labels.get(
-                        diff_type, ("Difference (left - right)", None))
-                    self._ax_opts['line_contours'] = False
-                else:  # Default case
-                    title_string = self._set_axes_title(findex)
-            elif geom and (geom[0] == (1, 2) or geom[0] == (1, 3)):
-                title_string = self._set_axes_title(findex)
-            ax.set_title(title_string, loc=loc, fontsize=title_fontsize)
-            return
-
-        # Non-comparison case
-        level_text = self._format_level_text(level)
-        name = self._get_field_name(field_name, sname, findex)
-
-        left, width = 0, 1.0
-        bottom, height = 0, 1.0
-        right = left + width
-        top = bottom + height
-        title_string = self._set_axes_title(findex)
-
-        if 'yz' in pid:
-            if self.config_manager.print_basic_stats:
-                # plt.rc('text', usetex=True)
-                fmt = self._basic_stats(data)
-                ax.text(right, top, fmt, transform=ax.transAxes,
-                        ha='right', va='bottom', fontsize=10)
-
-            if self.config_manager.use_history:
-                ax.set_title(self.config_manager.history_expid + " (" + self.config_manager.history_expdsc + ")")
-            else:
-                ax.set_title(title_string, loc=loc, fontsize=title_fontsize)
-
-            ax.text(0.5 * (left + right), bottom + top + 0.1,
-                    name, fontweight='bold',
-                    fontstyle='italic',
-                    horizontalalignment='center',
-                    verticalalignment='center',
-                    fontsize=14,
-                    transform=ax.transAxes)
-
-        elif 'xy' in pid or 'sc' in pid in pid:
-            if self.config_manager.print_basic_stats:
-                fmt = self._basic_stats(data)
-                ax.text(right, top, fmt, transform=ax.transAxes,
-                        ha='right', va='bottom', fontsize=10)
-                loc = 'left'
-
-            if self.config_manager.real_time and not self.config_manager.print_basic_stats:
-                ax.text(right, top, self.config_manager.real_time,
-                        ha='right', va='bottom', fontsize=10,
-                        transform=ax.transAxes)
-            if self.config_manager.use_history:
-                ax.set_title(
-                    self.config_manager.history_expid + " (" + self.config_manager.history_expdsc + ")",
-                    fontsize=title_fontsize
-                )
-            else:
-                ax.set_title(title_string, loc=loc, fontsize=title_fontsize)
-
-            ax.text(0.5 * (left + right), bottom + top + 0.1,
-                    name + level_text, 
-                    fontweight=kwargs.get('fontweight', 'bold'),
-                    fontstyle=kwargs.get('fontstyle', 'italic'),
-                    fontsize=kwargs.get('fontsize', 14),
-                    horizontalalignment=kwargs.get('ha', 'center'),
-                    verticalalignment=kwargs.get('va', 'center'),
-                    transform=ax.transAxes)
-
-        elif 'tx' in pid:
-            if self.config_manager.use_history:
-                ax.set_title(
-                    self.config_manager.history_expid + " (" + self.config_manager.history_expdsc + ")",
-                    fontsize=10
-                )
-            else:
-                ax.set_title(
-                    title_string, loc=kwargs.get('loc', 'right'),
-                    fontsize=kwargs.get('fontsize', 10)
-                )
-
-            ax.text(0.5 * (left + right), bottom + top + 0.5,
-                    name,
-                    fontweight=kwargs.get('fontweight', 'bold'),
-                    fontstyle=kwargs.get('fontstyle', 'normal'),
-                    fontsize=kwargs.get('fontsize', 12),
-                    horizontalalignment=kwargs.get('ha', 'center'),
-                    verticalalignment=kwargs.get('va', 'center'),
-                    transform=ax.transAxes)
-        elif 'po' in pid:
-            pass
-        elif 'corr' in pid:
-            ax.text(0.5 * (left + right), bottom + top + 0.1,
-                    name + level_text, 
-                    fontweight=kwargs.get('fontweight', 'bold'),
-                    fontstyle=kwargs.get('fontstyle', 'italic'),
-                    fontsize=kwargs.get('fontsize', 14),
-                    horizontalalignment=kwargs.get('ha', 'center'),
-                    verticalalignment=kwargs.get('va', 'center'),
-                    transform=ax.transAxes)
-        else:  # 'xt' and others
-            if self.config_manager.use_history:
-                ax.set_title(self.config_manager.history_expid + " (" + self.config_manager.history_expdsc + ")")
-            else:
-                ax.set_title(title_string, loc=loc, fontsize=fontsize)
-
-            ax.text(0.5 * (left + right), bottom + top + 0.1,
-                    name,
-                    fontweight=kwargs.get('fontweight', 'bold'),
-                    fontstyle=kwargs.get('fontstyle', 'italic'),
-                    fontsize=fontsize,
-                    horizontalalignment=kwargs.get('ha', 'center'),
-                    verticalalignment=kwargs.get('va', 'center'),
-                    transform=ax.transAxes)
-        
-    def _set_axes_title(self, findex):
-        if self.config_manager.overlay:
-            return None
-        if self.config_manager.get_file_description(findex):
-            return self.config_manager.get_file_description(findex)
-        elif self.config_manager.get_file_exp_name(findex):
-            return self.config_manager.get_file_exp_name(findex)
-        elif self.config_manager.get_file_exp_id(findex):
-            return self.config_manager.get_file_exp_id(findex)
-        elif self.config_manager.map_params[findex].get('field', None):
-            return self.config_manager.map_params[findex]['field']
-        else:
-            if self.config_manager.ax_opts['custom_title']:
-                return self.config_manager.ax_opts['custom_title']
-        return None
-        
-    @staticmethod
-    def _basic_stats(data):
-        """ Basic stats for a given field """
-        # datamin = data.min().values
-        # datamax = data.max().values
-        datamean = data.mean().values
-        datastd = data.std().values
-        return f"\nMean:{datamean:.2e}\nStd:{datastd:.2e}"
-
-    def _format_level_text(self, level):
-        """Format level annotation text based on level value."""
-        if self.config_manager.ax_opts.get('zave'):
-            return ' (Column Mean)'
-        if self.config_manager.ax_opts.get('zsum'):
-            return ' (Total Column)'
-        if level is None or str(level) == '0':
-            return ''
-        return f"@ {level} {'Pa' if level > 10000 else 'mb'}"
-
-    def _get_field_name(self, field_name, sname, findex):
-        """Get the field name from the reader's dataset."""
-        try:
-            # First, use the field name from spec_data if available
-            if field_name in self.config_manager.spec_data:
-                if 'name' in self.config_manager.spec_data[field_name]:
-                    return self.config_manager.spec_data[field_name]['name']
-            
-            # Try to get the name from the reader
-            # First check if we're dealing with the new reader structure
-            reader = None
-            if sname in self.config_manager.readers:
-                if isinstance(self.config_manager.readers[sname], dict):
-                    # New structure - get the primary reader
-                    readers_dict = self.config_manager.readers[sname]
-                    if 'NetCDF' in readers_dict:
-                        reader = readers_dict['NetCDF']
-                    elif readers_dict:
-                        reader = next(iter(readers_dict.values()))
-                else:
-                    # Old structure - direct access
-                    reader = self.config_manager.readers[sname]
-            
-            # If we found a reader, try to get the field name
-            if reader and hasattr(reader, 'datasets'):
-                if findex in reader.datasets and 'vars' in reader.datasets[findex]:
-                    var_attrs = reader.datasets[findex]['vars'][field_name].attrs
-                    if 'long_name' in var_attrs:
-                        return var_attrs['long_name']
-                        
-            # Default to the field name if we couldn't find anything better
-            return field_name
-            
-        except (KeyError, AttributeError, IndexError) as e:
-            self.logger.warning(f"Error getting field name for {field_name}: {e}")
-            return field_name
- 
     def apply_rc_params(self, default_params=None):
         """
         Apply matplotlib rcParams from a config dictionary.

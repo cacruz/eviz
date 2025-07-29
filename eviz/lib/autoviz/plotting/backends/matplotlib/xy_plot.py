@@ -23,8 +23,8 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
         Returns:
             The created figure
         """
+        # TODO: remove field_name from data_to_plot tuple (get from data2d.name)
         data2d, x, y, field_name, plot_type, findex, fig = data_to_plot
-
         if data2d is None:
             return fig
 
@@ -34,23 +34,22 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
                                     data2d, 
                                     findex)
         self.fig = fig
-        
-        ax_opts = config.ax_opts
+        self.ax_opts = config.ax_opts
         if not config.compare and not config.compare_diff:
             fig.set_axes()
         
         ax_temp = fig.get_axes()
         axes_shape = fig.subplots
-        
+
         if axes_shape == (3, 1):
-            if ax_opts['is_diff_field']:
+            if self.ax_opts['is_diff_field']:
                 self.ax = ax_temp[2]
             else:
                 self.ax = ax_temp[config.axindex]
         elif axes_shape == (2, 2):
-            if ax_opts['is_diff_field']:
+            if self.ax_opts['is_diff_field']:
                 self.ax = ax_temp[2]
-                if config.ax_opts['add_extra_field_type']:
+                if self.ax_opts['add_extra_field_type']:
                     self.ax = ax_temp[3]
             else:
                 self.ax = ax_temp[config.axindex]
@@ -62,9 +61,9 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
         else:
             self.ax = ax_temp[0]
 
-        ax_opts = fig.update_ax_opts(field_name, self.ax, 'xy', level=config.level)
-        fig.plot_text(field_name, self.ax, 'xy', level=config.level, data=data2d)
-        self._plot_xy_data(config, self.ax, data2d, x, y, field_name, fig, ax_opts, plot_type, findex)
+        self.ax_opts = fig.update_ax_opts(field_name, self.ax, 'xy', level=config.level)
+        self.plot_text(config, field_name=field_name, pid='xy', level=config.level, data=data2d)
+        self._plot_xy_data(config, data2d, x, y, field_name, fig, plot_type, findex)
         
         # Add shared colorbar if enabled
         if config.compare and config.shared_cbar:
@@ -72,8 +71,10 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
         
         return fig
 
-    def _plot_xy_data(self, config, ax, data2d, x, y, field_name, fig, ax_opts, plot_type, findex):
+    def _plot_xy_data(self, config, data2d, x, y, field_name, fig, plot_type, findex):
         """Helper function to plot XY data on a single axes."""
+        ax = self.ax
+        ax_opts = self.ax_opts
         with mpl.rc_context(rc=ax_opts.get('rc_params', {})):
             if 'fill_value' in config.spec_data[field_name]['xyplot']:
                 fill_value = config.spec_data[field_name]['xyplot']['fill_value']
@@ -133,11 +134,8 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
                     else:
                         self.line_contours(fig, ax, ax_opts, x, y, data2d)
 
-            title_str = field_name
+            name = self.get_name(config, data2d, findex)
             if config.compare_diff:
-                if 'name' in config.spec_data[field_name]:
-                    title_str = config.spec_data[field_name]['name']
-
                 level_text = None
                 if config.ax_opts.get('zave', False):
                     level_text = ' (Column Mean)'
@@ -154,7 +152,7 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
                                 level_text = '@ ' + str(config.level) + ' mb'
 
                 if level_text:
-                    title_str = title_str + level_text
+                    title_str = name + level_text
 
                 fig.suptitle_eviz(title_str, 
                                 fontweight='bold',
@@ -162,9 +160,7 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
                                 fontsize=self._image_font_size(fig.subplots))
             
             elif config.compare:
-                if 'name' in config.spec_data[field_name]:
-                    title_str = config.spec_data[field_name]['name']
-                fig.suptitle_eviz(text=title_str, 
+                fig.suptitle_eviz(text=name, 
                                 fontweight='bold',
                                 fontstyle='italic',
                                 fontsize=self._image_font_size(fig.subplots))

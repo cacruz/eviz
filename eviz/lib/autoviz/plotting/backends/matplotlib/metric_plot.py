@@ -79,8 +79,8 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
         self.source_name = config.source_names[config.ds_index]
         self.units = "R value"
         self.fig = fig
-        
-        ax_opts = config.ax_opts
+        self.ax_opts = config.ax_opts
+
         if not config.compare and not config.compare_diff:
             fig.set_axes()
         
@@ -88,14 +88,14 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
         axes_shape = fig.subplots
         
         if axes_shape == (3, 1):
-            if ax_opts['is_diff_field']:
+            if self.ax_opts['is_diff_field']:
                 self.ax = ax_temp[2]
             else:
                 self.ax = ax_temp[config.axindex]
         elif axes_shape == (2, 2):
-            if ax_opts['is_diff_field']:
+            if self.ax_opts['is_diff_field']:
                 self.ax = ax_temp[2]
-                if config.ax_opts['add_extra_field_type']:
+                if self.ax_opts['add_extra_field_type']:
                     self.ax = ax_temp[3]
             else:
                 self.ax = ax_temp[config.axindex]
@@ -107,16 +107,18 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
         else:
             self.ax = ax_temp[0]
 
-        ax_opts = fig.update_ax_opts(field_name, self.ax, 'corr', level=0)
+        self.ax_opts = fig.update_ax_opts(field_name, self.ax, 'corr', level=0)
         with mpl.rc_context(rc=ax_opts.get('rc_params', {})):
-            fig.plot_text(field_name, self.ax, 'corr', level=0, data=data2d)
+            self.plot_text(config, field_name, pid='corr', level=0, data=data2d)
         
-        self._plot_correlation_data(config, self.ax, data2d, x, y, field_name,
-                                fig, ax_opts, findex, method_name)
+        self._plot_correlation_data(config, data2d, x, y, field_name,
+                                fig, findex, method_name)
         return fig
 
-    def _plot_correlation_data(self, config, ax, data2d, x, y, field_name,
-                        fig, ax_opts, findex, method_name='Pearson'):
+    def _plot_correlation_data(self, config, data2d, x, y, field_name,
+                        fig, findex, method_name='Pearson'):
+        ax = self.ax
+        ax_opts = self.ax_opts
         with mpl.rc_context(rc=ax_opts.get('rc_params', {})):
             # Use RdBu_r colormap if not specified
             cmap_name = ax_opts.get('use_cmap', 'RdBu_r')

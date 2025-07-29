@@ -1365,7 +1365,6 @@ class GenericSource(BaseSource):
         if np.isnan(data2d.values).any():
             self.logger.debug(
                 f"Output contains NaN values: {np.sum(np.isnan(data2d.values))} NaNs")
-        data2d.attrs = data_array.attrs.copy()
 
         # after all of the above we still have >=3 dimensions
         if len(data2d.dims) > 2:

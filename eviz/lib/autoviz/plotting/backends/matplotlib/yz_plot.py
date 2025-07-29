@@ -35,8 +35,7 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
                                     data2d, 
                                     findex)
         self.fig = fig
-
-        ax_opts = config.ax_opts
+        self.ax_opts = config.ax_opts
         # Test applying rcparams to the figure via specification in specs
         # fig.apply_rc_params()
 
@@ -47,27 +46,27 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
         axes_shape = fig.subplots
 
         if axes_shape == (3, 1):
-            if ax_opts['is_diff_field']:
-                ax = ax_temp[2]
+            if self.ax_opts['is_diff_field']:
+                self.ax = ax_temp[2]
             else:
-                ax = ax_temp[config.axindex]
+                self.ax = ax_temp[config.axindex]
         elif axes_shape == (2, 2):
-            if ax_opts['is_diff_field']:
-                ax = ax_temp[2]
-                if config.ax_opts['add_extra_field_type']:
-                    ax = ax_temp[3]
+            if self.ax_opts['is_diff_field']:
+                self.ax = ax_temp[2]
+                if self.ax_opts['add_extra_field_type']:
+                    self.ax = ax_temp[3]
             else:
-                ax = ax_temp[config.axindex]
+                self.ax = ax_temp[config.axindex]
         elif axes_shape == (1, 2) or axes_shape == (1, 3):
             if isinstance(ax_temp, list):
-                ax = ax_temp[config.axindex]  # Use the correct axis based on axindex
+                self.ax = ax_temp[config.axindex]  # Use the correct axis based on axindex
             else:
-                ax = ax_temp
+                self.ax = ax_temp
         else:
-            ax = ax_temp[0]
+            self.ax = ax_temp[0]
 
-        ax_opts = fig.update_ax_opts(field_name, ax, 'yz')
-        fig.plot_text(field_name, ax, 'yz', level=None, data=data2d)
+        self.ax_opts = fig.update_ax_opts(field_name, self.ax, 'yz')
+        self.plot_text(config, field_name, 'yz', level=None, data=data2d)
 
         # Determine the vertical coordinate and its units
         zc = config.get_model_dim_name('zc')
@@ -76,23 +75,24 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
         except KeyError:
             vertical_units = 'n.a.'
 
-        if isinstance(ax, list):
-            for single_ax in ax:
+        if isinstance(self.ax, list):
+            for single_ax in self.ax:
                 self._plot_yz_data(config, single_ax, data2d,
-                                   x, y, field_name, fig, ax_opts, vertical_units,
+                                   x, y, field_name, fig, vertical_units,
                                    plot_type, findex)
         else:
-            self._plot_yz_data(config, ax, data2d,
-                               x, y, field_name, fig, ax_opts, vertical_units,
+            self._plot_yz_data(config, self.ax, data2d,
+                               x, y, field_name, fig, vertical_units,
                                plot_type, findex)
         # reset rc params to default
         # matplotlib.rcParams.update(matplotlib.rcParamsDef   
         return fig
 
     def _plot_yz_data(self, config, ax, data2d,
-                      x, y, field_name, fig, ax_opts, vertical_units,
+                      x, y, field_name, fig, vertical_units,
                       plot_type, findex):
         """Helper function to plot YZ data on a single axes."""
+        ax_opts = self.ax_opts
         with mpl.rc_context(rc=ax_opts.get('rc_params', {})):
             source_name = config.source_names[config.ds_index]
 
@@ -198,57 +198,21 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
             #     # The following is temporary, while the TODO above is not done.
             #     config.use_trop_height = None
 
-            # TODO: Simplify title string creation
+            name = self.get_name(config, data2d, findex)
             if config.compare_diff and config.ax_opts['is_diff_field']:
-                try:
-                    if 'name' in config.spec_data[field_name]:
-                        name = config.spec_data[field_name]['name']
-                    else:
-                        reader = None
-                        if source_name in config.readers:
-                            if isinstance(config.readers[source_name], dict):
-                                readers_dict = config.readers[source_name]
-                                if 'NetCDF' in readers_dict:
-                                    reader = readers_dict['NetCDF']
-                                elif readers_dict:
-                                    reader = next(iter(readers_dict.values()))
-                            else:
-                                # direct access
-                                reader = config.readers[source_name]
-
-                        if reader and hasattr(reader, 'datasets'):
-                            if findex in reader.datasets and 'vars' in reader.datasets[findex]:
-                                var_attrs = reader.datasets[findex]['vars'][field_name].attrs
-                                if 'long_name' in var_attrs:
-                                    name = var_attrs['long_name']
-                                else:
-                                    name = field_name
-                            else:
-                                name = field_name
-                        else:
-                            if hasattr(data2d, 'attrs') and 'long_name' in data2d.attrs:
-                                name = data2d.attrs['long_name']
-                            else:
-                                name = field_name
-                except Exception as e:
-                    self.logger.warning(f"Error getting field name: {e}")
-                    name = field_name
-
                 fig.suptitle_eviz(name, 
                                 # TODO: use rc_params
                                 fontweight='bold',
                                 fontstyle='italic',
                                 color='red',
                                 fontsize=pu.image_font_size(fig.subplots))        
-                
             elif config.compare:
-
                 fig.suptitle_eviz(text=config.map_params[findex].get('field', 'No name'), 
                                 # TODO: use rc_params
                                 fontweight='bold',
                                 fontstyle='italic',
                                 color='red',
-                                fontsize=pu.image_font_size(fig.subplots))        
+                                fontsize=pu.image_font_size(fig.subplots))     
 
             if config.add_logo:
                 pu.add_logo_ax(fig, desired_width_ratio=0.05)

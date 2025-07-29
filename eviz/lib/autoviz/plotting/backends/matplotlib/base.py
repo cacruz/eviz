@@ -185,6 +185,14 @@ class MatplotlibBasePlotter(BasePlotter):
             precision = 1
         elif 0.1 <= range_val < 1.0:
             precision = 2
+        elif 0.01 <= range_val < 1.0:
+            precision = 3
+        elif 0.001 <= range_val < 1.0:
+            precision = 4
+            ax_opts["cbar_sci_notation"] = True  # Use scientific notation for colorbar
+        elif 0.0001 <= range_val < 1.0:
+            precision = 5
+            ax_opts["cbar_sci_notation"] = True  # Use scientific notation for colorbar
 
         ax_opts["clevs_prec"] = precision
         self.logger.debug(f"range_val: {range_val}, precision: {precision}")
@@ -370,6 +378,23 @@ class MatplotlibBasePlotter(BasePlotter):
     def set_const_colorbar(cfilled, fig, ax):
         _ = fig.colorbar(cfilled, ax=ax, shrink=0.5)
 
+    def get_name(self, config, data2d, findex):
+        """Get name for the field."""
+        field_name = data2d.name
+        try:
+            if 'name' in config.spec_data[field_name]:
+                name = config.spec_data[field_name]['name']
+            else:
+                if hasattr(data2d, 'attrs') and 'long_name' in data2d.attrs:
+                    name = data2d.attrs['long_name']
+                else:
+                    name = field_name
+        except Exception as e:
+            self.logger.warning(f"Error getting field name: {e}")
+            name = field_name
+
+        return name
+        
     def get_units(self, config, field_name, data2d, findex):
         """Get units for the field."""
         self.logger.debug(f"Get units for {field_name}")
@@ -384,32 +409,9 @@ class MatplotlibBasePlotter(BasePlotter):
                 return data2d.attrs["units"]
             elif hasattr(data2d, "units"):
                 return data2d.units
-
-            # Try to get units from the reader
-            reader = None
-            if self.source_name in config.readers:
-                if isinstance(config.readers[self.source_name], dict):
-                    readers_dict = config.readers[self.source_name]
-                    if "NetCDF" in readers_dict:
-                        reader = readers_dict["NetCDF"]
-                    elif readers_dict:
-                        reader = next(iter(readers_dict.values()))
-                else:
-                    reader = config.readers[self.source_name]
-
-            if reader and hasattr(reader, "datasets"):
-                if findex in reader.datasets and "vars" in reader.datasets[findex]:
-                    field_var = reader.datasets[findex]["vars"].get(field_name)
-                    if (
-                        field_var
-                        and hasattr(field_var, "attrs")
-                        and "units" in field_var.attrs
-                    ):
-                        return field_var.attrs["units"]
-                    elif field_var and hasattr(field_var, "units"):
-                        return field_var.units
-
-            return "n.a."
+            else:
+                self.logger.warning(f"Could not find units for {field_name}")
+                return "n.a."
         except Exception as e:
             self.logger.warning(f"Error getting units: {e}")
             return "n.a."
@@ -598,3 +600,209 @@ class MatplotlibBasePlotter(BasePlotter):
                 ha="left",
                 fontsize=8,
             )
+
+    def plot_text(self, config, field_name, pid, level=None, data=None, *args, **kwargs):
+        """Add text to a map.
+
+        Parameters:
+            config (ConfigManager): configuration object for the plot
+            field_name (str): Name of the field
+            pid (str): Plot type identifier
+            level (int): Vertical level (optional, default=None)
+            data (Any): xarray Data for basic stats (optional)
+            *args: Additional positional arguments for customization
+            **kwargs: Additional keyword arguments for customization
+        """
+        if isinstance(self.ax, list):  # Check if ax is a list
+            for single_ax in self.ax:
+                self._plot_text(config, field_name, pid, level, data, **kwargs)
+        else:
+            self._plot_text(config, field_name, pid, level, data, **kwargs)
+
+    def _plot_text(self, config, field_name, pid, level=None, data=None, **kwargs):
+        """Add text to a single axes."""
+        font_size = None
+        title_size = None
+
+        ax = self.ax
+        if pid == 'tx':
+            ax = self.ax[0]
+            
+        # Extract properties from rc_params
+        if 'rc_params' in self.ax_opts:
+            font_size = self.ax_opts['rc_params'].get('font.size', None)
+            title_size = self.ax_opts['rc_params'].get('axes.titlesize', None)
+        else:
+            self.ax_opts['rc_params'] = {}
+        fontsize = font_size or pu.subplot_title_font_size(self.fig.subplots)
+        title_fontsize = title_size or fontsize
+        loc = kwargs.get('location', 'left')
+
+        findex = config.findex
+        sname = config.config.map_params[findex]['source_name']
+        geom = pu.get_subplot_geometry(ax) if config.compare or config.compare_diff else None
+
+        # Handle plot titles for comparison cases
+        if config.compare or config.compare_diff:
+            title_string = 'Placeholder'
+            if geom and geom[0] == (3, 1):  # (3,1) subplot structure
+                if geom[1:] == (0, 1, 1, 1):  # Bottom plot
+                    title_string = "Difference (top - middle)"
+                elif geom[1:] in [(1, 1, 0, 1), (0, 1, 0, 1)]:  # Top/Middle plots
+                    title_string = self._set_axes_title(config, findex)
+            elif self._subplots == (2, 2):  # (2,2) subplot structure
+                if geom[1:] == (0, 1, 1, 0):
+                    title_string = "Difference (left - right)"
+                elif geom[1:] == (0, 0, 1, 1):  # Extra diff plot
+                    diff_labels = {
+                        "percd": ("% Diff", "%"),
+                        "percc": ("% Change", "%"),
+                        "ratio": ("Ratio Diff", "ratio"),
+                    }
+                    diff_type = config.extra_diff_plot
+                    title_string, self._ax_opts['clabel'] = diff_labels.get(
+                        diff_type, ("Difference (left - right)", None))
+                    self._ax_opts['line_contours'] = False
+                else:  # Default case
+                    title_string = self._set_axes_title(config, findex)
+            elif geom and (geom[0] == (1, 2) or geom[0] == (1, 3)):
+                title_string = self._set_axes_title(config, findex)
+            ax.set_title(title_string, loc=loc, fontsize=title_fontsize)
+            return
+
+        # Non-comparison case
+        level_text = self._format_level_text(config, level)
+        name = self.get_name(config, data, findex)
+
+        left, width = 0, 1.0
+        bottom, height = 0, 1.0
+        right = left + width
+        top = bottom + height
+        title_string = self._set_axes_title(config, findex)
+
+        if 'yz' in pid:
+            if config.print_basic_stats:
+                # plt.rc('text', usetex=True)
+                fmt = self._basic_stats(data)
+                ax.text(right, top, fmt, transform=ax.transAxes,
+                        ha='right', va='bottom', fontsize=10)
+
+            if config.use_history:
+                ax.set_title(config.history_expid + " (" + config.history_expdsc + ")")
+            else:
+                ax.set_title(title_string, loc=loc, fontsize=10)
+
+            ax.text(0.5 * (left + right), bottom + top + 0.1,
+                    name, fontweight='bold',
+                    fontstyle='italic',
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    fontsize=14,
+                    transform=ax.transAxes)
+
+        elif 'xy' in pid or 'sc' in pid in pid:
+            if config.print_basic_stats:
+                fmt = self._basic_stats(data)
+                ax.text(right, top, fmt, transform=ax.transAxes,
+                        ha='right', va='bottom', fontsize=10)
+                loc = 'left'
+
+            if config.real_time and not config.print_basic_stats:
+                ax.text(right, top, config.real_time,
+                        ha='right', va='bottom', fontsize=10,
+                        transform=ax.transAxes)
+            if config.use_history:
+                ax.set_title(
+                    config.history_expid + " (" + config.history_expdsc + ")",
+                    fontsize=title_fontsize
+                )
+            else:
+                ax.set_title(title_string, loc=loc, fontsize=10)
+
+            ax.text(0.5 * (left + right), bottom + top + 0.1,
+                    name + level_text, 
+                    fontweight=kwargs.get('fontweight', 'bold'),
+                    fontstyle=kwargs.get('fontstyle', 'italic'),
+                    fontsize=kwargs.get('fontsize', 14),
+                    horizontalalignment=kwargs.get('ha', 'center'),
+                    verticalalignment=kwargs.get('va', 'center'),
+                    transform=ax.transAxes)
+
+        elif 'tx' in pid:
+            if config.use_history:
+                ax.set_title(
+                    config.history_expid + " (" + config.history_expdsc + ")",
+                    fontsize=10
+                )
+            else:
+                ax.set_title(
+                    title_string, loc=kwargs.get('loc', 'right'),
+                    fontsize=kwargs.get('fontsize', 10)
+                )
+
+            ax.text(0.5 * (left + right), bottom + top + 0.5,
+                    name,
+                    fontweight=kwargs.get('fontweight', 'bold'),
+                    fontstyle=kwargs.get('fontstyle', 'normal'),
+                    fontsize=kwargs.get('fontsize', 12),
+                    horizontalalignment=kwargs.get('ha', 'center'),
+                    verticalalignment=kwargs.get('va', 'center'),
+                    transform=ax.transAxes)
+        elif 'po' in pid:
+            pass
+        elif 'corr' in pid:
+            ax.text(0.5 * (left + right), bottom + top + 0.1,
+                    name + level_text, 
+                    fontweight=kwargs.get('fontweight', 'bold'),
+                    fontstyle=kwargs.get('fontstyle', 'italic'),
+                    fontsize=kwargs.get('fontsize', 12),
+                    horizontalalignment=kwargs.get('ha', 'center'),
+                    verticalalignment=kwargs.get('va', 'center'),
+                    transform=ax.transAxes)
+        else:  # 'xt' and others
+            if config.use_history:
+                ax.set_title(config.history_expid + " (" + config.history_expdsc + ")")
+            else:
+                ax.set_title(title_string, loc=loc, fontsize=10)
+
+            ax.text(0.5 * (left + right), bottom + top + 0.1,
+                    name,
+                    fontweight=kwargs.get('fontweight', 'bold'),
+                    fontstyle=kwargs.get('fontstyle', 'italic'),
+                    fontsize=fontsize,
+                    horizontalalignment=kwargs.get('ha', 'center'),
+                    verticalalignment=kwargs.get('va', 'center'),
+                    transform=ax.transAxes)
+        
+    def _set_axes_title(self, config,findex):
+        if config.overlay:
+            return None
+        if config.get_file_description(findex):
+            return config.get_file_description(findex)
+        elif config.get_file_exp_name(findex):
+            return config.get_file_exp_name(findex)
+        elif config.get_file_exp_id(findex):
+            return config.get_file_exp_id(findex)
+        else:
+            if config.ax_opts['custom_title']:
+                return config.ax_opts['custom_title']
+        return None
+        
+    @staticmethod
+    def _basic_stats(data):
+        """ Basic stats for a given field """
+        # datamin = data.min().values
+        # datamax = data.max().values
+        datamean = data.mean().values
+        datastd = data.std().values
+        return f"\nMean:{datamean:.2e}\nStd:{datastd:.2e}"
+
+    def _format_level_text(self, config, level):
+        """Format level annotation text based on level value."""
+        if config.ax_opts.get('zave'):
+            return ' (Column Mean)'
+        if config.ax_opts.get('zsum'):
+            return ' (Total Column)'
+        if level is None or str(level) == '0':
+            return ''
+        return f"@ {level} {'Pa' if level > 10000 else 'mb'}"

@@ -37,8 +37,7 @@ class MatplotlibPolarPlotter(MatplotlibBasePlotter):
                                     data2d, 
                                     findex)       
         self.fig = fig
-        
-        ax_opts = config.ax_opts
+        self.ax_opts = config.ax_opts
         
         if not config.compare and not config.compare_diff:
             fig.set_axes()
@@ -47,14 +46,14 @@ class MatplotlibPolarPlotter(MatplotlibBasePlotter):
         axes_shape = fig.subplots
         
         if axes_shape == (3, 1):
-            if ax_opts['is_diff_field']:
+            if self.ax_opts['is_diff_field']:
                 self.ax = ax_temp[2]
             else:
                 self.ax = ax_temp[config.axindex]
         elif axes_shape == (2, 2):
-            if ax_opts['is_diff_field']:
+            if self.ax_opts['is_diff_field']:
                 self.ax = ax_temp[2]
-                if config.ax_opts['add_extra_field_type']:
+                if self.ax_opts['add_extra_field_type']:
                     self.ax = ax_temp[3]
             else:
                 self.ax = ax_temp[config.axindex]
@@ -66,17 +65,19 @@ class MatplotlibPolarPlotter(MatplotlibBasePlotter):
         else:
             self.ax = ax_temp[0]
         
-        ax_opts = fig.update_ax_opts(field_name, self.ax, 'po')
-        # fig.plot_text(field_name, self.ax, 'po', level=0, data=data2d)
+        self.ax_opts = fig.update_ax_opts(field_name, self.ax, 'po')
+        # self.plot_text(config, field_name, 'po', level=0, data=data2d)
         
-        self._plot_polar_data(config, self.ax, data2d, x, y, field_name, ax_opts, findex)
+        self._plot_polar_data(config, data2d, x, y, field_name, findex)
         
         self.plot_object = fig
         
         return fig
     
-    def _plot_polar_data(self, config, ax, data2d, x, y, field_name, ax_opts, findex):
+    def _plot_polar_data(self, config, data2d, x, y, field_name, findex):
         """Helper function to plot polar data."""
+        ax = self.ax
+        ax_opts = self.ax_opts
         with mpl.rc_context(rc=ax_opts.get('rc_params', {})):
             if ax_opts['use_pole'] == 'south':
                 projection = ccrs.SouthPolarStereo()
