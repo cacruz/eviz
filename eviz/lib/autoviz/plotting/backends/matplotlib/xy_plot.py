@@ -2,6 +2,7 @@ import matplotlib as mpl
 import numpy as np
 import cartopy.crs as ccrs
 from cartopy.mpl.geoaxes import GeoAxes
+import eviz.lib.autoviz.utils as pu
 
 from .base import MatplotlibBasePlotter
 
@@ -33,6 +34,7 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
                                     field_name, 
                                     data2d, 
                                     findex)
+
         self.fig = fig
         self.ax_opts = config.ax_opts
         if not config.compare and not config.compare_diff:
@@ -99,7 +101,7 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
                     vmin, vmax = config._comparison_cbar_limits[field_name]
 
             # Ensure contour levels are created based on vmin and vmax
-            self._create_clevs(field_name, ax_opts, data2d, vmin, vmax)
+            self._create_clevs(field_name, data2d, vmin, vmax)
 
             if fig.use_cartopy and is_cartopy_axis:
                 cfilled = self.filled_contours(config, field_name, ax, x, y, data2d, 
@@ -126,20 +128,20 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
                     ax_opts['suppress_colorbar'] = True
                     self.logger.debug(f"Suppressing individual colorbar for {field_name} (axindex={config.axindex})")
                 else:
-                    self.cbar = self.set_colorbar(config, cfilled, fig, ax, ax_opts, findex, field_name, data2d)
+                    self.cbar = self.set_colorbar(config, cfilled, fig, ax, findex, field_name, data2d)
 
                 if ax_opts.get('line_contours', False):
                     if fig.use_cartopy and is_cartopy_axis:
-                        self.line_contours(fig, ax, ax_opts, x, y, data2d, transform=data_transform)
+                        self.line_contours(fig, ax, x, y, data2d, transform=data_transform)
                     else:
-                        self.line_contours(fig, ax, ax_opts, x, y, data2d)
+                        self.line_contours(fig, ax, x, y, data2d)
 
-            name = self.get_name(config, data2d, findex)
+            long_name = self.get_long_name(config, data2d, findex)
             if config.compare_diff:
                 level_text = None
-                if config.ax_opts.get('zave', False):
+                if ax_opts.get('zave', False):
                     level_text = ' (Column Mean)'
-                elif config.ax_opts.get('zsum', False):
+                elif ax_opts.get('zsum', False):
                     level_text = ' (Total Column)'
                 else:
                     if str(config.level) == '0':
@@ -151,8 +153,10 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
                             else:
                                 level_text = '@ ' + str(config.level) + ' mb'
 
-                if level_text:
-                    title_str = name + level_text
+                if level_text and long_name:
+                    title_str = long_name + level_text
+                else:
+                    title_str = data2d.name + level_text
 
                 fig.suptitle_eviz(title_str, 
                                 fontweight='bold',
@@ -160,13 +164,17 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
                                 fontsize=self._image_font_size(fig.subplots))
             
             elif config.compare:
-                fig.suptitle_eviz(text=name, 
+                title_str = data2d.name
+                if long_name:
+                    title_str = long_name
+
+                fig.suptitle_eviz(text=title_str, 
                                 fontweight='bold',
                                 fontstyle='italic',
                                 fontsize=self._image_font_size(fig.subplots))
 
             if config.add_logo:
-                self._add_logo_ax(fig, desired_width_ratio=0.05)
+                pu.add_logo_ax(fig, desired_width_ratio=0.04)
 
             # Collect filled contour objects for shared colorbar
             if not hasattr(config, '_filled_contours'):

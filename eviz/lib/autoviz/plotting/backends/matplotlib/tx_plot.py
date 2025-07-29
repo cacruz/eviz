@@ -59,7 +59,7 @@ class MatplotlibTXPlotter(MatplotlibBasePlotter):
             dmax = data2d.max(skipna=True).values
             self.logger.debug(f"Field: {field_name}; Min:{dmin}; Max:{dmax}")
             
-            self._create_clevs(field_name, self.ax_opts, data2d)
+            self._create_clevs(field_name, data2d)
             
             extend_value = "both"
             if self.ax_opts['clevs'][0] == 0:
@@ -107,7 +107,7 @@ class MatplotlibTXPlotter(MatplotlibBasePlotter):
             
             try:
                 if self.ax_opts.get('line_contours', False):
-                    self.line_contours(fig, self.ax[1], self.ax_opts, lons, vtimes, data2d_reduced)
+                    self.line_contours(fig, self.ax[1], lons, vtimes, data2d_reduced)
             except Exception as e:
                 self.logger.error(f"Error adding contour lines: {e}")
             

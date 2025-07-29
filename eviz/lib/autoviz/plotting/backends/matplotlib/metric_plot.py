@@ -108,7 +108,7 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
             self.ax = ax_temp[0]
 
         self.ax_opts = fig.update_ax_opts(field_name, self.ax, 'corr', level=0)
-        with mpl.rc_context(rc=ax_opts.get('rc_params', {})):
+        with mpl.rc_context(rc=self.ax_opts.get('rc_params', {})):
             self.plot_text(config, field_name, pid='corr', level=0, data=data2d)
         
         self._plot_correlation_data(config, data2d, x, y, field_name,
@@ -132,7 +132,7 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
             data_transform = ccrs.PlateCarree()
 
             vmin, vmax = None, None
-            self._create_clevs(field_name, ax_opts, data2d, vmin, vmax)
+            self._create_clevs(field_name, data2d, vmin, vmax)
 
             # For cross-correlation, the range might be different
             if method_name.lower() == 'cross':
@@ -164,7 +164,7 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
             else:
                 if 'colorbar_label' not in ax_opts:
                     ax_opts['colorbar_label'] = f'{method_name} Correlation'
-                self.set_colorbar(config, cfilled, fig, ax, ax_opts, findex, field_name, data2d)
+                self.set_colorbar(config, cfilled, fig, ax, findex, field_name, data2d)
             
             # Calculate and display R² value
             if hasattr(self, '_original_data') and len(self._original_data) == 2:

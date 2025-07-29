@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import logging
 import matplotlib.pyplot as plt
+import eviz.lib.autoviz.utils as pu
+
 from .base import MatplotlibBasePlotter
 
 
@@ -92,7 +94,7 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
                             fontsize=self._image_font_size(fig.subplots))
             
             if config.add_logo:
-                self._add_logo_ax(fig, desired_width_ratio=0.05)
+                pu.add_logo_ax(fig, desired_width_ratio=0.05)
                 
         return fig
     
@@ -132,7 +134,7 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
                             break
 
                 if not color_settings:
-                    color_settings = config.ax_opts.get('color_cycle', plt.rcParams['axes.prop_cycle'].by_key()['color'])
+                    color_settings = ax_opts.get('color_cycle', plt.rcParams['axes.prop_cycle'].by_key()['color'])
                 elif isinstance(color_settings, str):
                     color_settings = [color_settings]
                 self.logger.debug(f"Using color settings: {color_settings}")

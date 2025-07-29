@@ -1244,7 +1244,6 @@ class GenericSource(BaseSource):
         """
         if data_array is None:
             return None
-
         xc_dim = self.config_manager.get_model_dim_name('xc')
         tc_dim = self.config_manager.get_model_dim_name('tc')
         zc_dim = self.config_manager.get_model_dim_name('zc')
@@ -1274,8 +1273,8 @@ class GenericSource(BaseSource):
         else:
             zonal_mean = zonal_mean.squeeze()
 
-        zonal_mean = self._select_yrange(zonal_mean, data_array.name)
         zonal_mean.attrs = data_array.attrs.copy()
+        zonal_mean = self._select_yrange(zonal_mean, data_array.name)
 
         return apply_conversion(self.config_manager, zonal_mean, data_array.name)
 
@@ -1387,6 +1386,7 @@ class GenericSource(BaseSource):
                 for dim in dims[2:]:
                     data2d = data2d.mean(dim=dim)
                     
+        data2d.attrs = data_array.attrs.copy()
         return apply_conversion(self.config_manager, data2d, data_array.name)
 
     def _extract_xt_data(self, data_array, time_lev):

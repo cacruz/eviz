@@ -28,7 +28,7 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
 
         if data2d is None:
             return fig
-
+       
         self.source_name = config.source_names[config.ds_index]
         self.units = self.get_units(config, 
                                     field_name, 
@@ -93,6 +93,7 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
                       plot_type, findex):
         """Helper function to plot YZ data on a single axes."""
         ax_opts = self.ax_opts
+        long_name = self.get_long_name(config, data2d, findex)
         with mpl.rc_context(rc=ax_opts.get('rc_params', {})):
             source_name = config.source_names[config.ds_index]
 
@@ -146,11 +147,11 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
                         label = f"Dataset {dataset_index}"
                 
                 if config.overlay and label:
-                    self._plot_profile(config, data2d, fig, ax, ax_opts, (prof_dim, dep_var), 
+                    self._plot_profile(config, data2d, fig, ax, (prof_dim, dep_var), 
                                     color=line_color, linestyle=line_style, linewidth=line_width, 
                                     marker=marker, label=label)
                 else:
-                    self._plot_profile(config, data2d, fig, ax, ax_opts, (prof_dim, dep_var))
+                    self._plot_profile(config, data2d, fig, ax, (prof_dim, dep_var))
 
                 if config.overlay:
                     all_plotted = False
@@ -179,12 +180,12 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
                 for label in xlabels:
                     label.set_fontsize(pu.axis_tick_font_size(fig.subplots))
 
-                self._set_ax_ranges(config, field_name, fig, ax, ax_opts, y, vertical_units)
+                self._set_ax_ranges(config, field_name, fig, ax, y, vertical_units)
 
                 if ax_opts.get('line_contours', False):
-                    self.line_contours(fig, ax, ax_opts, x, y, data2d)
+                    self.line_contours(fig, ax, x, y, data2d)
 
-                self.set_colorbar(config, cfilled, fig, ax, ax_opts, findex, field_name, data2d)
+                self.set_colorbar(config, cfilled, fig, ax, findex, field_name, data2d)
 
             # The following is only supported for GEOS datasets:
             # TODO: move to 'model' layer!?
@@ -197,28 +198,25 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
             #         ax.plot(x, tropp, linewidth=2, color="k", linestyle="--")
             #     # The following is temporary, while the TODO above is not done.
             #     config.use_trop_height = None
-
-            name = self.get_name(config, data2d, findex)
-            if config.compare_diff and config.ax_opts['is_diff_field']:
-                fig.suptitle_eviz(name, 
+            if config.compare_diff and not ax_opts['is_diff_field']:
+                fig.suptitle_eviz(long_name,
                                 # TODO: use rc_params
                                 fontweight='bold',
                                 fontstyle='italic',
-                                color='red',
+                                color='black',
                                 fontsize=pu.image_font_size(fig.subplots))        
             elif config.compare:
-                fig.suptitle_eviz(text=config.map_params[findex].get('field', 'No name'), 
+                fig.suptitle_eviz(text=long_name, 
                                 # TODO: use rc_params
                                 fontweight='bold',
                                 fontstyle='italic',
-                                color='red',
+                                color='black',
                                 fontsize=pu.image_font_size(fig.subplots))     
 
             if config.add_logo:
                 pu.add_logo_ax(fig, desired_width_ratio=0.05)
 
-    @staticmethod
-    def _plot_profile(config, data2d, fig, ax, ax_opts, ax_dims,
+    def _plot_profile(self, config, data2d, fig, ax, ax_dims,
                       color=None, linestyle='-', linewidth=1.5, marker=None, label=None):
         """Plot a vertical profile."""
         if ax_dims[0] in ('zc', 'yc'):
@@ -237,17 +235,17 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
             
             ax.set_ylim(y0, y1)
         
-        ax.set_yscale(ax_opts['zscale'])
+        ax.set_yscale(self.ax_opts['zscale'])
         ax.yaxis.set_minor_formatter(NullFormatter())
         
         # Set y-axis ticks for linear scale
-        if 'linear' in ax_opts['zscale']:
+        if 'linear' in self.ax_opts['zscale']:
             y_ranges = [1000, 900, 800, 700, 600, 500, 400, 300, 200, 100, 0]
             ax.set_yticks(y_ranges)
         
         ax.yaxis.set_major_formatter(FormatStrFormatter('%3.1f'))
         
-        if ax_opts['add_grid']:
+        if self.ax_opts['add_grid']:
             ax.grid()
         
         ylabels = ax.get_yticklabels()
@@ -258,7 +256,7 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
         for label in xlabels:
             label.set_fontsize(pu.axis_tick_font_size(fig.subplots))
 
-    def _set_ax_ranges(self, config, field_name, fig, ax, ax_opts, y, units):
+    def _set_ax_ranges(self, config, field_name, fig, ax, y, units):
         """Set axis ranges and scales for YZ plots."""
         # Define standard pressure levels
         y_ranges = np.array([1000, 700, 500, 300, 200, 100])
@@ -298,7 +296,7 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
         
         # Set y-axis limits and scale
         ax.set_ylim(lo_z, hi_z)
-        ax.set_yscale(ax_opts['zscale'])
+        ax.set_yscale(self.ax_opts['zscale'])
         ax.yaxis.set_minor_formatter(NullFormatter())
         
         # Set y-axis formatter
@@ -308,6 +306,6 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
         ax.set_ylabel(f"Pressure ({units})", size=pu.axes_label_font_size(fig.subplots))
         
         # Add grid if requested
-        if ax_opts['add_grid']:
+        if self.ax_opts['add_grid']:
             ax.grid()
     

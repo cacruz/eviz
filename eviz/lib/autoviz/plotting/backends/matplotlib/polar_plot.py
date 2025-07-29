@@ -98,7 +98,7 @@ class MatplotlibPolarPlotter(MatplotlibBasePlotter):
                 circle = mpath.Path(verts * radius + center)
                 ax.set_boundary(circle, transform=ax.transAxes)
 
-            self._create_clevs(field_name, ax_opts, data2d)
+            self._create_clevs(field_name, data2d)
             clevs = pu.formatted_contours(ax_opts['clevs'])
 
             extend_value = "both"

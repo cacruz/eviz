@@ -3,6 +3,7 @@ import matplotlib as mpl
 import pandas as pd
 import logging
 from sklearn.metrics import mean_squared_error
+import eviz.lib.autoviz.utils as pu
 from .base import MatplotlibBasePlotter
 
 
@@ -94,7 +95,7 @@ class MatplotlibXTPlotter(MatplotlibBasePlotter):
                             fontsize=self._image_font_size(fig.subplots))
             
             if config.add_logo:
-                self._add_logo_ax(fig, desired_width_ratio=0.05)
+                pu.add_logo_ax(fig, desired_width_ratio=0.05)
         
         self.plot_object = fig
         
