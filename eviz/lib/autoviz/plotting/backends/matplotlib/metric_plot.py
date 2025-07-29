@@ -23,13 +23,10 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
             config: Configuration manager
             data_to_plot: Tuple containing (data2d, x, y, field_name, plot_type, findex, fig)
                 If data2d is a tuple of two DataArrays, compute correlation between them
-                Otherwise, assume data2d is already a correlation map
-        
-        Returns:
-            The created Matplotlib figure and axes
+                Otherwise, assume data2d is already a correlation map        
         """
         self.config = config
-        field_name = data_to_plot[3]        
+        field_name = data_to_plot[3]
         if isinstance(data_to_plot[0], tuple) and len(data_to_plot[0]) == 2:
             # Two datasets to correlate
             data1, data2 = data_to_plot[0]

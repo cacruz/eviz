@@ -2134,9 +2134,8 @@ class GenericSource(BaseSource):
         if data_array is None:
             return None
 
-        
         # Determine correlation type (time or space)
-        do_time_corr = self.config_manager.get('time_corr', True)
+        do_time_corr = self.config_manager.time_corr
         
         # For correlation analysis, we typically want to preserve the time dimension
         # if it exists, as we'll correlate across time at each grid point
