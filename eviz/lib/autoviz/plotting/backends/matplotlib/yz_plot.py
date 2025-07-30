@@ -93,7 +93,6 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
                       plot_type, findex):
         """Helper function to plot YZ data on a single axes."""
         ax_opts = self.ax_opts
-        long_name = self.get_long_name(config, data2d, findex)
         with mpl.rc_context(rc=ax_opts.get('rc_params', {})):
             source_name = config.source_names[config.ds_index]
 
@@ -198,20 +197,16 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
             #         ax.plot(x, tropp, linewidth=2, color="k", linestyle="--")
             #     # The following is temporary, while the TODO above is not done.
             #     config.use_trop_height = None
-            if config.compare_diff and not ax_opts['is_diff_field']:
-                fig.suptitle_eviz(long_name,
-                                # TODO: use rc_params
-                                fontweight='bold',
-                                fontstyle='italic',
-                                color='black',
-                                fontsize=pu.image_font_size(fig.subplots))        
-            elif config.compare:
-                fig.suptitle_eviz(text=long_name, 
-                                # TODO: use rc_params
-                                fontweight='bold',
-                                fontstyle='italic',
-                                color='black',
-                                fontsize=pu.image_font_size(fig.subplots))     
+
+            long_name = self.get_long_name(config, data2d, findex)
+            if config.compare_diff or config.compare:
+                if getattr(fig, "_suptitle", None) is None:
+                    fig.suptitle_eviz(long_name,
+                                    # TODO: use rc_params
+                                    fontweight='bold',
+                                    fontstyle='italic',
+                                    color='black',
+                                    fontsize=pu.image_font_size(fig.subplots))        
 
             if config.add_logo:
                 pu.add_logo_ax(fig, desired_width_ratio=0.05)

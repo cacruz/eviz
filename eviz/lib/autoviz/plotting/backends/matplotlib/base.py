@@ -382,28 +382,26 @@ class MatplotlibBasePlotter(BasePlotter):
     def get_long_name(self, config, data2d, findex):
         """Get long or descriptive name for the field."""
         try:
-            # User-given name
-            if 'name' in config.spec_data[data2d.name]:
-                return config.spec_data[data2d.name]['name']
-            # Look in attributes
-            if hasattr(data2d, 'attrs'):
-                name = None
-                if 'long_name' in data2d.attrs:
-                    name = data2d.attrs['long_name']
-                elif 'standard_name' in data2d.attrs:
-                    name = data2d.attrs['standard_name']
-                elif 'description' in data2d.attrs:
-                    name = data2d.attrs['description']
-                return name  
-            # TODO: Add more attributes to check
-        except (AttributeError, KeyError) as e:
-            self.logger.debug(f"Could not find long name for {data2d.name}: {e}")
+            # User-provided name
+            user_spec = config.spec_data.get(data2d.name, {})
+            if 'name' in user_spec:
+                self.logger.debug(f"Using user-provided name for {data2d.name}")
+                return user_spec['name']
+
+            # Attribute names
+            for attr_key in ['long_name', 'standard_name', 'description']:
+                if attr_key in getattr(data2d, 'attrs', {}):
+                    self.logger.debug(f"Using {attr_key} from attrs for {data2d.name}")
+                    return data2d.attrs[attr_key]
+
+            # Fallback: use variable name
+            self.logger.debug(f"No descriptive name found; using variable name {data2d.name}")
+            return data2d.name
+
         except Exception as e:
-            self.logger.error(f"Unexpected error: {e}")
-        finally:
-            # Nothing found
+            self.logger.error(f"Error getting long name for {getattr(data2d, 'name', 'unknown')}: {e}")
             return None
-        
+
     def get_units(self, config, field_name, data2d, findex):
         """Get units for the field."""
         self.logger.debug(f"Get units for {field_name}")

@@ -58,6 +58,7 @@ class Figure(mfigure.Figure):
         self._use_cartopy = False
         self.gs = None
         self.axes_array = []
+        self._refnum = 1
 
         # Remove nrows and ncols from kwargs to avoid passing them to matplotlib.figure.Figure
         if 'nrows' in kwargs:
@@ -75,38 +76,18 @@ class Figure(mfigure.Figure):
         self._init_frame()
 
     def _init_frame(self):
-        """Set shape and size for pre-defined figure frames."""
+        """Set shape and size for figure frames using improved sizing strategy."""
         self._set_compare_diff_subplots()
+        
+        # Calculate optimal figure size based on content and layout
+        figsize = self._calculate_optimal_figsize()
+        
+        # Store frame parameters with calculated size
         _frame_params = {}
         rindex = 0
-        _frame_params[rindex] = list()
-
-        if self.config_manager.compare and not self.config_manager.compare_diff:
-            # Side-by-side comparison
-            if self._subplots[1] == 3:
-                # [nrows, ncols, width, height] - wider for 3 columns
-                _frame_params[rindex] = [1, 3, 32, 6]
-            else:
-                _frame_params[rindex] = [1, 2, 18, 6]  # Original 2-column layout
-        elif self.config_manager.compare_diff:
-            # Comparison with difference
-            if self._subplots == (3, 1):
-                _frame_params[rindex] = [3, 1, 8, 12]
-            elif self._subplots == (2, 2):
-                _frame_params[rindex] = [2, 2, 12, 8]
-        else:
-            # Single plots - keep original logic
-            if self._subplots == (1, 1):
-                _frame_params[rindex] = [1, 1, None, None]
-            elif self._subplots == (2, 1):
-                _frame_params[rindex] = [2, 1, 8, 10]
-            elif self._subplots == (3, 1):
-                _frame_params[rindex] = [3, 1, 8, 12]
-            elif self._subplots == (2, 2):
-                _frame_params[rindex] = [2, 2, 14, 10]
-            elif self._subplots == (3, 4):
-                _frame_params[rindex] = [3, 4, 12, 16]
-                
+        nrows, ncols = self._subplots
+        _frame_params[rindex] = [nrows, ncols, figsize[0], figsize[1]]
+        
         self._frame_params = _frame_params
 
     def _set_compare_diff_subplots(self):
@@ -201,36 +182,30 @@ class Figure(mfigure.Figure):
         return self.axes_array
 
     def create_subplot_grid(self) -> "Figure":
-        """Create a grid of subplots based on the figure frame layout."""
-        # TODO: Check this!!!
-        # Hack to distinguish regional plots, which look better in square aspect ratio
-        if ('tx' in self.plot_type or 'sc' in self.plot_type or 'xy' in self.plot_type) and  'extent' in self._ax_opts:
-            if self._ax_opts['extent'] != [-180, 180, -90, 90]:
-                self._frame_params[self._rindex][2] = 8
-                self._frame_params[self._rindex][3] = 8
-
+        """Create a grid of subplots with optimized spacing and sizing."""
+        # Apply calculated figure size
         if self._frame_params[self._rindex][2] and self._frame_params[self._rindex][3]:
             figsize = (self._frame_params[self._rindex][2], self._frame_params[self._rindex][3])
             self.set_size_inches(figsize)
+
+        # Calculate optimal spacing based on subplot configuration
+        spacing_params = self._calculate_subplot_spacing()
         
-        # Create GridSpec with appropriate spacing for side-by-side plots
-        if self.config_manager.compare and not self.config_manager.compare_diff:
-            # Adjust spacing based on number of columns
-            if self._subplots[1] > 2:
-                self.gs = gridspec.GridSpec(*self._subplots, wspace=0.25)  # Slightly tighter spacing for 3+ columns
-            else:
-                self.gs = gridspec.GridSpec(*self._subplots, wspace=0.3)  # Original spacing for 2 columns
-        else:
-            self.gs = gridspec.GridSpec(*self._subplots)
+        # Create GridSpec with calculated spacing
+        self.gs = gridspec.GridSpec(
+            *self._subplots,
+            **spacing_params
+        )
             
         return self
 
     @classmethod
     def create_eviz_figure(cls, config_manager, 
                         plot_type, 
-                        field_name=None, nrows=None, ncols=None) -> "Figure":
+                        field_name=None, nrows=None, ncols=None,
+                        figsize=None, **kwargs) -> "Figure":
         """
-        Factory method to create an eViz Figure instance.
+        Enhanced factory method to create an eViz Figure instance with improved sizing.
         
         Args:
             config_manager (ConfigManager): Configuration manager
@@ -238,47 +213,36 @@ class Figure(mfigure.Figure):
             field_name (str, optional): Name of the field being plotted
             nrows (int, optional): Number of rows in the subplot grid
             ncols (int, optional): Number of columns in the subplot grid
+            figsize (tuple, optional): Explicit figure size (width, height)
+            **kwargs: Additional arguments passed to Figure constructor
         
         Returns:
-            Figure: An instance of the eViz Figure class
+            Figure: An instance of the eViz Figure class with optimized sizing
         """
         if field_name is None:
             field_name = config_manager.current_field_name
         
-        # Get rc_params if available
-        rc_params = {}
-        if (config_manager.spec_data and 
-            field_name in config_manager.spec_data and 
-            plot_type + 'plot' in config_manager.spec_data[field_name]):
-            rc_params = config_manager.spec_data[field_name][plot_type + 'plot'].get('rc_params', {})
-
-        use_overlay = False
-        if config_manager.compare and field_name:
-            use_overlay = config_manager.should_overlay_plots(field_name, plot_type[:2])
+        # Get plot-specific configuration
+        plot_config = cls._get_plot_config(config_manager, field_name, plot_type)
         
-        # If using overlay mode, create a single subplot
-        if use_overlay:
-            nrows, ncols = 1, 1
-        # Otherwise, determine layout based on configuration
-        elif nrows is None or ncols is None:
-            if config_manager.compare and not config_manager.compare_diff:
-                # For side-by-side comparison, use 1x2 layout
-                nrows, ncols = 1, 2
-            elif config_manager.compare_diff:
-                # For comparison with difference, use layout from config
-                nrows, ncols = config_manager.input_config._comp_panels
-            else:
-                # For single plots, use 1x1 layout
-                nrows, ncols = 1, 1
-
-        # Create figure with rc_params applied
-        fig = cls(config_manager, plot_type, nrows=nrows, ncols=ncols)
-
-        # Store rc_params in ax_opts for later use with axes
-        if not hasattr(fig, '_ax_opts'):
-            fig._ax_opts = {}
-        fig._ax_opts['rc_params'] = rc_params
-
+        # Determine subplot layout
+        layout = cls._determine_subplot_layout(config_manager, field_name, plot_type, nrows, ncols)
+        nrows, ncols = layout
+        
+        # Create figure instance
+        fig = cls(config_manager, plot_type, nrows=nrows, ncols=ncols, **kwargs)
+        
+        # Store field name for sizing calculations
+        fig.field_name = field_name
+        
+        # Initialize axis options with plot configuration
+        fig._initialize_ax_opts(plot_config)
+        
+        # Override figsize if explicitly provided
+        if figsize is not None:
+            fig._frame_params[0][2] = figsize[0]
+            fig._frame_params[0][3] = figsize[1]
+        
         return fig
 
     def set_us_map_layout(self):
@@ -750,3 +714,238 @@ class Figure(mfigure.Figure):
     def ax_opts(self, value):
         """Set the axis options."""
         self._ax_opts = value
+
+    def _calculate_optimal_figsize(self):
+        """Calculate optimal figure size based on subplot configuration and content type."""
+        nrows, ncols = self._subplots
+        
+        # Base subplot size (minimum usable size)
+        base_subplot_width = self._get_base_subplot_width()
+        base_subplot_height = self._get_base_subplot_height()
+        
+        # Calculate total figure dimensions
+        spacing_params = self._calculate_subplot_spacing()
+        
+        # Account for spacing between subplots
+        total_width = (ncols * base_subplot_width + 
+                    (ncols - 1) * spacing_params.get('wspace', 0.2) * base_subplot_width)
+        total_height = (nrows * base_subplot_height + 
+                    (nrows - 1) * spacing_params.get('hspace', 0.2) * base_subplot_height)
+        
+        # Add margins for labels, titles, colorbars
+        margin_width = self._calculate_margin_width()
+        margin_height = self._calculate_margin_height()
+        
+        final_width = total_width + margin_width
+        final_height = total_height + margin_height
+        
+        # Apply constraints
+        final_width = max(4, min(final_width, 20))  # Reasonable bounds
+        final_height = max(3, min(final_height, 16))
+        
+        return (final_width, final_height)
+
+    def _get_base_subplot_width(self):
+        """Get base width for a single subplot based on plot type."""
+        if self._is_map_plot():
+            # Maps need more width, especially for regional plots
+            if self._is_regional_plot():
+                return 6  # Square-ish for regional maps
+            else:
+                return 8  # Wider for global maps
+        elif self._is_time_series_plot():
+            return 6  # Time series can be narrower
+        else:
+            return 5  # Default width
+
+    def _get_base_subplot_height(self):
+        """Get base height for a single subplot based on plot type."""
+        if self._is_map_plot():
+            if self._is_regional_plot():
+                return 6  # Square for regional maps
+            else:
+                return 5  # Slightly shorter for global maps
+        elif self._is_time_series_plot():
+            return 4  # Time series can be shorter
+        else:
+            return 4  # Default height
+
+    def _calculate_subplot_spacing(self):
+        """Calculate optimal spacing between subplots."""
+        nrows, ncols = self._subplots
+        
+        # Base spacing
+        base_wspace = 0.3
+        base_hspace = 0.3
+        
+        # Adjust based on number of subplots
+        if ncols > 3:
+            base_wspace = 0.2  # Tighter spacing for many columns
+        elif ncols == 1:
+            base_wspace = 0.1  # Minimal spacing for single column
+            
+        if nrows > 3:
+            base_hspace = 0.2  # Tighter spacing for many rows
+        elif nrows == 1:
+            base_hspace = 0.1  # Minimal spacing for single row
+        
+        # Adjust for comparison plots
+        if self.config_manager.compare and not self.config_manager.compare_diff:
+            base_wspace = max(0.4, base_wspace)  # More space for comparison labels
+        
+        return {
+            'wspace': base_wspace,
+            'hspace': base_hspace
+        }
+
+    def _calculate_margin_width(self):
+        """Calculate additional width needed for labels, colorbars, etc."""
+        margin = 1.5  # Base margin for y-axis labels
+        
+        # Add space for colorbar
+        if self._needs_colorbar():
+            margin += 1.5
+        
+        # Add space for comparison labels
+        if self.config_manager.compare:
+            margin += 0.5
+            
+        return margin
+
+    def _calculate_margin_height(self):
+        """Calculate additional height needed for titles, labels, etc."""
+        margin = 1.0  # Base margin for x-axis labels
+        
+        # Add space for titles
+        if self._has_subplot_titles():
+            margin += 0.8
+        
+        # Add space for main title
+        if self._has_main_title():
+            margin += 0.6
+            
+        return margin
+
+    def _is_map_plot(self):
+        """Check if this is a map-based plot."""
+        return any(plot_type in self.plot_type for plot_type in ['tx', 'sc', 'xy'])
+
+    def _is_regional_plot(self):
+        """Check if this is a regional (non-global) map plot."""
+        if not self._is_map_plot():
+            return False
+        
+        # Check if extent is not global
+        if hasattr(self, '_ax_opts') and 'extent' in self._ax_opts:
+            extent = self._ax_opts['extent']
+            if isinstance(extent, list) and len(extent) == 4:
+                return extent != [-180, 180, -90, 90]
+        
+        return False
+
+    def _is_time_series_plot(self):
+        """Check if this is a time series plot."""
+        return 'xt' in self.plot_type or 'time' in self.plot_type.lower()
+
+    def _needs_colorbar(self):
+        """Check if plot needs a colorbar."""
+        # Most contour and image plots need colorbars
+        return self._is_map_plot() or 'contour' in self.plot_type.lower()
+
+    def _has_subplot_titles(self):
+        """Check if subplots will have individual titles."""
+        return self._subplots[0] * self._subplots[1] > 1
+
+    def _has_main_title(self):
+        """Check if figure will have a main title."""
+        return True  # Most plots have main titles
+
+    @classmethod
+    def _get_plot_config(cls, config_manager, field_name, plot_type):
+        """Extract plot-specific configuration from config manager."""
+        plot_config = {
+            'rc_params': {},
+            'projection': None,
+            'extent': None,
+            'aspect_ratio': None
+        }
+        
+        if (config_manager.spec_data and 
+            field_name in config_manager.spec_data):
+            
+            field_spec = config_manager.spec_data[field_name]
+            plot_spec_key = plot_type + 'plot' if not plot_type.startswith('po') else 'polarplot'
+            
+            if plot_spec_key in field_spec:
+                plot_spec = field_spec[plot_spec_key]
+                plot_config['rc_params'] = plot_spec.get('rc_params', {})
+                plot_config['projection'] = plot_spec.get('projection')
+                plot_config['extent'] = plot_spec.get('extent')
+                plot_config['aspect_ratio'] = plot_spec.get('aspect_ratio')
+            
+            # Also check field-level settings
+            plot_config['projection'] = plot_config['projection'] or field_spec.get('projection')
+            plot_config['extent'] = plot_config['extent'] or field_spec.get('extent')
+        
+        return plot_config
+
+    @classmethod
+    def _determine_subplot_layout(cls, config_manager, field_name, plot_type, nrows, ncols):
+        """Determine optimal subplot layout based on configuration."""
+        # If explicitly provided, use those values
+        if nrows is not None and ncols is not None:
+            return (nrows, ncols)
+        
+        # Check for overlay mode
+        use_overlay = False
+        if config_manager.compare and field_name:
+            try:
+                use_overlay = config_manager.should_overlay_plots(field_name, plot_type[:2])
+            except AttributeError:
+                use_overlay = False
+        
+        if use_overlay:
+            return (1, 1)
+        
+        # Determine layout based on comparison mode
+        if config_manager.compare and not config_manager.compare_diff:
+            # Side-by-side comparison
+            if hasattr(config_manager, 'compare_exp_ids'):
+                num_comparisons = len(config_manager.compare_exp_ids)
+                return (1, num_comparisons)
+            else:
+                return (1, 2)  # Default to 2-way comparison
+        
+        elif config_manager.compare_diff:
+            # Comparison with difference plots
+            if hasattr(config_manager, 'input_config') and hasattr(config_manager.input_config, '_comp_panels'):
+                return config_manager.input_config._comp_panels
+            else:
+                # Default difference layout
+                if config_manager.extra_diff_plot:
+                    return (2, 2)
+                else:
+                    return (3, 1)
+        
+        else:
+            # Single plot
+            return (1, 1)
+
+    def _initialize_ax_opts(self, plot_config):
+        """Initialize axis options with plot configuration."""
+        if not hasattr(self, '_ax_opts'):
+            self._ax_opts = {}
+        
+        # Set rc_params
+        self._ax_opts['rc_params'] = plot_config.get('rc_params', {})
+        
+        # Set projection and extent for map plots
+        if plot_config.get('projection'):
+            self._ax_opts['projection'] = plot_config['projection']
+        
+        if plot_config.get('extent'):
+            self._ax_opts['extent'] = plot_config['extent']
+        
+        # Set aspect ratio if specified
+        if plot_config.get('aspect_ratio'):
+            self._ax_opts['aspect_ratio'] = plot_config['aspect_ratio']

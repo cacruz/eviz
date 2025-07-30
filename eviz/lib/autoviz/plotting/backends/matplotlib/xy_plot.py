@@ -157,21 +157,21 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
                     title_str = long_name + level_text
                 else:
                     title_str = data2d.name + level_text
-
-                fig.suptitle_eviz(title_str, 
-                                fontweight='bold',
-                                fontstyle='italic',
-                                fontsize=self._image_font_size(fig.subplots))
+                if getattr(fig, "_suptitle", None) is None:
+                    fig.suptitle_eviz(title_str, 
+                                    fontweight='bold',
+                                    fontstyle='italic',
+                                    fontsize=self._image_font_size(fig.subplots))
             
             elif config.compare:
                 title_str = data2d.name
                 if long_name:
                     title_str = long_name
-
-                fig.suptitle_eviz(text=title_str, 
-                                fontweight='bold',
-                                fontstyle='italic',
-                                fontsize=self._image_font_size(fig.subplots))
+                if getattr(fig, "_suptitle", None) is None:
+                    fig.suptitle_eviz(text=title_str, 
+                                    fontweight='bold',
+                                    fontstyle='italic',
+                                    fontsize=self._image_font_size(fig.subplots))
 
             if config.add_logo:
                 pu.add_logo_ax(fig, desired_width_ratio=0.04)
