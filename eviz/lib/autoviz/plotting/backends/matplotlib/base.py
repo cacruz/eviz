@@ -396,7 +396,11 @@ class MatplotlibBasePlotter(BasePlotter):
                     name = data2d.attrs['description']
                 return name  
             # TODO: Add more attributes to check
-        except AttributeError:
+        except (AttributeError, KeyError) as e:
+            self.logger.debug(f"Could not find long name for {data2d.name}: {e}")
+        except Exception as e:
+            self.logger.error(f"Unexpected error: {e}")
+        finally:
             # Nothing found
             return None
         
