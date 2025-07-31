@@ -24,6 +24,7 @@ class MatplotlibBasePlotter(BasePlotter):
         super().__init__()
         self.fig = None
         self.ax = None
+        self.ax_opts = None
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def plot(self, config, data_to_plot):
@@ -54,14 +55,14 @@ class MatplotlibBasePlotter(BasePlotter):
 
         # Create contour levels if they don't exist
         if (
-            "clevs" not in config.ax_opts
-            or config.ax_opts["clevs"] is None
-            or len(config.ax_opts["clevs"]) == 0
+            "clevs" not in self.ax_opts
+            or self.ax_opts["clevs"] is None
+            or len(self.ax_opts["clevs"]) == 0
         ):
-            self._create_clevs(field_name, config.ax_opts, data2d)
+            self._create_clevs(field_name, data2d)
 
         # Check if field was marked as constant during level creation
-        if config.ax_opts.get("is_constant_field", False):
+        if self.ax_opts.get("is_constant_field", False):
             self.logger.debug("Rendering constant field with neutral color and text")
             ax.set_facecolor("whitesmoke")
             ax.text(
@@ -78,28 +79,28 @@ class MatplotlibBasePlotter(BasePlotter):
             return None
 
         if config.compare:
-            cmap_str = config.ax_opts["use_diff_cmap"]
+            cmap_str = self.ax_opts["use_diff_cmap"]
         else:
-            cmap_str = config.ax_opts["use_cmap"]
+            cmap_str = self.ax_opts["use_cmap"]
 
         try:
-            if np.all(np.diff(config.ax_opts["clevs"]) > 0):
+            if np.all(np.diff(self.ax_opts["clevs"]) > 0):
                 cfilled = ax.contourf(
                     x,
                     y,
                     data2d,
-                    levels=config.ax_opts["clevs"],
+                    levels=self.ax_opts["clevs"],
                     cmap=cmap_str,
-                    extend=config.ax_opts["extend_value"],
+                    extend=self.ax_opts["extend_value"],
                     norm=colors.Normalize(vmin=vmin, vmax=vmax),
                     transform=transform,
                 )
 
                 # Set under/over colors if specified
-                if config.ax_opts["cmap_set_under"]:
-                    cfilled.cmap.set_under(config.ax_opts["cmap_set_under"])
-                if config.ax_opts["cmap_set_over"]:
-                    cfilled.cmap.set_over(config.ax_opts["cmap_set_over"])
+                if self.ax_opts["cmap_set_under"]:
+                    cfilled.cmap.set_under(self.ax_opts["cmap_set_under"])
+                if self.ax_opts["cmap_set_over"]:
+                    cfilled.cmap.set_over(self.ax_opts["cmap_set_over"])
 
                 ax.set_aspect("auto")
                 return cfilled
@@ -114,22 +115,22 @@ class MatplotlibBasePlotter(BasePlotter):
 
             return cfilled
 
-    def _create_clevs(self, field_name, ax_opts, data2d, vmin=None, vmax=None):
+    def _create_clevs(self, field_name, data2d, vmin=None, vmax=None):
         """Create contour levels for the plot."""
         self.logger.debug(f"Create contour levels for {field_name}")
         # Check if clevs already exists and is not empty
         if (
-            "clevs" in ax_opts
-            and ax_opts["clevs"] is not None
-            and len(ax_opts["clevs"]) > 0
+            "clevs" in self.ax_opts
+            and self.ax_opts["clevs"] is not None
+            and len(self.ax_opts["clevs"]) > 0
         ):
             return
 
         if np.isnan(data2d).all():
             self.logger.warning("All values are NaN! Cannot create contour levels.")
             # Set default contour levels to avoid errors
-            ax_opts["clevs"] = np.array([0, 1])
-            ax_opts["clevs_prec"] = 0
+            self.ax_opts["clevs"] = np.array([0, 1])
+            self.ax_opts["clevs_prec"] = 0
             return
 
         if vmin is not None and vmax is not None:
@@ -141,7 +142,7 @@ class MatplotlibBasePlotter(BasePlotter):
         self.logger.debug(f"dmin: {dmin}, dmax: {dmax}")
 
         # Use a single consistent threshold
-        variation_threshold = float(ax_opts.get("variation_threshold", 1e-12))
+        variation_threshold = float(self.ax_opts.get("variation_threshold", 1e-12))
         data_range = np.abs(dmax - dmin)
 
         self.logger.debug(f"range: {data_range}, threshold: {variation_threshold}")
@@ -164,19 +165,19 @@ class MatplotlibBasePlotter(BasePlotter):
                 "Field variation below threshold — will be treated as constant in plotting."
             )
             # Set a flag to indicate this should be rendered as constant field
-            ax_opts["is_constant_field"] = True
+            self.ax_opts["is_constant_field"] = True
             # Still create minimal contour levels to avoid errors
             center = (dmin + dmax) / 2
-            ax_opts["clevs"] = np.array(
+            self.ax_opts["clevs"] = np.array(
                 [center - variation_threshold, center, center + variation_threshold]
             )
-            ax_opts["clevs_prec"] = max(
+            self.ax_opts["clevs_prec"] = max(
                 0, int(-np.floor(np.log10(variation_threshold)))
             )
             return
 
         # Normal case - create proper contour levels
-        ax_opts["is_constant_field"] = False
+        self.ax_opts["is_constant_field"] = False
 
         # Calculate appropriate precision
         range_val = data_range
@@ -185,13 +186,21 @@ class MatplotlibBasePlotter(BasePlotter):
             precision = 1
         elif 0.1 <= range_val < 1.0:
             precision = 2
+        elif 0.01 <= range_val < 1.0:
+            precision = 3
+        elif 0.001 <= range_val < 1.0:
+            precision = 4
+            self.ax_opts["cbar_sci_notation"] = True  # Use scientific notation for colorbar
+        elif 0.0001 <= range_val < 1.0:
+            precision = 5
+            self.ax_opts["cbar_sci_notation"] = True  # Use scientific notation for colorbar
 
-        ax_opts["clevs_prec"] = precision
+        self.ax_opts["clevs_prec"] = precision
         self.logger.debug(f"range_val: {range_val}, precision: {precision}")
 
         # Create contour levels
-        num_levels = int(ax_opts.get("num_clevs", 10))
-        if not ax_opts.get("create_clevs", True):
+        num_levels = int(self.ax_opts.get("num_clevs", 10))
+        if not self.ax_opts.get("create_clevs", True):
             clevs = np.around(np.linspace(dmin, dmax, 10), decimals=precision)
         else:
             clevs = np.around(np.linspace(dmin, dmax, num_levels), decimals=precision)
@@ -209,28 +218,28 @@ class MatplotlibBasePlotter(BasePlotter):
 
         # Ensure strictly increasing
         clevs = np.unique(clevs)
-        ax_opts["clevs"] = clevs
+        self.ax_opts["clevs"] = clevs
 
-        self.logger.debug(f"Created contour levels: {ax_opts['clevs']}")
-        if ax_opts["clevs"][0] == 0.0:
-            ax_opts["extend_value"] = "max"
+        self.logger.debug(f"Created contour levels: {self.ax_opts['clevs']}")
+        if self.ax_opts["clevs"][0] == 0.0:
+            self.ax_opts["extend_value"] = "max"
 
-    def line_contours(self, fig, ax, ax_opts, x, y, data2d, transform=None):
+    def line_contours(self, fig, ax, x, y, data2d, transform=None):
         """Add line contours to the plot."""
-        with mpl.rc_context(rc=ax_opts.get("rc_params", {})):
+        with mpl.rc_context(rc=self.ax_opts.get("rc_params", {})):
             try:
                 # Check if clevs exists and has enough levels
                 if (
-                    "clevs" not in ax_opts
-                    or ax_opts["clevs"] is None
-                    or len(ax_opts["clevs"]) < 2
+                    "clevs" not in self.ax_opts
+                    or self.ax_opts["clevs"] is None
+                    or len(self.ax_opts["clevs"]) < 2
                 ):
                     return
 
                 try:
-                    formatted_clevs = pu.formatted_contours(ax_opts["clevs"])
+                    formatted_clevs = pu.formatted_contours(self.ax_opts["clevs"])
                     contour_format = pu.contour_format_from_levels(
-                        formatted_clevs, scale=ax_opts.get("cscale", None)
+                        formatted_clevs, scale=self.ax_opts.get("cscale", None)
                     )
                 except IndexError:
                     # Handle the case where contour_format_from_levels fails
@@ -240,7 +249,7 @@ class MatplotlibBasePlotter(BasePlotter):
                     x,
                     y,
                     data2d,
-                    levels=ax_opts["clevs"],
+                    levels=self.ax_opts["clevs"],
                     colors="black",
                     alpha=0.5,
                     transform=transform,
@@ -256,24 +265,24 @@ class MatplotlibBasePlotter(BasePlotter):
                 self.logger.error(f"Error adding contour lines: {e}")
 
     def set_colorbar(
-        self, config, cfilled, fig, ax, ax_opts, findex, field_name, data2d
+        self, config, cfilled, fig, ax, findex, field_name, data2d
     ):
         """Add a colorbar to the plot."""
         self.logger.debug(f"Create colorbar for {field_name}")
         try:
             # Skip colorbar creation if suppressed (for shared colorbar)
-            if ax_opts.get("suppress_colorbar", False):
+            if self.ax_opts.get("suppress_colorbar", False):
                 return None
 
             # Create formatter for colorbar ticks
-            if ax_opts["cbar_sci_notation"]:
+            if self.ax_opts["cbar_sci_notation"]:
                 fmt = pu.FlexibleOOMFormatter(
                     min_val=data2d.min().compute().item(),
                     max_val=data2d.max().compute().item(),
                     math_text=True,
                 )
             else:
-                fmt = pu.OOMFormatter(prec=ax_opts["clevs_prec"], math_text=True)
+                fmt = pu.OOMFormatter(prec=self.ax_opts["clevs_prec"], math_text=True)
 
             if not fig.use_cartopy:
                 cbar = fig.colorbar(cfilled)
@@ -286,17 +295,17 @@ class MatplotlibBasePlotter(BasePlotter):
                     else "horizontal",
                     pad=pu.cbar_pad(fig.subplots),
                     fraction=pu.cbar_fraction(fig.subplots),
-                    ticks=ax_opts.get("clevs", None),
+                    ticks=self.ax_opts.get("clevs", None),
                     format=fmt,
                     shrink=pu.cbar_shrink(fig.subplots),
                 )
 
-            if ax_opts["clabel"] is None:
+            if self.ax_opts["clabel"] is None:
                 cbar_label = self.units
             else:
-                cbar_label = ax_opts["clabel"]
+                cbar_label = self.ax_opts["clabel"]
             self.style_colorbar(
-                cbar, ax_opts, data2d, fmt=fmt, fontsize=8, label=cbar_label
+                cbar, data2d, fmt=fmt, fontsize=8, label=cbar_label
             )
 
             for t in cbar.ax.get_xticklabels():
@@ -370,6 +379,29 @@ class MatplotlibBasePlotter(BasePlotter):
     def set_const_colorbar(cfilled, fig, ax):
         _ = fig.colorbar(cfilled, ax=ax, shrink=0.5)
 
+    def get_long_name(self, config, data2d, findex):
+        """Get long or descriptive name for the field."""
+        try:
+            # User-provided name
+            user_spec = config.spec_data.get(data2d.name, {})
+            if 'name' in user_spec:
+                self.logger.debug(f"Using user-provided name for {data2d.name}")
+                return user_spec['name']
+
+            # Attribute names
+            for attr_key in ['long_name', 'standard_name', 'description']:
+                if attr_key in getattr(data2d, 'attrs', {}):
+                    self.logger.debug(f"Using {attr_key} from attrs for {data2d.name}")
+                    return data2d.attrs[attr_key]
+
+            # Fallback: use variable name
+            self.logger.debug(f"No descriptive name found; using variable name {data2d.name}")
+            return data2d.name
+
+        except Exception as e:
+            self.logger.error(f"Error getting long name for {getattr(data2d, 'name', 'unknown')}: {e}")
+            return None
+
     def get_units(self, config, field_name, data2d, findex):
         """Get units for the field."""
         self.logger.debug(f"Get units for {field_name}")
@@ -384,32 +416,9 @@ class MatplotlibBasePlotter(BasePlotter):
                 return data2d.attrs["units"]
             elif hasattr(data2d, "units"):
                 return data2d.units
-
-            # Try to get units from the reader
-            reader = None
-            if self.source_name in config.readers:
-                if isinstance(config.readers[self.source_name], dict):
-                    readers_dict = config.readers[self.source_name]
-                    if "NetCDF" in readers_dict:
-                        reader = readers_dict["NetCDF"]
-                    elif readers_dict:
-                        reader = next(iter(readers_dict.values()))
-                else:
-                    reader = config.readers[self.source_name]
-
-            if reader and hasattr(reader, "datasets"):
-                if findex in reader.datasets and "vars" in reader.datasets[findex]:
-                    field_var = reader.datasets[findex]["vars"].get(field_name)
-                    if (
-                        field_var
-                        and hasattr(field_var, "attrs")
-                        and "units" in field_var.attrs
-                    ):
-                        return field_var.attrs["units"]
-                    elif field_var and hasattr(field_var, "units"):
-                        return field_var.units
-
-            return "n.a."
+            else:
+                self.logger.warning(f"Could not find units for {field_name}")
+                return "n.a."
         except Exception as e:
             self.logger.warning(f"Error getting units: {e}")
             return "n.a."
@@ -534,11 +543,6 @@ class MatplotlibBasePlotter(BasePlotter):
         return pu.image_font_size(subplots)
 
     @staticmethod
-    def _add_logo_ax(fig, desired_width_ratio=0.05):
-        """Add a logo to the figure."""
-        return pu.add_logo_ax(fig, desired_width_ratio)
-
-    @staticmethod
     def clabel_with_default_fontsize_mpl(contour, **kwargs):
         """Label contours with a default font size if not specified (QuadContourSet)."""
         if "fontsize" not in kwargs:
@@ -551,8 +555,7 @@ class MatplotlibBasePlotter(BasePlotter):
         kwargs.setdefault("fontsize", DEFAULT_CONTOUR_LABELSIZE)
         return ax.clabel(contour, **kwargs)
 
-    @staticmethod
-    def style_colorbar(cbar, ax_opts, data, fmt="%.1f", fontsize=8, label=None):
+    def style_colorbar(self, cbar, data, fmt="%.1f", fontsize=8, label=None):
         """Style the colorbar with a given format and font size."""
         # Set tick label font size
         cbar.ax.tick_params(labelsize=fontsize)
@@ -575,7 +578,7 @@ class MatplotlibBasePlotter(BasePlotter):
         vmax = np.nanmax(data)
         max_val = max(abs(vmin), abs(vmax))
 
-        clevs = ax_opts.get("clevs", None)
+        clevs = self.ax_opts.get("clevs", None)
         num_clevs = len(clevs) if clevs is not None else 0
 
         really_small_vals = max_val < 1e-3 or num_clevs > 10
@@ -588,7 +591,7 @@ class MatplotlibBasePlotter(BasePlotter):
                     label.set_rotation(45)
 
         # Add scientific notation if requested
-        if ax_opts["cbar_sci_notation"]:
+        if self.ax_opts["cbar_sci_notation"]:
             cbar.ax.text(
                 1.05,
                 -0.5,
@@ -598,3 +601,210 @@ class MatplotlibBasePlotter(BasePlotter):
                 ha="left",
                 fontsize=8,
             )
+
+    def plot_text(self, config, field_name, pid, level=None, data=None, *args, **kwargs):
+        """Add text to a map.
+
+        Parameters:
+            config (ConfigManager): configuration object for the plot
+            field_name (str): Name of the field
+            pid (str): Plot type identifier
+            level (int): Vertical level (optional, default=None)
+            data (Any): xarray Data for basic stats (optional)
+            *args: Additional positional arguments for customization
+            **kwargs: Additional keyword arguments for customization
+        """
+        if isinstance(self.ax, list):  # Check if ax is a list
+            for single_ax in self.ax:
+                self._plot_text(config, field_name, pid, level, data, **kwargs)
+        else:
+            self._plot_text(config, field_name, pid, level, data, **kwargs)
+
+    def _plot_text(self, config, field_name, pid, level=None, data=None, **kwargs):
+        """Add text to a single axes."""
+        font_size = None
+        title_size = None
+
+        ax = self.ax
+        if pid == 'tx':
+            ax = self.ax[0]
+            
+        # Extract properties from rc_params
+        if 'rc_params' in self.ax_opts:
+            font_size = self.ax_opts['rc_params'].get('font.size', None)
+            title_size = self.ax_opts['rc_params'].get('axes.titlesize', None)
+        else:
+            self.ax_opts['rc_params'] = {}
+        fontsize = font_size or pu.subplot_title_font_size(self.fig.subplots)
+        title_fontsize = title_size or fontsize
+        loc = kwargs.get('location', 'left')
+
+        findex = config.findex
+        sname = config.config.map_params[findex]['source_name']
+        geom = pu.get_subplot_geometry(ax) if config.compare or config.compare_diff else None
+
+        # Handle plot titles for comparison cases
+        if config.compare or config.compare_diff:
+            if geom and geom[0] == (3, 1):  # (3,1) subplot structure
+                if geom[1:] == (0, 1, 1, 1):  # Bottom plot
+                    title_string = "Difference (top - middle)"
+                elif geom[1:] in [(1, 1, 0, 1), (0, 1, 0, 1)]:  # Top/Middle plots
+                    title_string = self._set_axes_title(config, findex)
+            elif self.fig.subplots == (2, 2):  # (2,2) subplot structure
+                if geom[1:] == (0, 1, 1, 0):
+                    title_string = "Difference (left - right)"
+                elif geom[1:] == (0, 0, 1, 1):  # Extra diff plot
+                    diff_labels = {
+                        "percd": ("% Diff", "%"),
+                        "percc": ("% Change", "%"),
+                        "ratio": ("Ratio Diff", "ratio"),
+                    }
+                    diff_type = config.extra_diff_plot
+                    title_string, self.ax_opts['clabel'] = diff_labels.get(
+                        diff_type, ("Difference (left - right)", None))
+                    self.ax_opts['line_contours'] = False
+                else:  # Default case
+                    title_string = self._set_axes_title(config, findex)
+            elif geom and (geom[0] == (1, 2) or geom[0] == (1, 3)):
+                title_string = self._set_axes_title(config, findex)
+            ax.set_title(title_string, loc=loc, fontsize=title_fontsize)
+            return
+
+        # Non-comparison case
+        level_text = self._format_level_text(config, level)
+        long_name = self.get_long_name(config, data, findex)
+        if not long_name:
+            long_name = field_name
+
+        left, width = 0, 1.0
+        bottom, height = 0, 1.0
+        right = left + width
+        top = bottom + height
+        title_string = self._set_axes_title(config, findex)
+
+        if 'yz' in pid:
+            if config.print_basic_stats:
+                # plt.rc('text', usetex=True)
+                fmt = self._basic_stats(data)
+                ax.text(right, top, fmt, transform=ax.transAxes,
+                        ha='right', va='bottom', fontsize=10)
+
+            if config.use_history:
+                ax.set_title(config.history_expid + " (" + config.history_expdsc + ")")
+            else:
+                ax.set_title(title_string, loc=loc, fontsize=10)
+
+            ax.text(0.5 * (left + right), bottom + top + 0.1,
+                    long_name, fontweight='bold',
+                    fontstyle='italic',
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    fontsize=14,
+                    transform=ax.transAxes)
+
+        elif 'xy' in pid or 'sc' in pid:
+            if config.print_basic_stats:
+                fmt = self._basic_stats(data)
+                ax.text(right, top, fmt, transform=ax.transAxes,
+                        ha='right', va='bottom', fontsize=10)
+                loc = 'left'
+
+            if config.real_time and not config.print_basic_stats:
+                ax.text(right, top, config.real_time,
+                        ha='right', va='bottom', fontsize=10,
+                        transform=ax.transAxes)
+            if config.use_history:
+                ax.set_title(
+                    config.history_expid + " (" + config.history_expdsc + ")",
+                    fontsize=title_fontsize
+                )
+            else:
+                ax.set_title(title_string, loc=loc, fontsize=10)
+
+            ax.text(0.5 * (left + right), bottom + top + 0.1,
+                    long_name + level_text, 
+                    fontweight=kwargs.get('fontweight', 'bold'),
+                    fontstyle=kwargs.get('fontstyle', 'italic'),
+                    fontsize=kwargs.get('fontsize', 14),
+                    horizontalalignment=kwargs.get('ha', 'center'),
+                    verticalalignment=kwargs.get('va', 'center'),
+                    transform=ax.transAxes)
+
+        elif 'tx' in pid:
+            if config.use_history:
+                ax.set_title(
+                    config.history_expid + " (" + config.history_expdsc + ")",
+                    fontsize=10
+                )
+            else:
+                ax.set_title(
+                    title_string, loc=kwargs.get('loc', 'right'),
+                    fontsize=kwargs.get('fontsize', 10)
+                )
+
+            ax.text(0.5 * (left + right), bottom + top + 0.5,
+                    long_name,
+                    fontweight=kwargs.get('fontweight', 'bold'),
+                    fontstyle=kwargs.get('fontstyle', 'normal'),
+                    fontsize=kwargs.get('fontsize', 12),
+                    horizontalalignment=kwargs.get('ha', 'center'),
+                    verticalalignment=kwargs.get('va', 'center'),
+                    transform=ax.transAxes)
+        elif 'po' in pid:
+            pass
+        elif 'corr' in pid:
+            ax.text(0.5 * (left + right), bottom + top + 0.1,
+                    long_name + level_text, 
+                    fontweight=kwargs.get('fontweight', 'bold'),
+                    fontstyle=kwargs.get('fontstyle', 'italic'),
+                    fontsize=kwargs.get('fontsize', 12),
+                    horizontalalignment=kwargs.get('ha', 'center'),
+                    verticalalignment=kwargs.get('va', 'center'),
+                    transform=ax.transAxes)
+        else:  # 'xt' and others
+            if config.use_history:
+                ax.set_title(config.history_expid + " (" + config.history_expdsc + ")")
+            else:
+                ax.set_title(title_string, loc=loc, fontsize=10)
+
+            ax.text(0.5 * (left + right), bottom + top + 0.1,
+                    long_name,
+                    fontweight=kwargs.get('fontweight', 'bold'),
+                    fontstyle=kwargs.get('fontstyle', 'italic'),
+                    fontsize=fontsize,
+                    horizontalalignment=kwargs.get('ha', 'center'),
+                    verticalalignment=kwargs.get('va', 'center'),
+                    transform=ax.transAxes)
+        
+    def _set_axes_title(self, config, findex):
+        if config.overlay:
+            return None
+        if config.get_file_description(findex):
+            return config.get_file_description(findex)
+        elif config.get_file_exp_name(findex):
+            return config.get_file_exp_name(findex)
+        elif config.get_file_exp_id(findex):
+            return config.get_file_exp_id(findex)
+        else:
+            if self.ax_opts['custom_title']:
+                return self.ax_opts['custom_title']
+        return None
+        
+    @staticmethod
+    def _basic_stats(data):
+        """ Basic stats for a given field """
+        # datamin = data.min().values
+        # datamax = data.max().values
+        datamean = data.mean().values
+        datastd = data.std().values
+        return f"\nMean:{datamean:.2e}\nStd:{datastd:.2e}"
+
+    def _format_level_text(self, config, level):
+        """Format level annotation text based on level value."""
+        if self.ax_opts.get('zave'):
+            return ' (Column Mean)'
+        if self.ax_opts.get('zsum'):
+            return ' (Total Column)'
+        if level is None or str(level) == '0':
+            return ''
+        return f"@ {level} {'Pa' if level > 10000 else 'mb'}"

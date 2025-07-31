@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import logging
 import matplotlib.pyplot as plt
+import eviz.lib.autoviz.utils as pu
+
 from .base import MatplotlibBasePlotter
 
 
@@ -40,7 +42,7 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
                                     data, 
                                     findex)
         self.fig = fig
-        ax_opts = config.ax_opts
+        self.ax_opts = config.ax_opts
         df = data
 
         if not config.compare and not config.compare_diff and not config.overlay:
@@ -50,14 +52,14 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
         axes_shape = fig.subplots
         
         if axes_shape == (3, 1):
-            if ax_opts['is_diff_field']:
+            if self.ax_opts['is_diff_field']:
                 self.ax = ax_temp[2]
             else:
                 self.ax = ax_temp[config.axindex]
         elif axes_shape == (2, 2):
-            if ax_opts['is_diff_field']:
+            if self.ax_opts['is_diff_field']:
                 self.ax = ax_temp[2]
-                if config.ax_opts['add_extra_field_type']:
+                if self.ax_opts['add_extra_field_type']:
                     self.ax = ax_temp[3]
             else:
                 self.ax = ax_temp[config.axindex]
@@ -69,10 +71,10 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
         else:
             self.ax = ax_temp[0]
 
-        ax_opts = fig.update_ax_opts(field_name, self.ax, 'box', level=0)
-        fig.plot_text(field_name, self.ax, 'box', data=df)
+        self.ax_opts = fig.update_ax_opts(field_name, self.ax, 'box', level=0)
+        self.plot_text(config, field_name, 'box', data=df)
         
-        self._plot_box_data(config, self.ax, ax_opts, fig, df, field_name, findex)
+        self._plot_box_data(config, fig, df, field_name, findex)
         
         # Handle title for comparison plots
         if config.compare_diff:
@@ -92,12 +94,14 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
                             fontsize=self._image_font_size(fig.subplots))
             
             if config.add_logo:
-                self._add_logo_ax(fig, desired_width_ratio=0.05)
+                pu.add_logo_ax(fig, desired_width_ratio=0.05)
                 
         return fig
     
-    def _plot_box_data(self, config, ax, ax_opts, fig, df, field_name, findex):
-        """Helper method that plots the box plot data."""        
+    def _plot_box_data(self, config, fig, df, field_name, findex):
+        """Helper method that plots the box plot data."""
+        ax = self.ax
+        ax_opts = self.ax_opts
         with mpl.rc_context(rc=ax_opts.get('rc_params', {})):
             title = field_name
             if hasattr(config, 'spec_data') and \
@@ -130,7 +134,7 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
                             break
 
                 if not color_settings:
-                    color_settings = config.ax_opts.get('color_cycle', plt.rcParams['axes.prop_cycle'].by_key()['color'])
+                    color_settings = ax_opts.get('color_cycle', plt.rcParams['axes.prop_cycle'].by_key()['color'])
                 elif isinstance(color_settings, str):
                     color_settings = [color_settings]
                 self.logger.debug(f"Using color settings: {color_settings}")

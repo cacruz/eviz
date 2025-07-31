@@ -36,12 +36,11 @@ class MatplotlibTXPlotter(MatplotlibBasePlotter):
                                     field_name, 
                                     data2d, 
                                     findex)
-        self.fig = fig
-        
-        ax_opts = config.ax_opts
+        self.fig = fig        
+        self.ax_opts = config.ax_opts
         
         # Create a special gridspec layout for Hovmoller plots
-        with mpl.rc_context(rc=ax_opts.get('rc_params', {})):
+        with mpl.rc_context(rc=self.ax_opts.get('rc_params', {})):
             # IMPORTANT: Create a new figure instead of using the provided one
             # This is critical for Hovmoller plots which need a specific layout
             
@@ -49,24 +48,24 @@ class MatplotlibTXPlotter(MatplotlibBasePlotter):
             gs = mgridspec.GridSpec(nrows=2, ncols=1, height_ratios=[1, 6], hspace=0.05)
             
             # Create two axes - one for the map, one for the hovmoller
-            ax = [fig.add_subplot(gs[0, 0],
+            self.ax = [fig.add_subplot(gs[0, 0],
                                   projection=ccrs.PlateCarree(central_longitude=180)),
                   fig.add_subplot(gs[1, 0])]
             fig.set_size_inches(12, 10, forward=True)
 
-            ax_opts = fig.update_ax_opts(field_name, ax, 'tx')
+            self.ax_opts = fig.update_ax_opts(field_name, self.ax, 'tx')
             
             dmin = data2d.min(skipna=True).values
             dmax = data2d.max(skipna=True).values
             self.logger.debug(f"Field: {field_name}; Min:{dmin}; Max:{dmax}")
             
-            self._create_clevs(field_name, ax_opts, data2d)
+            self._create_clevs(field_name, data2d)
             
             extend_value = "both"
-            if ax_opts['clevs'][0] == 0:
+            if self.ax_opts['clevs'][0] == 0:
                 extend_value = "max"
             
-            norm = colors.BoundaryNorm(ax_opts['clevs'], ncolors=256, clip=False)
+            norm = colors.BoundaryNorm(self.ax_opts['clevs'], ncolors=256, clip=False)
             
             vtimes = self._get_time_coordinates(data2d)
             vtimes = self.ensure_mpl_compatible_times(vtimes)
@@ -77,36 +76,38 @@ class MatplotlibTXPlotter(MatplotlibBasePlotter):
             data2d_reduced = self._process_data_for_hovmoller(data2d, vtimes, lons)
             
             # Set up the map in the top panel
-            self._setup_map_panel(ax[0])            
-            fig.plot_text(field_name=field_name, ax=ax[0], pid='tx', data=data2d, fontsize=8, loc='left')
+            self._setup_map_panel(self.ax[0])            
+            self.plot_text(config, field_name=field_name, pid='tx', data=data2d, fontsize=8, loc='left')
             
-            if ax_opts.get('torder', False):
-                ax[1].invert_yaxis()  # Reverse the time order
+            if self.ax_opts.get('torder', False):
+                self.ax[1].invert_yaxis()  # Reverse the time order
             
             try:
-                cfilled = ax[1].contourf(lons, vtimes, data2d_reduced, ax_opts['clevs'],
+                cfilled = self.ax[1].contourf(lons, vtimes, data2d_reduced, 
+                                        self.ax_opts['clevs'],
                                         norm=norm,
-                                        cmap=ax_opts['use_cmap'], extend=extend_value)
+                                        cmap=self.ax_opts['use_cmap'], 
+                                        extend=extend_value)
             except Exception as e:
                 self.logger.error(f"Error creating contour plot: {e}")
                 try:
                     self.logger.info("Falling back to pcolormesh")
                     lon_mesh, time_mesh = np.meshgrid(lons, vtimes)
-                    cfilled = ax[1].pcolormesh(lon_mesh, time_mesh, data2d_reduced,
-                                            norm=norm, cmap=ax_opts['use_cmap'])
+                    cfilled = self.ax[1].pcolormesh(lon_mesh, time_mesh, data2d_reduced,
+                                            norm=norm, cmap=self.ax_opts['use_cmap'])
                 except Exception as e2:
                     self.logger.error(f"Error creating pcolormesh plot: {e2}")
                     # just show something
-                    cfilled = ax[1].imshow(data2d_reduced, aspect='auto', origin='lower',
-                                        norm=norm, cmap=ax_opts['use_cmap'])
+                    cfilled = self.ax[1].imshow(data2d_reduced, aspect='auto', origin='lower',
+                                        norm=norm, cmap=self.ax_opts['use_cmap'])
             
-            ax[1].set_xlabel("Longitude")
-            ax[1].set_ylabel("Time")
-            ax[1].grid(linestyle='dotted', linewidth=0.5)
+            self.ax[1].set_xlabel("Longitude")
+            self.ax[1].set_ylabel("Time")
+            self.ax[1].grid(linestyle='dotted', linewidth=0.5)
             
             try:
-                if ax_opts.get('line_contours', False):
-                    self.line_contours(fig, ax[1], ax_opts, lons, vtimes, data2d_reduced)
+                if self.ax_opts.get('line_contours', False):
+                    self.line_contours(fig, self.ax[1], lons, vtimes, data2d_reduced)
             except Exception as e:
                 self.logger.error(f"Error adding contour lines: {e}")
             
@@ -115,18 +116,18 @@ class MatplotlibTXPlotter(MatplotlibBasePlotter):
             
             cbar.set_label(self.units)
             
-            self._set_longitude_ticks(ax[1], lons)
+            self._set_longitude_ticks(self.ax[1], lons)
             
-            y_labels = ax[1].get_yticklabels()
+            y_labels = self.ax[1].get_yticklabels()
             if len(y_labels) > 0:
                 y_labels[0].set_visible(False)  # hide first label
             for i, label in enumerate(y_labels):
                 label.set_rotation(45)
                 label.set_ha('right')
             
-            if ax_opts.get('add_grid', False):
+            if self.ax_opts.get('add_grid', False):
                 kwargs = {'linestyle': '-', 'linewidth': 2}
-                ax[1].grid(**kwargs)
+                self.ax[1].grid(**kwargs)
             
             fig.tight_layout()
                 

@@ -28,6 +28,8 @@ def apply_conversion(config, data2d, name):
     For comparison plots, we rely on the "target" units specified in the specs file and the unit
     conversion is provided by the Units conversion module.
     """
+    d_temp = data2d.copy()
+
     # Check if spec_data exists and contains the field name
     if not hasattr(config, 'spec_data') or config.spec_data is None:
         logger.warning(f"No spec_data found in config for {name}")
@@ -65,6 +67,7 @@ def apply_conversion(config, data2d, name):
         msg = f"No units found for {name}. Will use the given 'dataset' units."
         logger.debug(msg)
 
+    data2d.attrs = d_temp.attrs.copy()
     return data2d
 
 
@@ -91,7 +94,7 @@ def apply_mean(config, d, level=None):
             d = d.mean(dim=config.get_model_dim_name('xc'))
             data2d = d.mean(dim=config.get_model_dim_name('tc'))
 
-    data2d.attrs = d.attrs.copy()  # retain units
+    data2d.attrs = d.attrs.copy()  # retain attributes
     return data2d.squeeze()
 
 def apply_zsum(config, data3d, name):
