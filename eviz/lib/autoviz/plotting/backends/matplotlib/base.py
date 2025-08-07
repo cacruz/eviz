@@ -681,7 +681,6 @@ class MatplotlibBasePlotter(BasePlotter):
         right = left + width
         top = bottom + height
         title_string = self._set_axes_title(config, findex)
-
         if 'yz' in pid:
             if config.print_basic_stats:
                 # plt.rc('text', usetex=True)
@@ -767,6 +766,9 @@ class MatplotlibBasePlotter(BasePlotter):
             else:
                 ax.set_title(title_string, loc=loc, fontsize=10)
 
+            if self.ax_opts['custom_title']:
+                long_name = self.ax_opts['custom_title']
+
             ax.text(0.5 * (left + right), bottom + top + 0.1,
                     long_name,
                     fontweight=kwargs.get('fontweight', 'bold'),
@@ -785,9 +787,7 @@ class MatplotlibBasePlotter(BasePlotter):
             return config.get_file_exp_name(findex)
         elif config.get_file_exp_id(findex):
             return config.get_file_exp_id(findex)
-        else:
-            if self.ax_opts['custom_title']:
-                return self.ax_opts['custom_title']
+
         return None
         
     @staticmethod
