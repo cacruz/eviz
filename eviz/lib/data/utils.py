@@ -452,3 +452,12 @@ def is_full_year(start_date, end_date):
             and start_date.astype(datetime).month == 1
             and start_date.astype(datetime).day == 1
     )
+
+
+def subset_region(data: xr.DataArray, extent: list) -> xr.DataArray:
+    lon_min, lon_max, lat_min, lat_max = extent
+    if data.lat[0] > data.lat[-1]:
+        lat_slice = slice(lat_max, lat_min)
+    else:
+        lat_slice = slice(lat_min, lat_max)
+    return data.sel(lon=slice(lon_min, lon_max), lat=lat_slice)

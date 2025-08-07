@@ -343,73 +343,67 @@ class Figure(mfigure.Figure):
         # Call the parent method or use plt.show() if needed
         plt.figure(self.number)  # Make sure this figure is active
         plt.show(*args, **kwargs)
-        
+
     def _get_projection(self, projection=None) -> Optional[ccrs.Projection]:
         """Get projection parameter."""
-        # Default values for extent and central coordinates
-        extent = [-180, 180, -90, 90]  # global default
+        # Default extent and central coordinates
+        extent = [-180, 180, -90, 90]
         central_lon = 0.0
         central_lat = 0.0
-        # Try to get extent from _ax_opts
-        if 'extent' in self._ax_opts:
-            if self._ax_opts['extent'.lower()] == 'conus':
+
+        # Get extent from _ax_opts if available
+        extent_key = next((k for k in self._ax_opts if k.lower() == 'extent'), None)
+
+        if extent_key:
+            val = self._ax_opts[extent_key]
+            if isinstance(val, str) and val.lower() == 'conus':
                 extent = [-120, -70, 24, 50.5]
-            else:
-                extent = self._ax_opts['extent']
-            # Calculate central coordinates from extent if not provided
+            elif isinstance(val, (list, tuple)) and len(val) == 4:
+                extent = list(val)
+
+            # Compute central coordinates
             central_lon = np.mean(extent[:2])
             central_lat = np.mean(extent[2:])
-
-        # Try to get extent from config_manager.ax_opts
-        if hasattr(self.config_manager, 'ax_opts') and self.config_manager.ax_opts:
-            if 'extent' in self.config_manager.ax_opts:
-                extent = self.config_manager.ax_opts['extent']
-            if 'central_lon' in self.config_manager.ax_opts:
-                central_lon = self.config_manager.ax_opts['central_lon']
-            if 'central_lat' in self.config_manager.ax_opts:
-                central_lat = self.config_manager.ax_opts['central_lat']
 
         if projection is None:
             self._ax_opts['extent'] = extent
             self._projection = ccrs.PlateCarree()
-            return ccrs.PlateCarree()
-        
+            return self._projection
+
+        # Safe default for standard_parallels
+        def valid_std_parallels(ext):
+            lat_min, lat_max = ext[2], ext[3]
+            if abs(lat_min + lat_max) > 1e-6:  # avoid lat_1 + lat_2 == 0
+                return (lat_min, lat_max)
+            return (33, 45)  # reasonable fallback (e.g., CONUS)
+
+        std_parallels = valid_std_parallels(extent)
+
         options = {
-            'mercator': ccrs.Mercator(
-                central_longitude=central_lon,
-            ),
-            'robinson': ccrs.Robinson(
-                central_longitude=central_lon,
-            ),
+            'mercator': ccrs.Mercator(central_longitude=central_lon),
+            'robinson': ccrs.Robinson(central_longitude=central_lon),
             'orthographic': ccrs.Orthographic(
-                central_longitude=central_lon,
-                central_latitude=central_lat,
-            ),
-            'mollweide': ccrs.Mollweide(
-                central_longitude=central_lon,
-            ),
+                central_longitude=central_lon, central_latitude=central_lat),
+            'mollweide': ccrs.Mollweide(central_longitude=central_lon),
             'lambert': ccrs.LambertConformal(
                 central_longitude=central_lon,
                 central_latitude=central_lat,
-                standard_parallels=(extent[2], extent[3])
-            ),
+                standard_parallels=std_parallels),
             'albers': ccrs.AlbersEqualArea(
                 central_longitude=central_lon,
                 central_latitude=central_lat,
-                standard_parallels=(extent[2], extent[3])
-            ),
+                standard_parallels=std_parallels),
             'stereo': ccrs.Stereographic(
                 central_latitude=central_lat,
-                central_longitude=central_lon
-            ),
+                central_longitude=central_lon),
             'ortho': ccrs.Orthographic(
                 central_latitude=central_lat,
-                central_longitude=central_lon
-            ),
+                central_longitude=central_lon),
             'polar': ccrs.NorthPolarStereo(central_longitude=central_lon),
         }
+
         self._ax_opts['extent'] = extent
-        self._projection = options.get(projection)
+        self._projection = options.get(projection.lower())
 
         return self._projection
 
@@ -461,6 +455,7 @@ class Figure(mfigure.Figure):
             'add_tropp_height': False,
             'torder': None,
             'add_trend': False,
+            'extent': None,
             'projection': None,
             'num_clevs': 10,
             'time_lev': 0,
@@ -708,6 +703,10 @@ class Figure(mfigure.Figure):
         return self._use_cartopy
 
     @property
+    def map_extent(self):
+        return self._ax_opts['extent']
+
+    @property
     def ax_opts(self):
         """Access to the axis options."""
         if not hasattr(self, '_ax_opts'):
@@ -873,8 +872,8 @@ class Figure(mfigure.Figure):
             'extent': None,
             'aspect_ratio': None
         }
-        
-        if (config_manager.spec_data and 
+
+        if (config_manager.spec_data and
             field_name in config_manager.spec_data):
             
             field_spec = config_manager.spec_data[field_name]
