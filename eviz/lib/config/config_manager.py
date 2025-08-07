@@ -675,6 +675,11 @@ class ConfigManager:
         return self.input_config.use_sphum_conv
 
     @property
+    def filename_id(self):
+        """Access to the filename identifier."""
+        return self.output_config.filename_id
+
+    @property
     def add_logo(self):
         """Flag indicating if a logo should be added to plots."""
         return self.output_config.add_logo

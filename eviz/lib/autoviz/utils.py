@@ -282,7 +282,10 @@ def print_map(config: "ConfigManager",
             else:
                 exp_id_suf = f"_{findex}_{time_level}."
         # else: exp_id_suf remains "."
-
+        # ...but if a filename_id is given, use it
+        if config.filename_id:
+            exp_id_suf = f"_{config.filename_id}."
+            
         # Add plot type to filename to make it unique for each field and plot type
         if 'xy' in plot_type:
             fname = f"{field_name}_xy{levstr}{exp_id_suf}"  # Added _xy to ensure uniqueness
