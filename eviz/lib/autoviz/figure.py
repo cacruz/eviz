@@ -350,6 +350,15 @@ class Figure(mfigure.Figure):
         extent = [-180, 180, -90, 90]  # global default
         central_lon = 0.0
         central_lat = 0.0
+        # Try to get extent from _ax_opts
+        if 'extent' in self._ax_opts:
+            if self._ax_opts['extent'.lower()] == 'conus':
+                extent = [-120, -70, 24, 50.5]
+            else:
+                extent = self._ax_opts['extent']
+            # Calculate central coordinates from extent if not provided
+            central_lon = np.mean(extent[:2])
+            central_lat = np.mean(extent[2:])
 
         # Try to get extent from config_manager.ax_opts
         if hasattr(self.config_manager, 'ax_opts') and self.config_manager.ax_opts:
@@ -359,15 +368,6 @@ class Figure(mfigure.Figure):
                 central_lon = self.config_manager.ax_opts['central_lon']
             if 'central_lat' in self.config_manager.ax_opts:
                 central_lat = self.config_manager.ax_opts['central_lat']
-        # Also check in _ax_opts
-        elif 'extent' in self._ax_opts:
-            if self._ax_opts['extent'.lower()] == 'conus':
-                extent = [-120, -70, 24, 50.5]
-            else:
-                extent = self._ax_opts['extent']
-            # Calculate central coordinates from extent if not provided
-            central_lon = np.mean(extent[:2])
-            central_lat = np.mean(extent[2:])
 
         if projection is None:
             self._ax_opts['extent'] = extent
@@ -581,19 +581,23 @@ class Figure(mfigure.Figure):
         # Optionally, update rc_params if new ones are found in the spec
         plot_type = "polar" if self.plot_type.startswith("po") else self.plot_type[:2]
         self.config_manager.spec_data.get(field_name, {}).get(f"{plot_type}plot", {})
-
         return self._ax_opts
     
     def _update_single_plot(self, field_name, pid, level):
         """Update axes options for single subplot case."""
         plot_type_map = {
-            'yz': 'yzplot', 'yzave': 'yzaveplot', 'xy': 'xyplot',
-            'xyave': 'xyaveplot', 'tx': 'txplot', 'polar': 'polarplot'
+            'yz': 'yzplot', 'yzave': 'yzaveplot', 'xy': 'xyplot', 'xt': 'xtplot',
+            'tx': 'txplot', 'polar': 'polarplot', 'box': 'boxplot', 'corr': 'corrplot',
         }
         plot_key = plot_type_map.get(pid, None)
-        if plot_key:
+        if plot_key in ['xyplot', 'yzplot', 'txplot', 'polarplot']:
             self._set_clevs(field_name, plot_key,
                             level if isinstance(level, int) else "contours")
+
+        # Update options at the field (not plot) level
+        opts = {k: v for k, v in self.config_manager.spec_data[field_name].items() if not isinstance(v, dict)}
+        self._ax_opts.update(opts)
+
         return self._ax_opts
 
     def _set_clevs(self, field_name, ptype, ctype):
