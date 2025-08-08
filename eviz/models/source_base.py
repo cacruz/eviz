@@ -1429,6 +1429,7 @@ class GenericSource(BaseSource):
             spec = self.config_manager.spec_data[data_array.name]
             if 'xtplot' in spec and 'mean_type' in spec['xtplot']:
                 mean_type = spec['xtplot']['mean_type']
+
                 self.logger.info(f"Averaging method: {mean_type}")
 
                 if mean_type == 'point_sel':
@@ -1456,12 +1457,8 @@ class GenericSource(BaseSource):
                         x2 = spec['xtplot']['area_sel'][1]
                         y1 = spec['xtplot']['area_sel'][2]
                         y2 = spec['xtplot']['area_sel'][3]
-
                         if xc_dim in data2d.coords and yc_dim in data2d.coords:
-                            data2d = data2d.sel({
-                                xc_dim: slice(x1, x2),
-                                yc_dim: slice(y1, y2)
-                            })
+                            data2d = subset_region(data2d, [x1, x2, y1, y2])
 
                             if xc_dim in data2d.dims and yc_dim in data2d.dims:
                                 data2d = data2d.mean(dim=(xc_dim, yc_dim))
