@@ -65,7 +65,7 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
 
         self.ax_opts = fig.update_ax_opts(field_name, self.ax, 'xy', level=config.level)
         self.plot_text(config, field_name=field_name, pid='xy', level=config.level, data=data2d)
-        self._plot_xy_data(config, data2d, x, y, field_name, fig, plot_type, findex)
+        self._plot_xy_data(config, data2d, x, y, field_name, fig, findex)
         
         # Add shared colorbar if enabled
         if config.compare and config.shared_cbar:
@@ -73,7 +73,7 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
         
         return fig
 
-    def _plot_xy_data(self, config, data2d, x, y, field_name, fig, plot_type, findex):
+    def _plot_xy_data(self, config, data2d, x, y, field_name, fig, findex):
         """Helper function to plot XY data on a single axes."""
         ax = self.ax
         ax_opts = self.ax_opts
@@ -93,6 +93,7 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
 
             vmin, vmax = None, None
             if config.compare or not config.compare_diff:
+            # if config.compare or config.compare_diff:
                 # Check if we've stored limits for this field in the config
                 if not hasattr(config, '_comparison_cbar_limits'):
                     config._comparison_cbar_limits = {}
@@ -106,10 +107,7 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
             if fig.use_cartopy and is_cartopy_axis:
                 cfilled = self.filled_contours(config, field_name, ax, x, y, data2d, 
                                             vmin=vmin, vmax=vmax, transform=data_transform)
-                if 'extent' in ax_opts:
-                    self.set_cartopy_ticks(ax, ax_opts['extent'])
-                else:
-                    self.set_cartopy_ticks(ax, [-180, 180, -90, 90])
+                self.set_cartopy_ticks(ax, ax_opts['extent'])
             else:
                 cfilled = self.filled_contours(config, field_name, ax, x, y, data2d,
                                             vmin=vmin, vmax=vmax)
@@ -118,11 +116,14 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
                 self.set_const_colorbar(cfilled, fig, ax)
             else:
                 # Store colorbar limits for the first plot in a comparison
-                if (config.compare or not config.compare_diff) and config.axindex == 0:
+                if config.compare and config.axindex == 0:
+                # if (config.compare or config.compare_diff) and config.axindex == 0:
                     vmin, vmax = cfilled.get_clim()
                     config._comparison_cbar_limits[field_name] = (vmin, vmax)
                     self.logger.debug(f"Setting comparison colorbar limits for {field_name}: {vmin} to {vmax}")
-                
+                elif not config.compare_diff and config.axindex == 0:
+                    pass
+
                 # Suppress individual colorbars if shared_bar is enabled
                 if config.shared_cbar:
                     ax_opts['suppress_colorbar'] = True
