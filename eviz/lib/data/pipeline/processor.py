@@ -257,11 +257,51 @@ class DataProcessor:
             return None
 
         dataset = self._standardize_coordinates(dataset, model_name)
+        dataset = self._normalize_longitude(dataset)
         dataset = self._handle_missing_values(dataset)
         dataset = self._apply_unit_conversions(dataset)
 
         return dataset
 
+    def _normalize_longitude(self, data, target='-180_180', lon_name='lon'):
+        """
+        Normalize longitude coordinates in an xarray Dataset or DataArray.
+
+        Parameters:
+            data: xr.Dataset or xr.DataArray
+            target: str, either '-180_180' or '0_360'
+            lon_name: str, name of longitude dimension (default 'lon')
+
+        Returns:
+            xr.Dataset or xr.DataArray with normalized longitudes
+        """
+        if lon_name not in data.coords:
+            raise ValueError(f"Longitude coordinate '{lon_name}' not found.")
+
+        lon = data[lon_name]
+        lon_vals = lon.values
+
+        # Determine current convention
+        is_0360 = np.all((lon_vals >= 0) & (lon_vals <= 360))
+        is_m180_180 = np.any(lon_vals < 0)
+
+        # No change needed
+        if (target == '0_360' and is_0360) or (target == '-180_180' and is_m180_180):
+            return data
+
+        # Apply normalization
+        if target == '-180_180':
+            lon_new = ((lon_vals + 180) % 360) - 180
+        elif target == '0_360':
+            lon_new = lon_vals % 360
+        else:
+            raise ValueError("target must be '-180_180' or '0_360'")
+
+        # Assign and sort longitudes
+        data = data.assign_coords({lon_name: lon_new})
+        data = data.sortby(lon_name)
+
+        return data
 
     def _extract_metadata(self, dataset: xr.Dataset, data_source: DataSource) -> None:
         """Extract metadata from the dataset and store it in the data source.

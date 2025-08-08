@@ -814,6 +814,15 @@ class Units:
                 'F': lambda d: k_to_f(d),
                 'C': lambda d: k_to_c(d),
             },
+            # degC and degK is unusual notation used in NCEP reanalysis:
+            'degK': {
+                'F': lambda d: k_to_f(d),
+                'C': lambda d: k_to_c(d),
+            },
+            'degC': {
+                'F': lambda d: c_to_f(d),
+                'K': lambda d: c_to_k(d),
+            },
         }
 
         if from_unit not in conversion_functions or to_unit not in conversion_functions[

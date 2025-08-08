@@ -93,9 +93,9 @@ class MatplotlibXTPlotter(MatplotlibBasePlotter):
             fig.suptitle_eviz(title_text, 
                             fontweight='bold', fontstyle='italic',
                             fontsize=self._image_font_size(fig.subplots))
-            
-            if config.add_logo:
-                pu.add_logo_ax(fig, desired_width_ratio=0.05)
+
+        if config.add_logo:
+            pu.add_logo_ax(fig, desired_width_ratio=0.05)
         
         self.plot_object = fig
         

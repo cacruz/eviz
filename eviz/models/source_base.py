@@ -14,7 +14,7 @@ import eviz.lib.autoviz.utils as pu
 from eviz.lib.config.config_manager import ConfigManager
 from eviz.lib.data import DataSource
 from eviz.models.base import BaseSource
-from eviz.lib.data.utils import apply_conversion, apply_mean, apply_zsum
+from eviz.lib.data.utils import apply_conversion, apply_mean, apply_zsum, subset_region
 
 
 logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
@@ -398,6 +398,11 @@ class GenericSource(BaseSource):
                     self.logger.info(f"Extent: {self.config_manager.ax_opts['extent']} ")
                     return data2d, xs, ys, field_name, plot_type, file_index, figure
             else:
+                if figure.ax_opts['extent']:
+                    extent = figure.ax_opts['extent']
+                    if extent == 'conus':
+                        extent = [-120, -70, 24, 50.5]
+                    data2d = subset_region(data2d, extent)
                 x = data2d[dim1_name].values if dim1_name in data2d.coords else None
                 y = data2d[dim2_name].values if dim2_name in data2d.coords else None
 
@@ -1424,6 +1429,7 @@ class GenericSource(BaseSource):
             spec = self.config_manager.spec_data[data_array.name]
             if 'xtplot' in spec and 'mean_type' in spec['xtplot']:
                 mean_type = spec['xtplot']['mean_type']
+
                 self.logger.info(f"Averaging method: {mean_type}")
 
                 if mean_type == 'point_sel':
@@ -1451,12 +1457,8 @@ class GenericSource(BaseSource):
                         x2 = spec['xtplot']['area_sel'][1]
                         y1 = spec['xtplot']['area_sel'][2]
                         y2 = spec['xtplot']['area_sel'][3]
-
                         if xc_dim in data2d.coords and yc_dim in data2d.coords:
-                            data2d = data2d.sel({
-                                xc_dim: slice(x1, x2),
-                                yc_dim: slice(y1, y2)
-                            })
+                            data2d = subset_region(data2d, [x1, x2, y1, y2])
 
                             if xc_dim in data2d.dims and yc_dim in data2d.dims:
                                 data2d = data2d.mean(dim=(xc_dim, yc_dim))
