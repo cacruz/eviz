@@ -73,43 +73,48 @@ def apply_conversion(config, data2d, name):
 
 def apply_mean(config, d, level=None):
     """ Compute various averages over coordinates """
+    d_temp = d.copy()
     if level:
         if level == 'all':
-            data2d = d.mean(dim=config.get_model_dim_name('zc'))
+            data2d = d_temp.mean(dim=config.get_model_dim_name('zc'))
         else:
-            if len(d.dims) == 3:
-                data2d = d.mean(dim=config.get_model_dim_name('tc'))
+            if len(d_temp.dims) == 3:
+                data2d = d_temp.mean(dim=config.get_model_dim_name('tc'))
             else:  # 4D array - we need to select a level
                 lev_to_plot = int(
-                    np.where(d.coords[config.get_model_dim_name('zc')].values == level)[
+                    np.where(d_temp.coords[config.get_model_dim_name('zc')].values == level)[
                         0])
                 logger.debug("Level to plot:" + str(lev_to_plot))
                 # select level
-                data2d = d.isel(lev=lev_to_plot)
+                data2d = d_temp.isel(lev=lev_to_plot)
                 data2d = data2d.mean(dim=config.get_model_dim_name('tc'))
     else:
-        if len(d.dims) == 3:
-            data2d = d.mean(dim=config.get_model_dim_name('tc'))
+        if len(d_temp.dims) == 3:
+            data2d = d_temp.mean(dim=config.get_model_dim_name('tc'))
         else:
-            d = d.mean(dim=config.get_model_dim_name('xc'))
-            data2d = d.mean(dim=config.get_model_dim_name('tc'))
+            d_temp = d_temp.mean(dim=config.get_model_dim_name('xc'))
+            data2d = d_temp.mean(dim=config.get_model_dim_name('tc'))
 
     data2d.attrs = d.attrs.copy()  # retain attributes
-    return data2d.squeeze()
+    return apply_conversion(config, data2d, data2d.name)
+
 
 def apply_zsum(config, data3d, name):
     """ Sum over vertical levels (column sum)"""
+    d_temp = data3d.copy()
     try:
         is_chem = hasattr(config, 'species_db') and name in config.species_db
-        if is_chem:
-            data2d_zsum = config.units.convert_chem(data3d, name, config.spec_data[name]['units'])
+        if is_chem and 'units' in config.spec_data[name] and 'unitconversion' not in config.spec_data[name]:
+                data2d_zsum = config.units.convert_chem(d_temp, name, config.spec_data[name]['units'])
+                data2d_zsum.attrs = data3d.attrs.copy()
+                return data2d_zsum
         else:
-            data2d_zsum = data3d.sum(dim='lev')
+            data2d_zsum = d_temp.sum(dim='lev')
     except:
         logger.error(f"Could not apply zsum for {name}")
         return None
-    data2d_zsum.attrs = data2d_zsum.attrs.copy()
-    return data2d_zsum.squeeze()
+    data2d_zsum.attrs = data3d.attrs.copy()
+    return apply_conversion(config, data2d_zsum, data2d_zsum.name)
 
 
 def grid_cell_areas(lon1d, lat1d, radius=constants.R_EARTH_M):
