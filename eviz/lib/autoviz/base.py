@@ -9,14 +9,16 @@ from dataclasses import dataclass, field
 from eviz.lib.config.config import Config
 from eviz.lib.config.config_manager import ConfigManager
 from eviz.lib.config.configuration_adapter import ConfigurationAdapter
+# New architecture imports
+from eviz.lib.models.factory import DataSourceFactory
+
+# Model-specific factories remain in legacy location
 from eviz.models.source_factory import (AirnowFactory, 
                                         CrestFactory, 
                                         GhgFactory, 
                                         GribFactory, 
-                                        GriddedSourceFactory,
                                         WrfFactory,
                                         LisFactory,
-                                        ObsSourceFactory,
                                         MopittFactory,
                                         LandsatFactory,
                                         OmiFactory,
@@ -106,29 +108,29 @@ def get_factory_from_user_input(inputs) -> list:
     the EVIZ_CONFIG_PATH directory structure.
     
     Supported sources include:
-    - 'test': GriddedSourceFactory (for unit tests)
-    - 'gridded': GriddedSourceFactory (for generic NetCDF data)
-    - 'geos': GriddedSourceFactory (for MERRA data)
-    - 'ccm', 'cf': GriddedSourceFactory (for special streams)
-    - 'crest' : GriddedSourceFactory (temporary)
+    - 'test': DataSourceFactory (for unit tests)
+    - 'gridded': DataSourceFactory (for generic NetCDF data)
+    - 'geos': DataSourceFactory (for MERRA data)
+    - 'ccm', 'cf': DataSourceFactory (for special streams)
+    - 'crest' : CrestFactory (for CREST data)
     - 'lis': LisFactory (for Land Information System data)
     - 'wrf': WrfFactory (for Weather Research and Forecasting model data)
     - 'grib': GribFactory (for GRIB data)
-    - 'airnow': ObsSourceFactory (for AirNow CSV data)
-    - 'ghg': ObsSourceFactory (for GHG inventories, e.g. NOAA GML)
+    - 'airnow': AirnowFactory (for AirNow CSV data)
+    - 'ghg': GhgFactory (for GHG inventories, e.g. NOAA GML)
     - 'fluxnet': FluxnetFactory (for FluxNet CSV data)
     - 'omi': OmiFactory (for OMI HDF5 data)
     - 'mopitt': MopittFactory (for MOPITT HDF5 data)
     - 'landsat': LandsatFactory (for Landsat HDF4 data)
     """
     mappings = {
-        "test": GriddedSourceFactory(),    # for unit tests
-        "gridded": GriddedSourceFactory(), # default for all gridded data such as NetCDF
-        "geos": GriddedSourceFactory(),    # special alias for GEOS datasets such as MERRA
-        "ccm": GriddedSourceFactory(),     # special alias for GEOS datasets CCM
-        "cf": GriddedSourceFactory(),      # and CF
+        "test": DataSourceFactory(),       # for unit tests
+        "gridded": DataSourceFactory(),    # default for all gridded data such as NetCDF
+        "geos": DataSourceFactory(),       # special alias for GEOS datasets such as MERRA
+        "ccm": DataSourceFactory(),        # special alias for GEOS datasets CCM
+        "cf": DataSourceFactory(),         # and CF
         "crest": CrestFactory(),           # and CREST
-        "obs": ObsSourceFactory(),         # for all observation data such
+        "obs": DataSourceFactory(),        # for all observation data such
         "lis": LisFactory(),               # LIS and WRF are gridded but require special
         "wrf": WrfFactory(),               # "treatment" due to the "regional" nature of the data
         "grib": GribFactory(),             #  Grib data sources like ERA5, GFS, etc.

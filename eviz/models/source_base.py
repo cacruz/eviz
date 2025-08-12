@@ -13,7 +13,7 @@ import eviz.lib.utils as u
 import eviz.lib.autoviz.utils as pu
 from eviz.lib.config.config_manager import ConfigManager
 from eviz.lib.data import DataSource
-from eviz.models.base import BaseSource
+from eviz.lib.models.base import GenericDataSource as BaseSource
 from eviz.lib.data.utils import apply_conversion, apply_mean, apply_zsum, subset_region
 from eviz.lib.data.data_extractor import DataExtractor
 from eviz.lib.autoviz.plotting.plot_manager import PlotManager
@@ -63,6 +63,54 @@ class GenericSource(BaseSource):
         # Initialize the new components
         self.data_extractor = DataExtractor(self.config_manager)
         self.plot_manager = PlotManager(self.config_manager, self.data_extractor)
+
+    def process_data(self, dataset: xr.Dataset) -> dict:
+        """
+        Process raw dataset into visualization-ready format.
+        
+        Args:
+            dataset: Raw xarray Dataset to process
+            
+        Returns:
+            Dictionary containing processed data and metadata
+        """
+        self.logger.debug(f"Processing dataset with variables: {list(dataset.data_vars) if dataset else 'None'}")
+        
+        # Legacy GenericSource doesn't need special data processing
+        # The actual processing is handled by DataExtractor and PlotManager
+        if dataset is None:
+            return {'dataset': None, 'type': 'generic', 'variables': [], 'dimensions': [], 'coordinates': []}
+        
+        processed_data = {
+            'dataset': dataset,
+            'type': 'generic',
+            'variables': list(dataset.data_vars),
+            'dimensions': list(dataset.dims),
+            'coordinates': list(dataset.coords)
+        }
+        
+        return processed_data
+    
+    def validate_data(self, dataset: xr.Dataset) -> bool:
+        """
+        Validate that the dataset is compatible with this data source.
+        
+        Args:
+            dataset: Dataset to validate
+            
+        Returns:
+            True if dataset is valid (GenericSource accepts any dataset)
+        """
+        if dataset is None:
+            self.logger.warning("Dataset is None")
+            return True  # Allow None datasets for legacy compatibility
+        
+        if not isinstance(dataset, xr.Dataset):
+            self.logger.warning("Input is not an xarray Dataset")
+            return True  # Still allow for legacy compatibility
+        
+        self.logger.debug("Dataset validation passed (GenericSource accepts all data)")
+        return True
 
     def load_data_sources(self, file_list: list):
         pass

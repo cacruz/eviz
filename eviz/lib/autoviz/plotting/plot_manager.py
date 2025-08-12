@@ -1148,6 +1148,65 @@ class PlotManager:
                 else:
                     self.logger.warning(f"Skipping plot for time level {t} - no valid data after processing")
 
+    def _process_other_plot(self, data_array, field_name, file_index, plot_type, figure):
+        """Process non-xy and non-polar plot types."""
+        self.logger.debug(f"Processing other plot type '{plot_type}' for {field_name}")
+        
+        self.config_manager.level = None
+        time_level_config = self.config_manager.ax_opts.get('time_lev', 0)
+        tc_dim = self.config_manager.get_model_dim_name('tc') or 'time'
+
+        if tc_dim in data_array.dims:
+            num_times = data_array[tc_dim].size
+            # TODO: Handle yx_plot Gifs
+            time_levels = range(num_times) if time_level_config == 'all' else [time_level_config]
+        else:
+            time_levels = [0]
+
+        field_to_plot = self._prepare_field_to_plot(data_array, 
+                                                    field_name, 
+                                                    file_index,
+                                                    plot_type, 
+                                                    figure,
+                                                    time_level=time_level_config)
+        if field_to_plot:
+            plot_result = self.create_plot(field_name, field_to_plot)
+            pu.print_map(self.config_manager, 
+                         plot_type, 
+                         self.config_manager.findex, 
+                         plot_result)
+
+    def _process_zsum_plot(self, data_array, field_name, file_index, plot_type, figure, time_levels):
+        """Process plots with vertical summation."""
+        self.logger.debug(f"Processing zsum plot for {field_name}")
+        
+        self.config_manager.level = None
+        tc_dim = self.config_manager.get_model_dim_name('tc') or 'time'
+        zc_dim = self.config_manager.get_model_dim_name('zc') or 'lev'
+
+        if not zc_dim or zc_dim not in data_array.dims:
+            data_array = data_array.squeeze()
+
+        for t in time_levels:
+            if tc_dim in data_array.dims:
+                data_at_time = data_array.isel({tc_dim: t})
+            else:
+                data_at_time = data_array.squeeze()  # Assume single time if no time dim
+
+            self._set_time_config(t, data_at_time)
+            field_to_plot = self._prepare_field_to_plot(data_at_time, 
+                                                        field_name,
+                                                        file_index, 
+                                                        plot_type, 
+                                                        figure, 
+                                                        time_level=t)
+            if field_to_plot:
+                plot_result = self.create_plot(field_name, field_to_plot)
+                pu.print_map(self.config_manager, 
+                             plot_type, 
+                             self.config_manager.findex, 
+                             plot_result)
+
     def _process_scatter_plot(self, data_array, field_name, file_index, plot_type, figure):
         """Process a scatter plot."""
         self.logger.debug("Starting scatter plot processing")

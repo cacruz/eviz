@@ -1,12 +1,25 @@
+"""
+LEGACY FILE - Partially redirects to eviz.lib.models.factory
+
+This file maintains model-specific factories while redirecting generic ones.
+Generic data sources should use: eviz.lib.models.factory.DataSourceFactory
+"""
+
+import warnings
 from dataclasses import dataclass
 from eviz.lib.config.config_manager import ConfigManager
+
+# Legacy compatibility imports - redirect to new architecture
+from eviz.lib.models.factory import DataSourceFactory as BaseSourceFactory
+from eviz.lib.models.factory import DataSourceFactory as GriddedSourceFactory  
+from eviz.lib.models.factory import DataSourceFactory as ObsSourceFactory
+
+# Model-specific imports remain here
 from eviz.models.esm.crest import Crest
-from eviz.models.gridded_source import GriddedSource
 from eviz.models.esm.grib import Grib
 from eviz.models.esm.geos import Geos
 from eviz.models.esm.lis import Lis
 from eviz.models.esm.wrf import Wrf
-from eviz.models.obs_source import ObsSource
 from eviz.models.obs.inventory.airnow import Airnow
 from eviz.models.obs.inventory.ghg import Ghg
 from eviz.models.obs.inventory.fluxnet import Fluxnet
@@ -14,40 +27,13 @@ from eviz.models.obs.satellite.landsat import Landsat
 from eviz.models.obs.satellite.mopitt import Mopitt
 from eviz.models.obs.satellite.omi import Omi
 
-
-class BaseSourceFactory:
-    """
-    Abstract factory base class for creating data model instances.
-    
-    Defines the interface for concrete factory classes that instantiate
-    specific data model handlers for different data formats and sources.
-    """
-    config_manager: ConfigManager
-
-    def create_root_instance(self, config_manager: ConfigManager):
-        """
-        Abstract method to create a root instance.
-        
-        Args:
-            config_manager: Configuration manager containing settings for the model.
-            
-        Returns:
-            A model instance configured for data processing and visualization.
-        """
-        raise NotImplementedError(
-            "create_root_instance must be implemented in subclasses")
-
-
-@dataclass
-class GriddedSourceFactory(BaseSourceFactory):
-    """
-    Factory for creating GriddedSource model instances that process NetCDF data.
-    
-    Used for generic gridded data, MERRA data, and special CCM/CF streams.
-    """
-
-    def create_root_instance(self, config_manager: ConfigManager):
-        return GriddedSource(config_manager)
+# Issue deprecation warning for generic factories
+warnings.warn(
+    "Generic factories in eviz.models.source_factory are deprecated. "
+    "Use eviz.lib.models.factory.DataSourceFactory for new data sources.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 
 @dataclass
