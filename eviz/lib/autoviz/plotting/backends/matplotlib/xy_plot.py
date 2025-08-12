@@ -93,7 +93,6 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
 
             vmin, vmax = None, None
             if config.compare or not config.compare_diff:
-            # if config.compare or config.compare_diff:
                 # Check if we've stored limits for this field in the config
                 if not hasattr(config, '_comparison_cbar_limits'):
                     config._comparison_cbar_limits = {}
@@ -117,7 +116,6 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
             else:
                 # Store colorbar limits for the first plot in a comparison
                 if config.compare and config.axindex == 0:
-                # if (config.compare or config.compare_diff) and config.axindex == 0:
                     vmin, vmax = cfilled.get_clim()
                     config._comparison_cbar_limits[field_name] = (vmin, vmax)
                     self.logger.debug(f"Setting comparison colorbar limits for {field_name}: {vmin} to {vmax}")

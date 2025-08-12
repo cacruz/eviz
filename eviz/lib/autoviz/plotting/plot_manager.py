@@ -271,6 +271,72 @@ class PlotManager:
         # Not gridded!
         return False
 
+    def _get_data_extent(self, data_array):
+        """
+        Extract the geographical extent (bounding box) from an xarray DataArray.
+        
+        This method determines the geographical boundaries using the domain info
+        from the ConfigManager or by analyzing the data array directly.
+        
+        Args:
+            data_array: The data array to extract extent from
+            
+        Returns:
+            list: The geographical extent as [lon_min, lon_max, lat_min, lat_max]
+        """
+        default_extent = [-180, 180, -90, 90]
+        
+        if data_array is None:
+            self.logger.warning("Cannot extract extent from None data_array")
+            return default_extent
+        
+        # First try to get extent from domain info
+        domain_extent = self.config_manager.domain_extent
+        if domain_extent is not None:
+            return domain_extent
+            
+        # If domain info not available, extract directly from data array
+        try:
+            # Find coordinate names
+            lon_coord_name = self.config_manager.longitude_coordinate_name
+            lat_coord_name = self.config_manager.latitude_coordinate_name
+            
+            # Fall back to generic dimension names if domain info not available
+            if not lon_coord_name:
+                lon_coord_name = self.config_manager.get_model_dim_name('xc') or 'lon'
+            if not lat_coord_name:
+                lat_coord_name = self.config_manager.get_model_dim_name('yc') or 'lat'
+            
+            # Check if coordinates exist in the DataArray
+            if lon_coord_name in data_array.coords and lat_coord_name in data_array.coords:
+                lon_vals = data_array[lon_coord_name].values
+                lat_vals = data_array[lat_coord_name].values
+                
+                lon_min = np.nanmin(lon_vals)
+                lon_max = np.nanmax(lon_vals)
+                lat_min = np.nanmin(lat_vals)
+                lat_max = np.nanmax(lat_vals)
+                
+                # Add a small buffer (5% of range) around the extent for better visualization
+                lon_buffer = (lon_max - lon_min) * 0.05
+                lat_buffer = (lat_max - lat_min) * 0.05
+                
+                extent = [
+                    lon_min - lon_buffer,
+                    lon_max + lon_buffer,
+                    lat_min - lat_buffer,
+                    lat_max + lat_buffer
+                ]
+                
+                self.logger.debug(f"Extracted extent: {extent}")
+                return extent
+                
+        except Exception as e:
+            self.logger.error(f"Error extracting extent: {e}")
+        
+        self.logger.warning("Could not determine extent, using default global extent")
+        return default_extent
+
     def _prepare_field_to_plot(self, 
                                data_array: xr.DataArray, 
                                field_name: str,
@@ -315,16 +381,14 @@ class PlotManager:
             return data2d, None, None, field_name, plot_type, file_index, figure
         elif plot_type in ['sc']:
             # TODO: temporary:
-            extent = self.get_data_extent(data_array)
+            extent = self._get_data_extent(data_array)
             self.config_manager.ax_opts['extent'] = extent
-            self.config_manager.ax_opts['central_lon'] = (extent[0] + extent[1]) / 2
-            self.config_manager.ax_opts['central_lat'] = (extent[2] + extent[3]) / 2
+            self.config_manager.ax_opts['central_lon'] = self.config_manager.central_longitude
+            self.config_manager.ax_opts['central_lat'] = self.config_manager.central_latitude
             return data2d[0], data2d[1], data2d[2], field_name, plot_type, file_index, figure
 
         # Process coordinates based on domain type
         try:
-            self.config_manager.is_regional = hasattr(self, 'source_name') and self.source_name in ['lis',
-                                                                                'wrf']
 
             if self.config_manager.is_regional:
                 if hasattr(self, '_process_coordinates'):
@@ -340,8 +404,8 @@ class PlotManager:
                     lonW = min(xs[:])
                     lonE = max(xs[:])
                     self.config_manager.ax_opts['extent'] = [lonW, lonE, latS, latN]
-                    self.config_manager.ax_opts['central_lon'] = np.mean([lonW, lonE])
-                    self.config_manager.ax_opts['central_lat'] = np.mean([latS, latN])
+                    self.config_manager.ax_opts['central_lon'] = self.config_manager.central_longitude
+                    self.config_manager.ax_opts['central_lat'] = self.config_manager.central_latitude
                     self.logger.info(f"Extent: {self.config_manager.ax_opts['extent']} ")
                     return data2d, xs, ys, field_name, plot_type, file_index, figure
             else:
@@ -449,11 +513,9 @@ class PlotManager:
                 self.logger.warning(f"No data source found in pipeline for {filename}")
                 continue
 
-            # NUWRF-specific initializations
-            if hasattr(self, 'source_name') and self.source_name in ['wrf']:
-                self._init_wrf_domain(data_source)
-            if hasattr(self, 'source_name') and self.source_name in ['lis']:
-                self._init_lis_domain(data_source)
+            # Extract domain information from the dataset
+            if hasattr(data_source, 'dataset') and data_source.dataset is not None:
+                self.config_manager.set_domain_info(data_source.dataset, filename)
 
             if hasattr(data_source, 'dataset') and data_source.dataset is not None:
                 field_data = data_source.dataset.get(field_name)
@@ -540,13 +602,11 @@ class PlotManager:
             if sdat1_dataset is None or sdat2_dataset is None:
                 continue
 
-            # NUWRF-specific initializations
-            if hasattr(self, 'source_name') and self.source_name in ['wrf']:
-                self._init_wrf_domain(sdat1_dataset)
-                self._init_wrf_domain(sdat2_dataset)
-            if hasattr(self, 'source_name') and self.source_name in ['lis']:
-                self._init_lis_domain(sdat1_dataset)
-                self._init_lis_domain(sdat2_dataset)
+            # Extract domain information from the datasets
+            if sdat1_dataset is not None:
+                self.config_manager.set_domain_info(sdat1_dataset, filename1)
+            if sdat2_dataset is not None:
+                self.config_manager.set_domain_info(sdat2_dataset, filename2)
 
             file_indices = (map1_params['file_index'], map2_params['file_index'])
 
@@ -637,13 +697,11 @@ class PlotManager:
             if sdat1_dataset is None or sdat2_dataset is None:
                 continue
 
-            # NUWRF-specific initializations
-            if hasattr(self, 'source_name') and self.source_name in ['wrf']:
-                self._init_wrf_domain(sdat1_dataset)
-                self._init_wrf_domain(sdat2_dataset)
-            if hasattr(self, 'source_name') and self.source_name in ['lis']:
-                self._init_lis_domain(sdat1_dataset)
-                self._init_lis_domain(sdat2_dataset)
+            # Extract domain information from the datasets
+            if sdat1_dataset is not None:
+                self.config_manager.set_domain_info(sdat1_dataset, filename1)
+            if sdat2_dataset is not None:
+                self.config_manager.set_domain_info(sdat2_dataset, filename2)
 
             self.file_indices = (map1_params['file_index'], map2_params['file_index'])
 
@@ -867,8 +925,9 @@ class PlotManager:
                             levels):
         """Process plots for specific vertical levels."""
         self.logger.debug("Processing XY level plots")
-        zc_dim = self.config_manager.get_model_dim_name('zc') or 'lev'
-        tc_dim = self.config_manager.get_model_dim_name('tc') or 'time'
+        # Use the new method that checks against the actual data_array dimensions
+        zc_dim = self.config_manager.get_model_dim_name_for_data('zc', data_array) or 'lev'
+        tc_dim = self.config_manager.get_model_dim_name_for_data('tc', data_array) or 'time'
 
         has_vertical_dim = zc_dim and zc_dim in data_array.dims
         self.config_manager.level = None
@@ -1120,12 +1179,13 @@ class PlotManager:
             figure.set_axes()
             self.config_manager.level = level_val
 
-            # Store domain information for regional plots if available
-            self.config_manager.is_regional = hasattr(self, 'source_name') and self.source_name in ['lis', 'wrf']
+            # Store coordinate information for regional plots if available
             if self.config_manager.is_regional:
-                if hasattr(sdat1_dataset, 'lon') and hasattr(sdat1_dataset, 'lat'):
-                    self.lon = sdat1_dataset.lon
-                    self.lat = sdat1_dataset.lat
+                lon_coord_name = self.config_manager.longitude_coordinate_name
+                lat_coord_name = self.config_manager.latitude_coordinate_name
+                if lon_coord_name and lat_coord_name and hasattr(sdat1_dataset, lon_coord_name) and hasattr(sdat1_dataset, lat_coord_name):
+                    self.lon = getattr(sdat1_dataset, lon_coord_name)
+                    self.lat = getattr(sdat1_dataset, lat_coord_name)
 
             # Create the side-by-side plots
             self._create_xy_side_by_side_plot(current_field_index,

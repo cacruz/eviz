@@ -61,8 +61,8 @@ class GenericSource(BaseSource):
             self.config_manager._plot_type_registry = {}
 
         # Initialize the new components
-        self.data_extractor = DataExtractor(self.config_manager, self.logger)
-        self.plot_orchestrator = PlotOrchestrator(self.config_manager, self.data_extractor, self.logger)
+        self.data_extractor = DataExtractor(self.config_manager)
+        self.plot_manager = PlotManager(self.config_manager, self.data_extractor)
 
     def load_data_sources(self, file_list: list):
         pass

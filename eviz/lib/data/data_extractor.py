@@ -13,6 +13,30 @@ class DataExtractor:
 
     def __init__(self, config_manager: ConfigManager):
         self.config_manager = config_manager
+    
+    def _get_dimension_size(self, data_array, dim_name):
+        """
+        Safely get the size of a dimension, whether it's a coordinate or just a dimension.
+        
+        Args:
+            data_array: xarray DataArray
+            dim_name: Name of dimension
+            
+        Returns:
+            int: Size of dimension, or 0 if not found
+        """
+        if dim_name is None:
+            return 0
+            
+        # First check if it's a dimension
+        if dim_name in data_array.dims:
+            return data_array.sizes[dim_name]
+        # Then check if it's a coordinate
+        elif dim_name in data_array.coords:
+            return data_array[dim_name].size
+        else:
+            self.logger.debug(f"Dimension '{dim_name}' not found in data array. Available dims: {list(data_array.dims)}, Available coords: {list(data_array.coords.keys())}")
+            return 0
           
     def _extract_scatter_data(self, data_array, time_level=None):
         """
@@ -31,7 +55,7 @@ class DataExtractor:
 
         # Handle time dimension
         if tc_dim in d_temp.dims:
-            num_tc = d_temp[tc_dim].size
+            num_tc = self._get_dimension_size(d_temp, tc_dim)
             self.logger.debug(f"Time dimension has {num_tc} levels")
             
             if time_level == 'all':
@@ -162,12 +186,16 @@ class DataExtractor:
         if data_array is None:
             return None
 
-        tc_dim = self.config_manager.get_model_dim_name('tc')
-        zc_dim = self.config_manager.get_model_dim_name('zc')
+        tc_dim = self.config_manager.get_model_dim_name_for_data('tc', data_array)
+        zc_dim = self.config_manager.get_model_dim_name_for_data('zc', data_array)
 
         d_temp = data_array.copy()
-        num_tc = d_temp[tc_dim].size
-        if num_tc > 1 and not self.config_manager.ax_opts.get('tave', False):
+        num_tc = self._get_dimension_size(d_temp, tc_dim)
+        
+        if num_tc == 0:
+            # Time dimension not found - data may have already been time-sliced
+            self.logger.debug(f"Time dimension '{tc_dim}' not found in data array - assuming data is already time-sliced")
+        elif num_tc > 1 and not self.config_manager.ax_opts.get('tave', False):
             self.logger.debug(f"Selecting time level: {time_level}")                
             # Handle negative indices (e.g., -1 for the last time level)
             if isinstance(time_level, int):
@@ -257,7 +285,7 @@ class DataExtractor:
         zc_dim = self.config_manager.get_model_dim_name('zc') or 'lev'
         xc_dim = self.config_manager.get_model_dim_name('xc') or 'lon'
         yc_dim = self.config_manager.get_model_dim_name('yc') or 'lat'
-        num_times = data_array[tc_dim].size
+        num_times = self._get_dimension_size(data_array, tc_dim)
         self.logger.debug(f"'{data_array.name}' field has {num_times} time levels")
 
         data2d = data_array.copy()
@@ -470,7 +498,7 @@ class DataExtractor:
 
         # Handle time dimension selection
         if tc_dim and tc_dim in d_temp.dims:
-            num_tc = d_temp[tc_dim].size
+            num_tc = self._get_dimension_size(d_temp, tc_dim)
             self.logger.debug(f"Time dimension '{tc_dim}' has {num_tc} levels")
             
             if time_lev == 'all' and tc_dim in d_temp.dims:
@@ -1022,7 +1050,7 @@ class DataExtractor:
                 # No need to select a specific time level
             elif time_lev != 'all' and isinstance(time_lev, (int, np.integer)):
                 # For spatial correlation, select a specific time point
-                num_tc = d_temp[tc_dim].size
+                num_tc = self._get_dimension_size(d_temp, tc_dim)
                 actual_time_lev = time_lev if time_lev >= 0 else num_tc + time_lev
                 
                 if 0 <= actual_time_lev < num_tc:
