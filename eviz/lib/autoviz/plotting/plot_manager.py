@@ -1,4 +1,5 @@
 import logging
+import os
 import numpy as np
 import xarray as xr
 from eviz.lib.autoviz.plotter import SimplePlotter
@@ -271,6 +272,36 @@ class PlotManager:
         # Not gridded!
         return False
 
+    def _get_filename_for_index(self, file_index: int) -> str:
+        """
+        Get the filename for a given file index.
+        
+        Args:
+            file_index: The file index to look up
+            
+        Returns:
+            str: The filename or None if not found
+        """
+        try:
+            if file_index is not None and file_index < len(self.config_manager.app_data.inputs):
+                file_entry = self.config_manager.app_data.inputs[file_index]
+                return os.path.join(file_entry.get('location', ''),
+                                    file_entry.get('name', ''))
+        except (AttributeError, IndexError, TypeError):
+            self.logger.debug(f"Could not get filename for file_index {file_index}")
+        return None
+    
+    def _get_field(self, name, data):
+        """
+        Compatibility method for extracting fields from data.
+        Added to maintain compatibility with any remaining legacy code.
+        """
+        try:
+            return data[name]
+        except Exception as e:
+            self.logger.error(f'Field access error: {name} not found in data: {e}')
+            return None
+
     def _get_data_extent(self, data_array):
         """
         Extract the geographical extent (bounding box) from an xarray DataArray.
@@ -389,25 +420,62 @@ class PlotManager:
 
         # Process coordinates based on domain type
         try:
-
-            if self.config_manager.is_regional:
+            # Get the current filename for domain lookup
+            current_filename = self._get_filename_for_index(file_index)
+            domain_info = self.config_manager.get_domain_info(current_filename)
+            is_regional = domain_info.get('is_regional', False)
+            
+            if is_regional:
                 if hasattr(self, '_process_coordinates'):
+                    self.logger.debug(f"Calling self._process_coordinates for {field_name}")
                     return self._process_coordinates(data2d, 
                                                      dim1_name, dim2_name,
                                                      field_name,
                                                      plot_type, file_index, figure)
-                else:
-                    xs = np.array(self._get_field(dim1_name, data2d)[0, :])
-                    ys = np.array(self._get_field(dim2_name, data2d)[:, 0])
-                    latN = max(ys[:])
-                    latS = min(ys[:])
-                    lonW = min(xs[:])
-                    lonE = max(xs[:])
-                    self.config_manager.ax_opts['extent'] = [lonW, lonE, latS, latN]
-                    self.config_manager.ax_opts['central_lon'] = self.config_manager.central_longitude
-                    self.config_manager.ax_opts['central_lat'] = self.config_manager.central_latitude
-                    self.logger.info(f"Extent: {self.config_manager.ax_opts['extent']} ")
-                    return data2d, xs, ys, field_name, plot_type, file_index, figure
+                else:                    
+                    # Use domain extent from domain_info if available
+                    extent = domain_info.get('extent')
+                    if extent:
+                        lonW, lonE, latS, latN = extent
+                        self.config_manager.ax_opts['extent'] = extent
+                        self.config_manager.ax_opts['central_lon'] = domain_info.get('central_lon', (lonW + lonE) / 2)
+                        self.config_manager.ax_opts['central_lat'] = domain_info.get('central_lat', (latS + latN) / 2)
+                        self.logger.debug(f"Using domain extent: {extent}")
+                        
+                        # Create coordinate arrays for the plot (using data2d dimensions)
+                        if hasattr(data2d, 'coords'):
+                            # Try to get coordinate arrays from the data
+                            lon_coord_name = domain_info.get('lon_coords', 'lon')
+                            lat_coord_name = domain_info.get('lat_coords', 'lat')
+                            
+                            if lon_coord_name in data2d.coords and lat_coord_name in data2d.coords:
+                                lon_coords = data2d.coords[lon_coord_name]
+                                lat_coords = data2d.coords[lat_coord_name]
+                                
+                                # For 2D coordinates (like WRF), extract 1D arrays
+                                if len(lon_coords.dims) == 2:
+                                    xs = np.array(lon_coords.isel({lon_coords.dims[0]: 0}))
+                                    ys = np.array(lat_coords.isel({lat_coords.dims[1]: 0}))
+                                else:
+                                    xs = np.array(lon_coords)
+                                    ys = np.array(lat_coords)
+                            else:
+                                # Fallback: create linear coordinate arrays from extent
+                                n_lon = data2d.shape[-1] if data2d.ndim >= 2 else 100
+                                n_lat = data2d.shape[-2] if data2d.ndim >= 2 else 100
+                                xs = np.linspace(lonW, lonE, n_lon)
+                                ys = np.linspace(latS, latN, n_lat)
+                        else:
+                            # Final fallback: create coordinate arrays from extent
+                            xs = np.linspace(lonW, lonE, 100)
+                            ys = np.linspace(latS, latN, 100)
+                            
+                        self.logger.info(f"Extent: {self.config_manager.ax_opts['extent']} ")
+                        return data2d, xs, ys, field_name, plot_type, file_index, figure
+                    else:
+                        self.logger.warning(f"No domain extent available for regional data {field_name}")
+                        # Fall back to non-regional processing by setting is_regional to False
+                        is_regional = False
             else:
                 if figure.ax_opts['extent']:
                     extent = figure.ax_opts['extent']
