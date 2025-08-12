@@ -1046,6 +1046,108 @@ class PlotManager:
                 else:
                     self.logger.warning(f"Skipping plot for time level {t} - no valid data after processing")
 
+    def _process_xt_plot(self, data_array, field_name, file_index, plot_type, figure):
+        """Process an XT (time series) plot."""
+        self.logger.debug(f"Processing XT plot for {field_name}")
+        
+        self.config_manager.level = None
+        time_level_config = self.config_manager.ax_opts.get('time_lev', 0)
+        tc_dim = self.config_manager.get_model_dim_name('tc') or 'time'
+
+        if tc_dim in data_array.dims:
+            num_times = data_array[tc_dim].size
+            time_levels = range(num_times) if time_level_config == 'all' else [time_level_config]
+        else:
+            time_levels = [0]
+
+        field_to_plot = self._prepare_field_to_plot(data_array, 
+                                                    field_name, 
+                                                    file_index, 
+                                                    plot_type, 
+                                                    figure, 
+                                                    time_level=time_level_config)
+        
+        if field_to_plot:
+            plot_result = self.create_plot(field_name, field_to_plot)
+            pu.print_map(self.config_manager, 
+                         plot_type, 
+                         self.config_manager.findex, 
+                         plot_result)
+
+    def _process_tx_plot(self, data_array, field_name, file_index, plot_type, figure):
+        """Process a TX (Hovmoller) plot."""
+        self.logger.debug(f"Processing TX plot for {field_name}")
+        
+        self.config_manager.level = None
+        time_level_config = self.config_manager.ax_opts.get('time_lev', 0)
+        tc_dim = self.config_manager.get_model_dim_name('tc') or 'time'
+
+        if tc_dim in data_array.dims:
+            num_times = data_array[tc_dim].size
+            time_levels = range(num_times) if time_level_config == 'all' else [time_level_config]
+        else:
+            time_levels = [0]
+
+        field_to_plot = self._prepare_field_to_plot(data_array, 
+                                                    field_name, 
+                                                    file_index, 
+                                                    plot_type, 
+                                                    figure, 
+                                                    time_level=time_level_config)
+        
+        if field_to_plot:
+            plot_result = self.create_plot(field_name, field_to_plot)
+            pu.print_map(self.config_manager, 
+                         plot_type, 
+                         self.config_manager.findex, 
+                         plot_result)
+
+    def _process_polar_plot(self, data_array, field_name, file_index, plot_type, figure):
+        """Process polar plots for specific vertical levels."""
+        self.logger.debug(f"Processing polar plot for {field_name}")
+        
+        levels = self.config_manager.get_levels(field_name, plot_type + 'plot')
+        do_zsum = self.config_manager.ax_opts.get('zsum', False)
+
+        time_level_config = self.config_manager.ax_opts.get('time_lev', 0)
+        tc_dim = self.config_manager.get_model_dim_name('tc') or 'time'
+        num_times = data_array[tc_dim].size if tc_dim in data_array.dims else 1
+        time_levels = range(num_times) if time_level_config == 'all' else [time_level_config]
+
+        if not levels and not do_zsum:
+            return
+        
+        self.logger.debug(f' -> Processing {len(time_levels)} time levels')
+        zc_dim = self.config_manager.get_model_dim_name('zc') or 'lev'
+        tc_dim = self.config_manager.get_model_dim_name('tc') or 'time'
+
+        has_vertical_dim = zc_dim and zc_dim in data_array.dims
+
+        for level_val in levels.keys():
+            self.config_manager.level = level_val
+            for t in time_levels:
+                if tc_dim in data_array.dims:
+                    data_at_time = data_array.isel({tc_dim: t})
+                else:
+                    data_at_time = data_array.squeeze()
+
+                field_to_plot = self._prepare_field_to_plot(data_at_time,
+                                                            field_name,
+                                                            file_index,
+                                                            plot_type,
+                                                            figure,
+                                                            time_level=t,
+                                                            level=level_val)
+                if field_to_plot:
+                    plot_result = self.create_plot(field_name, field_to_plot)
+                    pu.print_map(self.config_manager,
+                                 plot_type,
+                                 self.config_manager.findex,
+                                 plot_result,
+                                 level=level_val)
+                else:
+                    self.logger.warning(f"Skipping plot for time level {t} - no valid data after processing")
+
     def _process_scatter_plot(self, data_array, field_name, file_index, plot_type, figure):
         """Process a scatter plot."""
         self.logger.debug("Starting scatter plot processing")
