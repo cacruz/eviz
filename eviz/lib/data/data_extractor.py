@@ -1,5 +1,7 @@
 import logging
 import numpy as np
+import pandas as pd
+import xarray as xr
 from eviz.lib.config.config_manager import ConfigManager
 from eviz.lib.data.utils import apply_conversion, apply_mean, apply_zsum, subset_region
 
@@ -257,12 +259,15 @@ class DataExtractor:
         # Almost done...
         data2d = d_temp
         if self.config_manager.ax_opts.get('tave', False):
-            num_tc = data2d[tc_dim].size
-            if num_tc > 1:
-                self.logger.debug(f"Averaging over {num_tc} time levels.")
-                data2d = apply_mean(self.config_manager, data2d, level)
-                data2d.attrs = data_array.attrs.copy()
-                return apply_conversion(self.config_manager, data2d, data_array.name)
+            if tc_dim is not None and tc_dim in data2d.dims:
+                num_tc = data2d[tc_dim].size
+                if num_tc > 1:
+                    self.logger.debug(f"Averaging over {num_tc} time levels.")
+                    data2d = apply_mean(self.config_manager, data2d, level)
+                    data2d.attrs = data_array.attrs.copy()
+                    return apply_conversion(self.config_manager, data2d, data_array.name)
+            else:
+                self.logger.debug(f"Time averaging requested but no time dimension found (tc_dim={tc_dim}). Skipping time averaging.")
 
         if np.isnan(data2d.values).any():
             self.logger.debug(

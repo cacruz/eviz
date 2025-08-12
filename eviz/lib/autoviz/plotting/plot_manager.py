@@ -2,14 +2,16 @@ import logging
 import os
 import numpy as np
 import xarray as xr
+import pandas as pd
 from eviz.lib.autoviz.plotter import SimplePlotter
 from eviz.lib.autoviz.plotting.factory import PlotterFactory
 from eviz.lib.autoviz.figure import Figure
 import eviz.lib.utils as u
 import eviz.lib.autoviz.utils as pu
 from eviz.lib.config.config_manager import ConfigManager
-from eviz.lib.data import DataSource # Needed for process_single_plots, process_comparison_plots, etc.
-from eviz.lib.data.data_extractor import DataExtractor # Import the new DataExtractor
+from eviz.lib.data.data_extractor import DataExtractor
+from eviz.lib.data.utils import subset_region
+
 
 class PlotManager:
     @property
@@ -18,13 +20,13 @@ class PlotManager:
 
     def __init__(self, config_manager: ConfigManager, data_extractor: DataExtractor):
         self.config_manager = config_manager
-        self.data_extractor = data_extractor # Store the DataExtractor instance
-        self.data2d_list = [] # Initialize this here as it's used by comparison plots
-        self.plot_result = None # Used in _process_box_plots
-        self.field_names = None # Used in comparison plots
-        self.file_indices = None # Used in comparison plots
-        self.lon = None # Used in _process_xy_side_by_side_plots
-        self.lat = None # Used in _process_xy_side_by_side_plots
+        self.data_extractor = data_extractor
+        self.data2d_list = []
+        self.plot_result = None
+        self.field_names = None
+        self.file_indices = None
+        self.lon = None
+        self.lat = None
 
     def plot(self):
         """
@@ -516,8 +518,7 @@ class PlotManager:
 
         try:
             if 'time' in data_var.coords:
-                if isinstance(time_index, int) and time_index < len(
-                        data_var.coords['time']):
+                if isinstance(time_index, int) and time_index < len(data_var.coords['time']):
                     real_time = data_var.coords['time'].values[time_index]
                     real_time_readable = pd.to_datetime(real_time).strftime('%Y-%m-%d %H')
                     self.config_manager.real_time = real_time_readable
