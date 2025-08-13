@@ -135,7 +135,7 @@ class DataExtractor:
             return None, None, None
 
     # DATA SLICE PROCESSING METHODS
-    def _extract_yz_data(self, data_array, time_lev):
+    def _extract_yz_data(self, data_array, time_level):
         """ Extract YZ slice (zonal mean) from a DataArray
 
         Note:
@@ -144,6 +144,7 @@ class DataExtractor:
         """
         if data_array is None:
             return None
+
         xc_dim = self.config_manager.get_model_dim_name('xc')
         tc_dim = self.config_manager.get_model_dim_name('tc')
         zc_dim = self.config_manager.get_model_dim_name('zc')
@@ -160,19 +161,18 @@ class DataExtractor:
                 f"Could not find any longitude dimension for zonal mean in {data_array.name}")
             return None
 
-        if tc_dim and tc_dim in zonal_mean.dims:
-            num_times = zonal_mean[tc_dim].size
-            if self.config_manager.ax_opts.get('tave', False) and num_times > 1:
-                self.logger.debug(f"Averaging over {num_times} time levels.")
-                zonal_mean = apply_mean(self.config_manager, zonal_mean)
-            else:
-                if isinstance(time_lev, int) and time_lev < num_times:
-                    zonal_mean = zonal_mean.isel({tc_dim: time_lev})
-                else:
-                    zonal_mean = zonal_mean.isel({tc_dim: 0})
+        time_ave = self.config_manager.ax_opts.get('tave', False)
+        num_times = zonal_mean[tc_dim].size
+        if time_ave:
+            self.logger.debug(f"Averaging over {num_times} time levels.")
+            zonal_mean = apply_mean(self.config_manager, zonal_mean)
         else:
-            zonal_mean = zonal_mean.squeeze()
+            if isinstance(time_level, int) and time_level < num_times:
+                zonal_mean = zonal_mean.isel({tc_dim: time_level})
+            else:
+                zonal_mean = zonal_mean.isel({tc_dim: 0})
 
+        zonal_mean = zonal_mean.squeeze()
         zonal_mean.attrs = data_array.attrs.copy()
         zonal_mean = self._select_yrange(zonal_mean, data_array.name)
 
@@ -286,10 +286,10 @@ class DataExtractor:
         if data_array is None:
             return None
 
-        tc_dim = self.config_manager.get_model_dim_name('tc') or 'time'
-        zc_dim = self.config_manager.get_model_dim_name('zc') or 'lev'
-        xc_dim = self.config_manager.get_model_dim_name('xc') or 'lon'
-        yc_dim = self.config_manager.get_model_dim_name('yc') or 'lat'
+        tc_dim = self.config_manager.get_model_dim_name('tc')
+        zc_dim = self.config_manager.get_model_dim_name('zc')
+        xc_dim = self.config_manager.get_model_dim_name('xc')
+        yc_dim = self.config_manager.get_model_dim_name('yc')
         num_times = self._get_dimension_size(data_array, tc_dim)
         self.logger.debug(f"'{data_array.name}' field has {num_times} time levels")
 

@@ -1010,7 +1010,7 @@ class PlotManager:
                     data_at_time = data_array.squeeze()  # Assume single time if no time dim
                 
                 if np.isnan(data_at_time).all():
-                    self.logger.warning(f"Skipping time level {t} for {field_name} - all values are NaN")
+                    self.logger.debug(f"Skipping time level {t} for {field_name} - all values are NaN")
                     continue
                     
                 self._set_time_config(t, data_at_time)
@@ -1162,6 +1162,7 @@ class PlotManager:
             time_levels = range(num_times) if time_level_config == 'all' else [time_level_config]
         else:
             time_levels = [0]
+
 
         field_to_plot = self._prepare_field_to_plot(data_array, 
                                                     field_name, 
