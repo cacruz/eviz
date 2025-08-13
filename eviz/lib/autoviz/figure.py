@@ -98,9 +98,10 @@ class Figure(mfigure.Figure):
                 # Get the number of variables to compare from the config
                 if hasattr(self.config_manager, 'compare_exp_ids'):
                     num_vars = len(self.config_manager.compare_exp_ids)
-                    self._subplots = (1, num_vars)
+                    # TODO: unless panels shape is specified in config
+                    self._subplots = (num_vars, 1)
                 else:
-                    self._subplots = (1, 2)  # Default to side by side layout
+                    self._subplots = (2, 1)  # Default to side by side layout
                 return
                 
             # Handle comparison with difference plots

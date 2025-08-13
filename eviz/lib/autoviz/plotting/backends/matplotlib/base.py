@@ -620,7 +620,7 @@ class MatplotlibBasePlotter(BasePlotter):
         geom = pu.get_subplot_geometry(ax) if config.compare or config.compare_diff else None
 
         # Handle plot titles for comparison cases
-        if config.compare or config.compare_diff:
+        if config.compare_diff:
             if geom and geom[0] == (3, 1):  # (3,1) subplot structure
                 if geom[1:] == (0, 1, 1, 1):  # Bottom plot
                     title_string = "Difference (top - middle)"
@@ -641,10 +641,13 @@ class MatplotlibBasePlotter(BasePlotter):
                     self.ax_opts['line_contours'] = False
                 else:  # Default case
                     title_string = self._set_axes_title(config, findex)
-            elif geom and (geom[0] == (1, 2) or geom[0] == (1, 3)):
+        elif config.compare:
+            if geom and (geom[0][0] == 1):
                 title_string = self._set_axes_title(config, findex)
-            ax.set_title(title_string, loc=loc, fontsize=title_fontsize)
-            return
+            else:
+                title_string = field_name
+        ax.set_title(title_string, loc=loc, fontsize=title_fontsize)
+        return
 
         # Non-comparison case
         level_text = self._format_level_text(config, level)
