@@ -377,7 +377,9 @@ class PlotManager:
                                plot_type: str, 
                                figure, 
                                time_level,
-                               level=None) -> tuple:
+                               level=None,
+                               global_vmin=None,
+                               global_vmax=None) -> tuple:
         """Prepare the 2D data array and coordinates to be plotted."""
         dim1_name, dim2_name = self.config_manager.get_dim_names(plot_type)
         data2d = None
@@ -483,7 +485,7 @@ class PlotManager:
                             ys = np.linspace(latS, latN, 100)
                             
                         self.logger.debug(f"Extent: {self.config_manager.ax_opts['extent']} ")
-                        return data2d, xs, ys, field_name, plot_type, file_index, figure
+                        return data2d, xs, ys, field_name, plot_type, file_index, figure, global_vmin, global_vmax
                     else:
                         self.logger.warning(f"No domain extent available for regional data {field_name}")
                         # Fall back to non-regional processing by setting is_regional to False
@@ -516,7 +518,7 @@ class PlotManager:
                         f"Note: Some NaN values present ({np.sum(np.isnan(data2d.values))} NaNs).")
                     # data2d = data2d.fillna(0)
 
-                return data2d, x, y, field_name, plot_type, file_index, figure
+                return data2d, x, y, field_name, plot_type, file_index, figure, global_vmin, global_vmax
 
         except Exception as e:
             self.logger.error(f"Error processing coordinates for {field_name}: {e}")
@@ -980,11 +982,26 @@ class PlotManager:
 
         time_level_config = self.config_manager.ax_opts.get('time_lev', 0)
         tc_dim = self.config_manager.get_model_dim_name('tc') or 'time'
+        zc_dim = self.config_manager.get_model_dim_name_for_data('zc', data_array) or 'lev'
         num_times = data_array[tc_dim].size if tc_dim in data_array.dims else 1
         time_levels = range(num_times) if time_level_config == 'all' else [time_level_config]
 
         if not levels and not do_zsum:
             return
+
+        # Calculate global min/max for consistent colorbar if creating a GIF
+        global_vmin = None
+        global_vmax = None
+        if self.config_manager.make_gif and len(time_levels) > 1:
+            self.logger.info(f"Calculating global colorbar range for GIF consistency across {len(time_levels)} time frames")
+            global_vmin, global_vmax = self._calculate_global_minmax(data_array, 
+                                                                    field_name, 
+                                                                    time_levels, 
+                                                                    levels, 
+                                                                    tc_dim, 
+                                                                    zc_dim)
+            if global_vmin is not None and global_vmax is not None:
+                self.logger.info(f"Using consistent colorbar range [{global_vmin:.2f}, {global_vmax:.2f}] for all {len(time_levels)} frames")
 
         self._process_level_plot(data_array, 
                                  field_name, 
@@ -992,7 +1009,47 @@ class PlotManager:
                                  plot_type, 
                                  figure, 
                                  time_levels, 
-                                 levels)
+                                 levels, 
+                                 global_vmin, 
+                                 global_vmax)
+
+    def _calculate_global_minmax(self, data_array, field_name, time_levels, levels, tc_dim, zc_dim):
+        """Calculate global min/max values across all time frames for consistent GIF colorbar."""
+        global_min = float('inf')
+        global_max = float('-inf')
+        
+        has_vertical_dim = zc_dim and zc_dim in data_array.dims
+        
+        for level_val in levels.keys():
+            for t in time_levels:
+                # Extract data at this time step (same logic as in _process_level_plot)
+                if tc_dim in data_array.dims:
+                    data_at_time = data_array.isel({tc_dim: t})
+                else:
+                    data_at_time = data_array.squeeze()
+                
+                if np.isnan(data_at_time).all():
+                    continue
+                
+                # Apply the same data extraction as in _prepare_field_to_plot
+                if not has_vertical_dim:
+                    data2d = self.data_extractor._extract_xy_data(data_at_time, 0, level=level_val)
+                else:
+                    data2d = self.data_extractor._extract_xy_data(data_at_time, 0, level=level_val)
+                
+                if data2d is not None and not np.isnan(data2d).all():
+                    field_min = np.nanmin(data2d)
+                    field_max = np.nanmax(data2d)
+                    
+                    if not np.isnan(field_min) and not np.isnan(field_max):
+                        global_min = min(global_min, field_min)
+                        global_max = max(global_max, field_max)
+        
+        # Handle case where no valid data was found
+        if global_min == float('inf') or global_max == float('-inf'):
+            return None, None
+            
+        return float(global_min), float(global_max)
 
     def _process_level_plot(self, 
                             data_array, 
@@ -1001,7 +1058,9 @@ class PlotManager:
                             plot_type, 
                             figure, 
                             time_levels, 
-                            levels):
+                            levels, 
+                            global_vmin=None, 
+                            global_vmax=None):
         """Process plots for specific vertical levels."""
         self.logger.debug("Processing XY level plots")
         # Use the new method that checks against the actual data_array dimensions
@@ -1036,7 +1095,9 @@ class PlotManager:
                                                                 file_index, 
                                                                 plot_type, 
                                                                 figure, 
-                                                                time_level=t)
+                                                                time_level=t,
+                                                                global_vmin=global_vmin,
+                                                                global_vmax=global_vmax)
                 else:
                     field_to_plot = self._prepare_field_to_plot(data_at_time, 
                                                                 field_name, 
@@ -1044,7 +1105,9 @@ class PlotManager:
                                                                 plot_type, 
                                                                 figure, 
                                                                 time_level=t, 
-                                                                level=level_val)
+                                                                level=level_val,
+                                                                global_vmin=global_vmin,
+                                                                global_vmax=global_vmax)
 
                 if field_to_plot and not np.isnan(field_to_plot[0]).all():
                     plot_result = self.create_plot(field_name, field_to_plot)                    
