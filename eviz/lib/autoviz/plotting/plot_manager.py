@@ -424,6 +424,15 @@ class PlotManager:
         try:
             # Get the current filename for domain lookup
             current_filename = self._get_filename_for_index(file_index)
+            
+            # If we can't get filename from file_index, try using config_manager's filename
+            if not current_filename and hasattr(self.config_manager, 'current_field_name'):
+                # Try to get filename from map_params using current field
+                for idx, params in self.config_manager.map_params.items():
+                    if params.get('field') == field_name:
+                        current_filename = params.get('filename')
+                        break
+            
             domain_info = self.config_manager.get_domain_info(current_filename)
             is_regional = domain_info.get('is_regional', False)
             

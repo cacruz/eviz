@@ -433,6 +433,13 @@ class Figure(mfigure.Figure):
         if hasattr(self, '_ax_opts') and 'rc_params' in self._ax_opts:
             existing_rc_params = self._ax_opts.get('rc_params', {}).copy()  # Make a copy
 
+        # Preserve existing domain extent and projection from config_manager if available
+        existing_extent = None
+        existing_projection = None
+        if hasattr(self, '_ax_opts'):
+            existing_extent = self._ax_opts.get('extent')
+            existing_projection = self._ax_opts.get('projection')
+
         defaults = {
             'rc_params': existing_rc_params,
             'boundary': None,
@@ -456,8 +463,8 @@ class Figure(mfigure.Figure):
             'add_tropp_height': False,
             'torder': None,
             'add_trend': False,
-            'extent': None,
-            'projection': None,
+            'extent': existing_extent,
+            'projection': existing_projection,
             'num_clevs': 10,
             'time_lev': 0,
             'is_diff_field': False,
