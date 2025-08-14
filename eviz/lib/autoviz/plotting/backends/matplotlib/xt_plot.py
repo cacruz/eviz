@@ -25,7 +25,12 @@ class MatplotlibXTPlotter(MatplotlibBasePlotter):
         Returns:
             The created figure
         """
-        data2d, _, _, field_name, plot_type, findex, fig = data_to_plot
+        # Handle both 7-element and 9-element tuples (with global min/max for overlay consistency)
+        if len(data_to_plot) == 9:
+            data2d, _, _, field_name, plot_type, findex, fig, global_vmin, global_vmax = data_to_plot
+        else:
+            data2d, _, _, field_name, plot_type, findex, fig = data_to_plot
+            global_vmin, global_vmax = None, None
         
         if data2d is None:
             return fig
@@ -70,7 +75,7 @@ class MatplotlibXTPlotter(MatplotlibBasePlotter):
         self.ax_opts = fig.update_ax_opts(field_name, self.ax, 'xt', level=0)
         self.plot_text(config, field_name, 'xt', data=data2d)
         
-        self._plot_xt_data(config, fig, data2d, field_name, findex)
+        self._plot_xt_data(config, fig, data2d, field_name, findex, global_vmin, global_vmax)
         
         # Handle overlay mode
         if config.overlay:
@@ -101,7 +106,7 @@ class MatplotlibXTPlotter(MatplotlibBasePlotter):
         
         return fig
     
-    def _plot_xt_data(self, config, fig, data2d, field_name, findex):
+    def _plot_xt_data(self, config, fig, data2d, field_name, findex, global_vmin=None, global_vmax=None):
         """Helper method that plots the time series (xt) data."""     
         ax = self.ax   
         ax_opts = self.ax_opts
@@ -238,13 +243,23 @@ class MatplotlibXTPlotter(MatplotlibBasePlotter):
             
             # Set y-axis limits
             try:
-                davg = 0.5 * (abs(dmin - dmax))
-                ax.set_ylim([dmin - davg, dmax + davg])
+                # Use global min/max for overlay plots if available, otherwise use local values
+                if global_vmin is not None and global_vmax is not None and config.overlay:
+                    plot_dmin, plot_dmax = global_vmin, global_vmax
+                    self.logger.debug(f"Using global y-axis range for overlay: [{plot_dmin:.6f}, {plot_dmax:.6f}]")
+                else:
+                    plot_dmin, plot_dmax = dmin, dmax
+                    
+                davg = 0.5 * (abs(plot_dmin - plot_dmax))
+                ax.set_ylim([plot_dmin - davg, plot_dmax + davg])
             except Exception as e:
                 self.logger.warning(f"Error setting y limits: {e}")
             
             # Set y-axis label (units)
             ax.set_ylabel(self.units)
+            
+            # Set x-axis label
+            ax.set_xlabel('Time')
             
             # Add grid if specified
             if ax_opts['add_grid']:

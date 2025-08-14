@@ -414,7 +414,7 @@ class PlotManager:
 
         # For these plot types, return without coordinates
         if plot_type in ['line', 'box', 'xt', 'tx']:
-            return data2d, None, None, field_name, plot_type, file_index, figure
+            return data2d, None, None, field_name, plot_type, file_index, figure, global_vmin, global_vmax
         elif plot_type in ['sc']:
             # TODO: temporary:
             extent = self._get_data_extent(data_array)
@@ -1591,6 +1591,23 @@ class PlotManager:
         # Set total datasets for the plotter (overlay mode is already active from config)
         self.config_manager.total_datasets = len(datasets)
         
+        # For overlay plots, calculate global min/max across all datasets to ensure proper y-axis scaling
+        global_min, global_max = None, None
+        if plot_type == 'xt':  # Only for time series plots
+            all_data_values = []
+            for dataset in datasets:
+                if field_name in dataset:
+                    field_data = dataset[field_name]
+                    # Extract time series data (assuming time is first dimension)
+                    if field_data.ndim >= 1:
+                        data_values = field_data.values.flatten()
+                        all_data_values.extend(data_values[~np.isnan(data_values)])  # Remove NaN values
+            
+            if all_data_values:
+                global_min = np.min(all_data_values)
+                global_max = np.max(all_data_values)
+                self.logger.debug(f"Calculated global y-axis range for overlay: [{global_min:.6f}, {global_max:.6f}]")
+        
         # Plot each dataset on the same figure
         for i, dataset in enumerate(datasets):
             if field_name not in dataset:
@@ -1609,7 +1626,9 @@ class PlotManager:
                                                        i, 
                                                        plot_type, 
                                                        figure, 
-                                                       time_level=0)
+                                                       time_level=0,
+                                                       global_vmin=global_min,
+                                                       global_vmax=global_max)
             
             if field_to_plot:
                 # Create the plot - this will add to the existing figure
