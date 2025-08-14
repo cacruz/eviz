@@ -649,7 +649,11 @@ class MatplotlibBasePlotter(BasePlotter):
         else:
             # Non-comparison case
             level_text = self._format_level_text(config, level)
-            long_name = self.get_long_name(config, data, findex)
+            # For box plots, data is a DataFrame and doesn't have the same attributes as xarray
+            if data is not None and hasattr(data, 'name'):  # Check if it's an xarray-like object
+                long_name = self.get_long_name(config, data, findex)
+            else:
+                long_name = None
             if not long_name:
                 long_name = field_name
             title_string = self._set_axes_title(config, findex)
