@@ -54,7 +54,7 @@ class GriddedSourceFactory(BaseSourceFactory):
     Factory for creating GriddedSource model instances.
     """
     def create_root_instance(self, config_manager: ConfigManager):
-        return GenericSource(config_manager)
+        return GriddedSource(config_manager)
 
 
 @dataclass
