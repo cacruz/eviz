@@ -9,10 +9,8 @@ import warnings
 from dataclasses import dataclass
 from eviz.lib.config.config_manager import ConfigManager
 
-# Legacy compatibility imports - redirect to new architecture
-from eviz.lib.models.factory import DataSourceFactory as BaseSourceFactory
-from eviz.lib.models.factory import DataSourceFactory as GriddedSourceFactory  
-from eviz.lib.models.factory import DataSourceFactory as ObsSourceFactory
+# Import new architecture for base
+from eviz.lib.models.factory import DataSourceFactory
 
 # Model-specific imports remain here
 from eviz.models.esm.crest import Crest
@@ -27,6 +25,10 @@ from eviz.models.obs.satellite.landsat import Landsat
 from eviz.models.obs.satellite.mopitt import Mopitt
 from eviz.models.obs.satellite.omi import Omi
 
+# Import legacy sources for compatibility
+from eviz.models.obs_source import ObsSource
+from eviz.models.gridded_source import GriddedSource
+
 # Issue deprecation warning for generic factories
 warnings.warn(
     "Generic factories in eviz.models.source_factory are deprecated. "
@@ -34,6 +36,33 @@ warnings.warn(
     DeprecationWarning,
     stacklevel=2
 )
+
+
+@dataclass
+class BaseSourceFactory:
+    """
+    Abstract base factory - should not be instantiated directly.
+    """
+    def create_root_instance(self, config_manager: ConfigManager):
+        raise NotImplementedError("BaseSourceFactory is abstract and cannot be instantiated")
+
+
+@dataclass
+class GriddedSourceFactory(BaseSourceFactory):
+    """
+    Factory for creating GriddedSource model instances.
+    """
+    def create_root_instance(self, config_manager: ConfigManager):
+        return GriddedSource(config_manager)
+
+
+@dataclass
+class ObsSourceFactory(BaseSourceFactory):
+    """
+    Factory for creating ObsSource model instances.
+    """
+    def create_root_instance(self, config_manager: ConfigManager):
+        return ObsSource(config_manager)
 
 
 @dataclass
@@ -85,15 +114,6 @@ class GhgFactory(BaseSourceFactory):
     """
     def create_root_instance(self, config_manager: ConfigManager):
         return Ghg(config_manager)
-
-
-@dataclass
-class ObsSourceFactory(BaseSourceFactory):
-    """
-    Factory for creating ObsSource model instances
-    """
-    def create_root_instance(self, config_manager: ConfigManager):
-        return ObsSource(config_manager)
 
 
 @dataclass

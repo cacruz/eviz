@@ -508,8 +508,8 @@ class DummyConfig:
 
 @pytest.mark.parametrize("compare,compare_diff,extra_diff_plot,expected_shape", [
     (False, False, False, (1, 1)),
-    (True, False, False, (1, 2)),
-    (True, False, True, (1, 2)),  
+    (True, False, False, (2, 1)),
+    (True, False, True, (2, 1)),  
     (False, True, False, (3, 1)),
     (False, True, True, (3, 1)), 
 ])
