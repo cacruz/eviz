@@ -1515,6 +1515,149 @@ class PlotManager:
 
         self.data2d_list = []
 
+    def _process_other_side_by_side_plots(self, current_field_index, field_name1, field_name2, plot_type, sdat1_dataset, sdat2_dataset):
+        """Process side-by-side comparison plots for non-xy plot types (xt, yz, tx, etc.)."""
+        self.logger.info(f"Processing side-by-side comparison of {field_name1} vs {field_name2} for {plot_type} plot type")
+        
+        # For most non-XY plot types, we'll use a generic approach that delegates to the appropriate plotter
+        self._process_generic_side_by_side_plots(current_field_index, field_name1, field_name2, plot_type, sdat1_dataset, sdat2_dataset)
+
+    def _process_generic_side_by_side_plots(self, current_field_index, field_name1, field_name2, plot_type, sdat1_dataset, sdat2_dataset):
+        """Generic side-by-side processing for non-xy plot types."""
+        self.logger.info(f"Processing generic side-by-side comparison of {field_name1} vs {field_name2} as {plot_type} data")
+        
+        # Check if this is overlay mode
+        is_overlay = hasattr(self.config_manager, 'overlay') and self.config_manager.overlay
+        
+        # Collect datasets
+        datasets = []
+        
+        # Always include the passed datasets first
+        if sdat1_dataset is not None:
+            datasets.append(sdat1_dataset)
+        if sdat2_dataset is not None:
+            datasets.append(sdat2_dataset)
+        
+        # For overlay mode, try to get all datasets from the pipeline
+        if is_overlay:
+            self.logger.info("Overlay mode - checking all available data sources")
+            all_data_sources = self.config_manager.pipeline.get_all_data_sources()
+            self.logger.info(f"Found {len(all_data_sources)} data sources from pipeline")
+            
+            # The pipeline get_all_data_sources() returns a dict with file paths as keys and DataSource objects as values
+            # We need to iterate over the values (DataSource objects) directly
+            for i, (file_path, data_source) in enumerate(all_data_sources.items()):
+                self.logger.debug(f"Checking data source {i}: {file_path}")
+                if data_source and hasattr(data_source, 'dataset') and data_source.dataset is not None:
+                    dataset = data_source.dataset
+                    if field_name1 in dataset:
+                        # Check if this dataset is already in our list (avoid duplicates by using id())
+                        if not any(id(ds) == id(dataset) for ds in datasets):
+                            datasets.append(dataset)
+                            self.logger.info(f"Added dataset {i} from {file_path} to overlay list")
+                        else:
+                            self.logger.debug(f"Dataset {i} from {file_path} already in list (duplicate)")
+                    else:
+                        self.logger.debug(f"Field {field_name1} not found in dataset from {file_path}")
+                else:
+                    self.logger.debug(f"Could not load dataset from {file_path}")
+        
+        if not datasets:
+            self.logger.error("No datasets available for side-by-side plotting.")
+            return
+        
+        self.logger.debug(f"Processing {len(datasets)} datasets for {plot_type} comparison")
+        
+        if is_overlay:
+            # For overlay mode, create a single figure and plot all datasets on it
+            self._process_overlay_plots(datasets, field_name1, plot_type, current_field_index)
+        else:
+            # For side-by-side mode, create separate plots for each dataset
+            self._process_separate_plots(datasets, field_name1, plot_type)
+
+    def _process_overlay_plots(self, datasets, field_name, plot_type, current_field_index):
+        """Process overlay plots where multiple datasets are plotted on the same figure."""
+        self.logger.info(f"Creating overlay plot for {len(datasets)} datasets")
+        
+        # Create a single figure for all datasets
+        figure = Figure.create_eviz_figure(self.config_manager, plot_type)
+        figure.set_axes()
+        self.config_manager.ax_opts = figure.init_ax_opts(field_name)
+        
+        # Register the plot type
+        self.register_plot_type(field_name, plot_type)
+        
+        # Set total datasets for the plotter (overlay mode is already active from config)
+        self.config_manager.total_datasets = len(datasets)
+        
+        # Plot each dataset on the same figure
+        for i, dataset in enumerate(datasets):
+            if field_name not in dataset:
+                self.logger.warning(f"Field {field_name} not found in dataset {i}")
+                continue
+                
+            field_data = dataset[field_name]
+            self.logger.debug(f"Adding dataset {i} to overlay plot, data shape: {field_data.shape}")
+            
+            # Set current dataset index for proper styling
+            self.config_manager.current_dataset_index = i
+            
+            # Prepare field data for plotting
+            field_to_plot = self._prepare_field_to_plot(field_data, 
+                                                       field_name, 
+                                                       i, 
+                                                       plot_type, 
+                                                       figure, 
+                                                       time_level=0)
+            
+            if field_to_plot:
+                # Create the plot - this will add to the existing figure
+                plot_result = self.create_plot(field_name, field_to_plot)
+        
+        # Print the final overlay plot
+        pu.print_map(self.config_manager, 
+                    plot_type, 
+                    self.config_manager.findex, 
+                    plot_result)
+
+    def _process_separate_plots(self, datasets, field_name, plot_type):
+        """Process separate plots for each dataset (non-overlay mode)."""
+        for i, dataset in enumerate(datasets):
+            if field_name not in dataset:
+                self.logger.warning(f"Field {field_name} not found in dataset {i}")
+                continue
+            
+            field_data = dataset[field_name]
+            self.logger.debug(f"Processing field {field_name} from dataset {i}, data shape: {field_data.shape}")
+            
+            # Create a figure for this plot
+            figure = Figure.create_eviz_figure(self.config_manager, plot_type)
+            figure.set_axes()  # Initialize axes for the plot
+            self.config_manager.ax_opts = figure.init_ax_opts(field_name)
+            
+            # Register the plot type for this field
+            self.register_plot_type(field_name, plot_type)
+            
+            # Use the appropriate plot-specific method
+            if hasattr(self, '_process_xt_plot') and 'xt' in plot_type:
+                self.logger.debug(f"Processing XT plot for dataset {i}")
+                self._process_xt_plot(field_data, field_name, i, plot_type, figure)
+            elif hasattr(self, '_process_yz_plot') and 'yz' in plot_type:
+                self.logger.info(f"Processing YZ plot for dataset {i}")
+                # Check if YZ plot method exists (it might not)
+                try:
+                    self._process_yz_plot(field_data, field_name, i, plot_type, figure)
+                except AttributeError:
+                    self.logger.warning("YZ plot method not available, using general approach")
+                    self.process_plot(field_data, field_name, i, plot_type)
+            elif hasattr(self, '_process_tx_plot') and 'tx' in plot_type:
+                self.logger.info(f"Processing TX plot for dataset {i}")
+                self._process_tx_plot(field_data, field_name, i, plot_type, figure)
+            else:
+                # Fallback to general process_plot method
+                self.logger.info(f"Using general process_plot for {plot_type} plot type")
+                self.process_plot(field_data, field_name, i, plot_type)
+
     def _create_xy_side_by_side_plot(self, 
                                      current_field_index,
                                      field_name1, 
