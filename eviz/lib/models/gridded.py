@@ -52,6 +52,21 @@ class GriddedDataSource(GenericDataSource):
         super().__post_init__()
         self.processor = DataProcessor(self.config_manager)
 
+    def __call__(self):
+        """Make the GriddedDataSource callable for compatibility with legacy interface."""
+        # Import here to avoid circular imports
+        from eviz.lib.autoviz.plotting.plot_manager import PlotManager
+        from eviz.lib.data.data_extractor import DataExtractor
+        
+        # Initialize plot type registry if not already present
+        if not hasattr(self.config_manager, '_plot_type_registry'):
+            self.config_manager._plot_type_registry = {}
+        
+        # Use PlotManager to handle the plotting
+        data_extractor = DataExtractor(self.config_manager)
+        plot_manager = PlotManager(self.config_manager, data_extractor)
+        plot_manager.plot()
+
     def process_data(self, dataset: xr.Dataset) -> dict:
         """
         Process raw dataset into visualization-ready format.

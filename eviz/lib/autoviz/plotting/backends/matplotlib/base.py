@@ -646,14 +646,16 @@ class MatplotlibBasePlotter(BasePlotter):
                 title_string = self._set_axes_title(config, findex)
             else:
                 title_string = field_name
+        else:
+            # Non-comparison case
+            level_text = self._format_level_text(config, level)
+            long_name = self.get_long_name(config, data, findex)
+            if not long_name:
+                long_name = field_name
+            title_string = self._set_axes_title(config, findex)
+            
         ax.set_title(title_string, loc=loc, fontsize=title_fontsize)
         return
-
-        # Non-comparison case
-        level_text = self._format_level_text(config, level)
-        long_name = self.get_long_name(config, data, findex)
-        if not long_name:
-            long_name = field_name
 
         left, width = 0, 1.0
         bottom, height = 0, 1.0

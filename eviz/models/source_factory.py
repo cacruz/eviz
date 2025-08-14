@@ -28,6 +28,7 @@ from eviz.models.obs.satellite.omi import Omi
 # Import legacy sources for compatibility
 from eviz.models.obs_source import ObsSource
 from eviz.models.gridded_source import GriddedSource
+from eviz.models.source_base import GenericSource
 
 # Issue deprecation warning for generic factories
 warnings.warn(
@@ -53,7 +54,7 @@ class GriddedSourceFactory(BaseSourceFactory):
     Factory for creating GriddedSource model instances.
     """
     def create_root_instance(self, config_manager: ConfigManager):
-        return GriddedSource(config_manager)
+        return GenericSource(config_manager)
 
 
 @dataclass
