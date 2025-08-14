@@ -382,6 +382,7 @@ class PlotManager:
         dim1_name, dim2_name = self.config_manager.get_dim_names(plot_type)
         data2d = None
 
+        self.logger.debug(f"Preparing data for: {field_name}, plot_type:{plot_type}, time_level:{time_level}, level:{level}")
         if 'xy' in plot_type or 'polar' in plot_type:
             data2d = self.data_extractor._extract_xy_data(data_array, time_level, level=level)
         elif 'yz' in plot_type:
@@ -481,7 +482,7 @@ class PlotManager:
                             xs = np.linspace(lonW, lonE, 100)
                             ys = np.linspace(latS, latN, 100)
                             
-                        self.logger.info(f"Extent: {self.config_manager.ax_opts['extent']} ")
+                        self.logger.debug(f"Extent: {self.config_manager.ax_opts['extent']} ")
                         return data2d, xs, ys, field_name, plot_type, file_index, figure
                     else:
                         self.logger.warning(f"No domain extent available for regional data {field_name}")
