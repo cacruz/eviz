@@ -1373,7 +1373,8 @@ class PlotManager:
             self.logger.error(f"Failed to prepare box plot data for {field_name}")
             return
         
-        field_to_plot = (box_data, None, None, field_name, plot_type, file_index, figure)
+        # Pass both the DataFrame (box_data) and the original DataArray (data_array) for units extraction
+        field_to_plot = (box_data, None, None, field_name, plot_type, file_index, figure, data_array)
         
         plot_result = self.create_plot(field_name, field_to_plot)
         
