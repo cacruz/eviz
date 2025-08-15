@@ -521,7 +521,9 @@ class PlotManager:
                 return data2d, x, y, field_name, plot_type, file_index, figure, global_vmin, global_vmax
 
         except Exception as e:
+            import traceback
             self.logger.error(f"Error processing coordinates for {field_name}: {e}")
+            self.logger.error(f"Traceback: {traceback.format_exc()}")
             return None
 
     def _set_time_config(self, time_index, data_var):
@@ -1482,15 +1484,23 @@ class PlotManager:
         
             # Set up axes with proper spacing
             figure.set_axes()
+            self.logger.info(f"Figure created with {nrows}x{ncols} layout for {num_plots} datasets")
             self.config_manager.level = level_val
 
             # Store coordinate information for regional plots if available
             if self.config_manager.is_regional:
                 lon_coord_name = self.config_manager.longitude_coordinate_name
                 lat_coord_name = self.config_manager.latitude_coordinate_name
-                if lon_coord_name and lat_coord_name and hasattr(sdat1_dataset, lon_coord_name) and hasattr(sdat1_dataset, lat_coord_name):
-                    self.lon = getattr(sdat1_dataset, lon_coord_name)
-                    self.lat = getattr(sdat1_dataset, lat_coord_name)
+                
+                # Check if coordinate names exist in the dataset
+                if (lon_coord_name and lat_coord_name and 
+                    lon_coord_name in sdat1_dataset.coords and lat_coord_name in sdat1_dataset.coords):
+                    self.lon = sdat1_dataset.coords[lon_coord_name]
+                    self.lat = sdat1_dataset.coords[lat_coord_name]
+                    self.logger.debug(f"Set coordinates: lon={lon_coord_name}, lat={lat_coord_name}")
+                else:
+                    self.logger.debug(f"Coordinate names not found: lon={lon_coord_name}, lat={lat_coord_name}")
+                    self.logger.debug(f"Available coordinates: {list(sdat1_dataset.coords.keys())}")
 
             # Create the side-by-side plots
             self._create_xy_side_by_side_plot(current_field_index,
@@ -1700,12 +1710,16 @@ class PlotManager:
 
         # Plot first dataset (from a_list)
         if self.config_manager.a_list:
-            self._process_single_side_by_side_plot(self.config_manager.a_list[0],
+            first_file_idx = self.config_manager.a_list[0]
+            first_data = sdat1_dataset[field_name1]
+            self.logger.info(f"Processing first dataset {first_file_idx} with field {field_name1}")
+            self.logger.info(f"First dataset data shape: {first_data.shape}, has data: {not first_data.isnull().all().values}")
+            self._process_single_side_by_side_plot(first_file_idx,
                                             current_field_index,
                                             field_name1, 
                                             figure, 
                                             0,
-                                            sdat1_dataset[field_name1], 
+                                            first_data, 
                                             plot_type,
                                             level=level)
 
@@ -1717,18 +1731,18 @@ class PlotManager:
                 data_source = self.config_manager.pipeline.get_data_source(filename)
                 dataset = data_source.dataset
                 
-                # Get the correct field name for this specific dataset
-                to_plot = map_params.get('to_plot', {})
-                if isinstance(to_plot, dict):
-                    field_name_for_dataset = list(to_plot.keys())[0] if to_plot else field_name2
-                else:
-                    # If to_plot is not a dict, fall back to inspecting the dataset variables
-                    dataset_vars = list(dataset.data_vars.keys())
-                    # Find a data variable that's not a coordinate
-                    data_vars = [var for var in dataset_vars if var not in ['lat', 'lon', 'time', 'lev']]
-                    field_name_for_dataset = data_vars[0] if data_vars else field_name2
+                # Use the same field name for all datasets in the comparison
+                # since we're comparing the same variable across different datasets
+                field_name_for_dataset = field_name1
                 
-                self.logger.debug(f"Processing dataset {file_idx}: {filename} with field {field_name_for_dataset}")
+                # Verify the field exists in this dataset
+                if field_name_for_dataset not in dataset.data_vars:
+                    self.logger.warning(f"Field '{field_name_for_dataset}' not found in dataset {filename}, skipping this plot")
+                    continue
+                
+                self.logger.info(f"Processing dataset {file_idx}: {filename} with field {field_name_for_dataset}")
+                field_data = dataset[field_name_for_dataset]
+                self.logger.info(f"Field data shape: {field_data.shape}, has data: {not field_data.isnull().all().values}")
 
                 self._process_single_side_by_side_plot(file_idx,
                                                 current_field_index,
@@ -1779,14 +1793,19 @@ class PlotManager:
                                                     figure,
                                                     time_level=time_level_config,
                                                     level=level)
-
+        
+        self.logger.info(f"field_to_plot result for ax_index {ax_index}: {field_to_plot is not None}")
         if field_to_plot and field_to_plot[0] is not None:
+            data2d = field_to_plot[0]
+            self.logger.info(f"Data stats for ax_index {ax_index}: min={float(data2d.min()):.6f}, max={float(data2d.max()):.6f}, shape={data2d.shape}")
             if not hasattr(self, 'data2d_list'):
                 self.data2d_list = []
-            self.data2d_list.append(field_to_plot[0])
+            self.data2d_list.append(data2d)
             
         if field_to_plot:
+            self.logger.info(f"Creating plot for ax_index {ax_index}, field {field_name}")
             self.plot_result = self.create_plot(field_name, field_to_plot)
+            self.logger.info(f"Plot result for ax_index {ax_index}: {self.plot_result is not None}")
 
     def _process_xy_comparison_plots(self, 
                                      file_indices: tuple,

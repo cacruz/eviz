@@ -269,9 +269,13 @@ class DataExtractor:
             else:
                 self.logger.debug(f"Time averaging requested but no time dimension found (tc_dim={tc_dim}). Skipping time averaging.")
 
-        if np.isnan(data2d.values).any():
-            self.logger.debug(
-                f"Output contains NaN values: {np.sum(np.isnan(data2d.values))} NaNs")
+        # Check for NaN values only if data is numeric
+        if np.issubdtype(data2d.values.dtype, np.number):
+            if np.isnan(data2d.values).any():
+                self.logger.debug(
+                    f"Output contains NaN values: {np.sum(np.isnan(data2d.values))} NaNs")
+        else:
+            self.logger.debug(f"Skipping NaN check for non-numeric data type: {data2d.values.dtype}")
 
         data2d.attrs = data_array.attrs.copy()
         return apply_conversion(self.config_manager, data2d, data_array.name)
@@ -478,9 +482,13 @@ class DataExtractor:
         data2d = data2d.squeeze()
         data2d.attrs = data_array.attrs.copy()
 
-        if np.isnan(data2d.values).any():
-            self.logger.debug(
-                f"Output contains NaN values: {np.sum(np.isnan(data2d.values))} NaNs")
+        # Check for NaN values only if data is numeric
+        if np.issubdtype(data2d.values.dtype, np.number):
+            if np.isnan(data2d.values).any():
+                self.logger.debug(
+                    f"Output contains NaN values: {np.sum(np.isnan(data2d.values))} NaNs")
+        else:
+            self.logger.debug(f"Skipping NaN check for non-numeric data type: {data2d.values.dtype}")
             
         return apply_conversion(self.config_manager, data2d, data_array.name)
 
@@ -562,11 +570,15 @@ class DataExtractor:
                 d_temp = d_temp.isel({tc_dim: -1})
 
         
-        if np.isnan(d_temp).all():
-            return None
-        
-        if np.isnan(d_temp.values).any():
-            self.logger.debug(f"Output contains NaN values: {np.sum(np.isnan(d_temp.values))} NaNs")
+        # Check for NaN values only if data is numeric
+        if np.issubdtype(d_temp.values.dtype, np.number):
+            if np.isnan(d_temp).all():
+                return None
+            
+            if np.isnan(d_temp.values).any():
+                self.logger.debug(f"Output contains NaN values: {np.sum(np.isnan(d_temp.values))} NaNs")
+        else:
+            self.logger.debug(f"Skipping NaN check for non-numeric data type: {d_temp.values.dtype}")
         
         field_name = data_array.name if hasattr(data_array, 'name') else 'unnamed'
         
@@ -970,9 +982,13 @@ class DataExtractor:
                 if yc_dim in data2d.dims:
                     data2d = data2d.mean(dim=yc_dim)
 
-        if np.isnan(data2d.values).any():
-            self.logger.debug(
-                f"Output contains NaN values: {np.sum(np.isnan(data2d.values))} NaNs")
+        # Check for NaN values only if data is numeric
+        if np.issubdtype(data2d.values.dtype, np.number):
+            if np.isnan(data2d.values).any():
+                self.logger.debug(
+                    f"Output contains NaN values: {np.sum(np.isnan(data2d.values))} NaNs")
+        else:
+            self.logger.debug(f"Skipping NaN check for non-numeric data type: {data2d.values.dtype}")
             
         data2d.attrs = data_array.attrs.copy()
 
@@ -1065,7 +1081,11 @@ class DataExtractor:
         
         data2d = apply_conversion(self.config_manager, d_temp, data_array.name)
         
-        if np.isnan(data2d.values).all():
-            self.logger.warning(f"All values are NaN for {data_array.name if hasattr(data_array, 'name') else 'unnamed field'}")
+        # Check for NaN values only if data is numeric
+        if np.issubdtype(data2d.values.dtype, np.number):
+            if np.isnan(data2d.values).all():
+                self.logger.warning(f"All values are NaN for {data_array.name if hasattr(data_array, 'name') else 'unnamed field'}")
+        else:
+            self.logger.debug(f"Skipping NaN check for non-numeric data type: {data2d.values.dtype}")
         
         return data2d

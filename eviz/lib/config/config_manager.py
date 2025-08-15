@@ -901,10 +901,6 @@ class ConfigManager:
             return
         
         self.logger.debug(f"set_domain_info called with dataset type: {type(dataset)}")
-        if hasattr(dataset, 'coords'):
-            self.logger.debug(f"Dataset coordinates: {list(dataset.coords.keys())}")
-        if hasattr(dataset, 'data_vars'):  
-            self.logger.debug(f"Dataset data variables: {list(dataset.data_vars.keys())}")
             
         # Use filename as key if provided, otherwise use a generic key
         key = filename if filename else 'default'
@@ -949,7 +945,7 @@ class ConfigManager:
         lon_coords, lat_coords = self._find_coordinate_variables(dataset)
         
         self.logger.debug(f"Dataset coords: {list(dataset.coords.keys())}")
-        self.logger.debug(f"Dataset data_vars: {list(dataset.data_vars.keys()) if hasattr(dataset, 'data_vars') else 'N/A'}")
+        #self.logger.debug(f"Dataset data_vars: {list(dataset.data_vars.keys()) if hasattr(dataset, 'data_vars') else 'N/A'}")
         self.logger.debug(f"Found lon_coords: {lon_coords}, lat_coords: {lat_coords}")
         
         if lon_coords is None or lat_coords is None:

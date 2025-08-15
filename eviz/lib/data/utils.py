@@ -461,8 +461,43 @@ def is_full_year(start_date, end_date):
 
 def subset_region(data: xr.DataArray, extent: list) -> xr.DataArray:
     lon_min, lon_max, lat_min, lat_max = extent
-    if data.lat[0] > data.lat[-1]:
-        lat_slice = slice(lat_max, lat_min)
+    
+    # Find latitude coordinate name (support both standard and WRF naming)
+    lat_coord_name = None
+    lon_coord_name = None
+    
+    for coord_name in data.coords:
+        if coord_name.lower() in ['lat', 'latitude']:
+            lat_coord_name = coord_name
+        elif coord_name.lower() in ['lon', 'longitude']:
+            lon_coord_name = coord_name
+        elif 'xlat' in coord_name.lower():
+            lat_coord_name = coord_name
+        elif 'xlong' in coord_name.lower():
+            lon_coord_name = coord_name
+    
+    if not lat_coord_name or not lon_coord_name:
+        # If we can't find standard coordinate names, return data unchanged
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Could not find lat/lon coordinates in {list(data.coords.keys())}, skipping region subset")
+        return data
+    
+    lat_coord = data.coords[lat_coord_name]
+    
+    # Handle 2D coordinates (like WRF) vs 1D coordinates
+    if lat_coord.ndim > 1:
+        # For 2D coordinates, we can't easily do coordinate-based slicing
+        # For now, return the data unchanged
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Skipping region subset for 2D coordinates ({lat_coord_name}, {lon_coord_name})")
+        return data
     else:
-        lat_slice = slice(lat_min, lat_max)
-    return data.sel(lon=slice(lon_min, lon_max), lat=lat_slice)
+        # For 1D coordinates, proceed with normal slicing
+        if lat_coord[0] > lat_coord[-1]:
+            lat_slice = slice(lat_max, lat_min)
+        else:
+            lat_slice = slice(lat_min, lat_max)
+        
+        return data.sel({lon_coord_name: slice(lon_min, lon_max), lat_coord_name: lat_slice})
