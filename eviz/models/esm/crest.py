@@ -1,5 +1,6 @@
 import warnings
 import logging
+import numpy as np
 from dataclasses import dataclass
 from eviz.lib.autoviz.figure import Figure
 from eviz.models.source_base import GenericSource
@@ -219,5 +220,66 @@ class Crest(GenericSource):
             self.gridded_handler.field_names = (field_name1, field_name2)
             return self.gridded_handler._process_other_comparison_plots(
                 file_indices, current_field_index, field_name1, field_name2, plot_type, sdat1_dataset, sdat2_dataset)
+
+    def _is_observational_data(self, data_array):
+        """
+        Determine if the data array should be treated as observational data.
+        
+        This method checks various characteristics of the data to determine
+        if it should be processed as observational data (e.g., swath format)
+        or as standard gridded data.
+        
+        Args:
+            data_array: The xarray DataArray to check
+            
+        Returns:
+            bool: True if the data should be treated as observational
+        """
+        if data_array is None:
+            return False
+            
+        # Check for characteristics of observational data
+        try:
+            # 2D coordinate arrays (common in swath data)
+            for coord_name in data_array.coords:
+                if ('lon' in coord_name.lower() or 'lat' in coord_name.lower()) and len(data_array[coord_name].shape) == 2:
+                    return True
+            
+            # Irregular grid spacing
+            xc_dim = self.config_manager.get_model_dim_name('xc') or 'lon'
+            yc_dim = self.config_manager.get_model_dim_name('yc') or 'lat'
+            
+            if xc_dim in data_array.coords and yc_dim in data_array.coords:
+                lon_vals = data_array[xc_dim].values
+                if len(lon_vals) > 2:
+                    lon_diffs = np.diff(lon_vals)  # Check if longitude spacing is regular
+                    if not np.allclose(lon_diffs, lon_diffs[0], rtol=1e-3):
+                        return True
+                
+                lat_vals = data_array[yc_dim].values
+                if len(lat_vals) > 2:
+                    lat_diffs = np.diff(lat_vals)  # Check if latitude spacing is regular
+                    if not np.allclose(lat_diffs, lat_diffs[0], rtol=1e-3):
+                        return True
+            
+            # Observational metadata (usually in attributes)
+            for attr in ['platform', 'instrument', 'sensor', 'satellite']:
+                if hasattr(data_array, attr) or attr in data_array.attrs:
+                    return True
+                    
+            # Do we have limited geographical coverage (i.e., not global)?
+            if xc_dim in data_array.coords and yc_dim in data_array.coords:
+                lon_min, lon_max = np.nanmin(data_array[xc_dim]), np.nanmax(data_array[xc_dim])
+                lat_min, lat_max = np.nanmin(data_array[yc_dim]), np.nanmax(data_array[yc_dim])
+                
+                # Hackish way to check...
+                if (lon_max - lon_min < 300) or (lat_max - lat_min < 150):
+                    return True
+            
+        except Exception as e:
+            self.logger.debug(f"Error checking if data is observational: {e}")
+        
+        # Default to gridded
+        return False
 
             

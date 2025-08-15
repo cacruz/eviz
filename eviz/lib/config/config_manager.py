@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 import logging
 import os
 from typing import Optional, List, Dict, Any
+import numpy as np
 import eviz.lib.utils as u
 from eviz.lib.config.config import Config
 from eviz.lib.config.input_config import InputConfig
@@ -58,6 +59,9 @@ class ConfigManager:
     _units: Optional[object] = field(default=None, init=False)
     _integrator: Optional[DataIntegrator] = field(default=None, init=False)
     _pipeline: Optional[DataPipeline] = field(default=None, init=False)
+    
+    # Domain information (extracted from datasets)
+    _domain_info: Dict[str, Any] = field(default_factory=dict, init=False)
 
     def __post_init__(self):
         """Initialize the ConfigManager after construction."""
@@ -310,6 +314,44 @@ class ConfigManager:
                     return item
         else:
             return coords if coords in dims else None
+
+        return None
+
+    def get_model_dim_name_for_data(self, dim_name, data_array):
+        """
+        Get model-specific dimension name for a specific data array.
+        This method checks which of the possible dimension names actually exists
+        in the given data_array.
+        
+        Args:
+            dim_name (str): The generic dimension name to look up ('tc', 'zc', etc.)
+            data_array: xarray.DataArray to check dimensions against
+            
+        Returns:
+            str or None: The model-specific dimension name that exists in data_array
+        """
+        if not hasattr(data_array, 'dims'):
+            return None
+            
+        source = self.source_names[self.ds_index] if self.source_names else 'gridded'
+        
+        if dim_name not in self.meta_coords:
+            return None
+        if source not in self.meta_coords[dim_name]:
+            return None
+
+        if source in ['wrf', 'lis']:
+            coords = self.meta_coords[dim_name][source].get('dim', '')
+        else:
+            coords = self.meta_coords[dim_name][source]
+
+        if ',' in coords:
+            coords_list = [c.strip() for c in coords.split(',')]
+            for item in coords_list:
+                if item in data_array.dims:
+                    return item
+        else:
+            return coords if coords in data_array.dims else None
 
         return None
 
@@ -839,3 +881,284 @@ class ConfigManager:
     def real_time(self, value):
         """Set the human-readable representation of the current time."""
         self.config._real_time = value
+
+    def set_domain_info(self, dataset, filename: str = None):
+        """
+        Extract and store generic domain information from an xarray.Dataset.
+        
+        This method analyzes the dataset to determine domain characteristics such as:
+        - Whether the data is regional vs global
+        - Coordinate information (lon/lat ranges, central points)
+        - Grid type and spacing
+        - Domain extent
+        
+        Args:
+            dataset: xarray.Dataset to analyze
+            filename: Optional filename for caching domain info per file
+        """
+        if dataset is None:
+            self.logger.warning("Cannot extract domain info from None dataset")
+            return
+        
+        self.logger.debug(f"set_domain_info called with dataset type: {type(dataset)}")
+            
+        # Use filename as key if provided, otherwise use a generic key
+        key = filename if filename else 'default'
+        
+        try:
+            domain_info = self._extract_domain_characteristics(dataset)
+            self._domain_info[key] = domain_info
+            
+            self.logger.debug(f"Extracted domain info for {key}: {domain_info}")
+            
+        except Exception as e:
+            self.logger.error(f"Error extracting domain info: {e}")
+            # Set safe defaults
+            self._domain_info[key] = {
+                'is_regional': False,
+                'extent': None,
+                'central_lon': 0.0,
+                'central_lat': 0.0,
+                'grid_type': 'regular',
+                'has_2d_coords': False
+            }
+
+    def _extract_domain_characteristics(self, dataset):
+        """
+        Extract domain characteristics from an xarray Dataset.
+        
+        Returns:
+            dict: Dictionary containing domain characteristics
+        """
+        domain_info = {
+            'is_regional': False,
+            'extent': None,
+            'central_lon': 0.0,
+            'central_lat': 0.0,
+            'grid_type': 'regular',
+            'has_2d_coords': False,
+            'lon_coords': None,
+            'lat_coords': None
+        }
+        
+        # Find longitude and latitude coordinates
+        lon_coords, lat_coords = self._find_coordinate_variables(dataset)
+        
+        self.logger.debug(f"Dataset coords: {list(dataset.coords.keys())}")
+        #self.logger.debug(f"Dataset data_vars: {list(dataset.data_vars.keys()) if hasattr(dataset, 'data_vars') else 'N/A'}")
+        self.logger.debug(f"Found lon_coords: {lon_coords}, lat_coords: {lat_coords}")
+        
+        if lon_coords is None or lat_coords is None:
+            self.logger.warning("Could not find longitude/latitude coordinates in dataset")
+            return domain_info
+            
+        domain_info['lon_coords'] = lon_coords
+        domain_info['lat_coords'] = lat_coords
+        
+        # Get coordinate data
+        lon_data = dataset[lon_coords].values
+        lat_data = dataset[lat_coords].values
+        
+        # Check if coordinates are 2D (common in regional/curvilinear grids)
+        has_2d_coords = len(lon_data.shape) == 2 and len(lat_data.shape) == 2
+        domain_info['has_2d_coords'] = has_2d_coords
+        
+        if has_2d_coords:
+            # For 2D coordinates, flatten to get extents
+            lon_min, lon_max = np.nanmin(lon_data), np.nanmax(lon_data)
+            lat_min, lat_max = np.nanmin(lat_data), np.nanmax(lat_data)
+            domain_info['grid_type'] = 'curvilinear'
+        else:
+            # For 1D coordinates
+            lon_min, lon_max = np.nanmin(lon_data), np.nanmax(lon_data)
+            lat_min, lat_max = np.nanmin(lat_data), np.nanmax(lat_data)
+            
+            # Check if grid spacing is regular
+            if len(lon_data) > 2 and len(lat_data) > 2:
+                lon_diffs = np.diff(lon_data)
+                lat_diffs = np.diff(lat_data)
+                
+                # If spacing is not regular, mark as irregular
+                if not (np.allclose(lon_diffs, lon_diffs[0], rtol=1e-3) and 
+                        np.allclose(lat_diffs, lat_diffs[0], rtol=1e-3)):
+                    domain_info['grid_type'] = 'irregular'
+        
+        # Determine if regional based on coverage
+        lon_range = lon_max - lon_min
+        lat_range = lat_max - lat_min
+        
+        # Heuristics for regional vs global:
+        # - Global data typically spans close to 360° in longitude and ~180° in latitude
+        # - Regional data has more limited coverage
+        is_regional = (lon_range < 300) or (lat_range < 150)
+        
+        # Additional checks for regional data
+        if not is_regional:
+            # Check if data covers poles (typical of global data)
+            covers_poles = lat_min < -80 and lat_max > 80
+            # Check if data wraps around longitude (typical of global data)
+            wraps_longitude = lon_range > 350
+            
+            is_regional = not (covers_poles or wraps_longitude)
+        
+        domain_info['is_regional'] = is_regional
+        
+        # Calculate extent and central points
+        domain_info['extent'] = [lon_min, lon_max, lat_min, lat_max]
+        domain_info['central_lon'] = (lon_min + lon_max) / 2.0
+        domain_info['central_lat'] = (lat_min + lat_max) / 2.0
+        
+        return domain_info
+
+    def _find_coordinate_variables(self, dataset):
+        """
+        Find longitude and latitude coordinate variables in the dataset.
+        
+        Returns:
+            tuple: (lon_coord_name, lat_coord_name) or (None, None) if not found
+        """
+        lon_names = ['lon', 'longitude', 'x', 'XLONG', 'LONGITUDE']
+        lat_names = ['lat', 'latitude', 'y', 'XLAT', 'LATITUDE']
+        
+        lon_coord = None
+        lat_coord = None
+        
+        # Check coordinates first - use exact matching to avoid false positives
+        for coord_name in dataset.coords:
+            coord_lower = coord_name.lower()
+            if any(coord_lower == ln.lower() for ln in lon_names):
+                lon_coord = coord_name
+            elif any(coord_lower == ln.lower() for ln in lat_names):
+                lat_coord = coord_name
+        
+        # If not found in coordinates, check data variables (important for WRF)
+        if lon_coord is None or lat_coord is None:
+            for var_name in dataset.data_vars:
+                var_lower = var_name.lower()
+                if lon_coord is None and any(ln.lower() == var_lower for ln in lon_names):
+                    lon_coord = var_name
+                elif lat_coord is None and any(ln.lower() == var_lower for ln in lat_names):
+                    lat_coord = var_name
+        
+        # Additional check for exact WRF coordinate names if still not found
+        if lon_coord is None and 'XLONG' in dataset.data_vars:
+            lon_coord = 'XLONG'
+        if lat_coord is None and 'XLAT' in dataset.data_vars:
+            lat_coord = 'XLAT'
+        
+        return lon_coord, lat_coord
+
+    def get_domain_info(self, filename: str = None) -> Dict[str, Any]:
+        """
+        Get domain information for a dataset.
+        
+        Args:
+            filename: Optional filename to get specific domain info
+            
+        Returns:
+            dict: Domain information dictionary
+        """
+        key = filename if filename else 'default'
+        
+        if key in self._domain_info:
+            return self._domain_info[key]
+        
+        # Return safe defaults if no domain info is available
+        return {
+            'is_regional': False,
+            'extent': None,
+            'central_lon': 0.0,
+            'central_lat': 0.0,
+            'grid_type': 'regular',
+            'has_2d_coords': False,
+            'lon_coords': None,
+            'lat_coords': None
+        }
+
+    @property
+    def is_regional(self) -> bool:
+        """
+        Get whether the current dataset is regional.
+        
+        Returns:
+            bool: True if the dataset is regional, False if global
+        """
+        domain_info = self.get_domain_info()
+        return domain_info.get('is_regional', False)
+
+    @property
+    def domain_extent(self) -> Optional[List[float]]:
+        """
+        Get the domain extent [lon_min, lon_max, lat_min, lat_max].
+        
+        Returns:
+            list or None: Domain extent or None if not available
+        """
+        domain_info = self.get_domain_info()
+        return domain_info.get('extent')
+
+    @property
+    def central_longitude(self) -> float:
+        """
+        Get the central longitude of the domain.
+        
+        Returns:
+            float: Central longitude
+        """
+        domain_info = self.get_domain_info()
+        return domain_info.get('central_lon', 0.0)
+
+    @property
+    def central_latitude(self) -> float:
+        """
+        Get the central latitude of the domain.
+        
+        Returns:
+            float: Central latitude
+        """
+        domain_info = self.get_domain_info()
+        return domain_info.get('central_lat', 0.0)
+
+    @property
+    def has_2d_coordinates(self) -> bool:
+        """
+        Get whether the dataset has 2D coordinate arrays.
+        
+        Returns:
+            bool: True if coordinates are 2D (curvilinear), False if 1D
+        """
+        domain_info = self.get_domain_info()
+        return domain_info.get('has_2d_coords', False)
+
+    @property
+    def grid_type(self) -> str:
+        """
+        Get the grid type ('regular', 'irregular', or 'curvilinear').
+        
+        Returns:
+            str: Grid type
+        """
+        domain_info = self.get_domain_info()
+        return domain_info.get('grid_type', 'regular')
+
+    @property
+    def longitude_coordinate_name(self) -> Optional[str]:
+        """
+        Get the name of the longitude coordinate variable.
+        
+        Returns:
+            str or None: Longitude coordinate name
+        """
+        domain_info = self.get_domain_info()
+        return domain_info.get('lon_coords')
+
+    @property
+    def latitude_coordinate_name(self) -> Optional[str]:
+        """
+        Get the name of the latitude coordinate variable.
+        
+        Returns:
+            str or None: Latitude coordinate name
+        """
+        domain_info = self.get_domain_info()
+        return domain_info.get('lat_coords')

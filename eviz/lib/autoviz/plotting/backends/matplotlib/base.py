@@ -118,111 +118,86 @@ class MatplotlibBasePlotter(BasePlotter):
     def _create_clevs(self, field_name, data2d, vmin=None, vmax=None):
         """Create contour levels for the plot."""
         self.logger.debug(f"Create contour levels for {field_name}")
-        # Check if clevs already exists and is not empty
-        if (
-            "clevs" in self.ax_opts
-            and self.ax_opts["clevs"] is not None
-            and len(self.ax_opts["clevs"]) > 0
-        ):
+
+        # If clevs already set, exit early
+        if self.ax_opts.get("clevs"):
             return
 
         if np.isnan(data2d).all():
             self.logger.warning("All values are NaN! Cannot create contour levels.")
-            # Set default contour levels to avoid errors
-            self.ax_opts["clevs"] = np.array([0, 1])
-            self.ax_opts["clevs_prec"] = 0
+            self.ax_opts.update(clevs=np.array([0, 1]), clevs_prec=0)
             return
 
-        if vmin is not None and vmax is not None:
-            dmin, dmax = vmin, vmax
-        else:
-            # Get min/max values, skipping NaN values
-            dmin = np.nanmin(data2d)
-            dmax = np.nanmax(data2d)
+        # Determine min/max
+        dmin = vmin if vmin is not None else np.nanmin(data2d)
+        dmax = vmax if vmax is not None else np.nanmax(data2d)
         self.logger.debug(f"dmin: {dmin}, dmax: {dmax}")
 
-        # Use a single consistent threshold
         variation_threshold = float(self.ax_opts.get("variation_threshold", 1e-12))
-        data_range = np.abs(dmax - dmin)
+        data_range = abs(dmax - dmin)
+        max_abs_value = max(abs(dmin), abs(dmax))
 
-        self.logger.debug(f"range: {data_range}, threshold: {variation_threshold}")
-
-        # Determine if field should be treated as constant based on relative variation
-        max_abs_value = max(np.abs(dmin), np.abs(dmax))
-
-        # For very small values, use absolute threshold
-        # For larger values, use relative threshold (e.g., 0.01% of the maximum absolute value)
+        # Constant field detection
         if max_abs_value < 1e-10:
-            # Very small values - use absolute threshold
             is_constant = data_range < variation_threshold
         else:
-            # Larger values - use relative threshold
             relative_threshold = max(variation_threshold, 1e-6 * max_abs_value)
             is_constant = data_range < relative_threshold
 
         if is_constant:
-            self.logger.debug(
-                "Field variation below threshold — will be treated as constant in plotting."
-            )
-            # Set a flag to indicate this should be rendered as constant field
-            self.ax_opts["is_constant_field"] = True
-            # Still create minimal contour levels to avoid errors
             center = (dmin + dmax) / 2
-            self.ax_opts["clevs"] = np.array(
-                [center - variation_threshold, center, center + variation_threshold]
-            )
-            self.ax_opts["clevs_prec"] = max(
-                0, int(-np.floor(np.log10(variation_threshold)))
+            clevs = np.array(
+                [center - variation_threshold, center, center + variation_threshold])
+            self.ax_opts.update(
+                is_constant_field=True,
+                clevs=clevs,
+                clevs_prec=max(0, int(-np.floor(np.log10(variation_threshold))))
             )
             return
 
-        # Normal case - create proper contour levels
         self.ax_opts["is_constant_field"] = False
 
-        # Calculate appropriate precision
-        range_val = data_range
-        precision = max(0, int(np.ceil(-np.log10(range_val)))) if range_val != 0 else 6
-        if 1.0 <= range_val <= 9.0:
+        # Decide number of levels
+        num_levels = int(self.ax_opts.get("num_clevs", 10))
+
+        # Logarithmic-aware spacing
+        # TODO: make this an option
+        if dmin > 0 and (dmax / dmin) > 50:
+            self.logger.debug("Using logarithmic spacing for contour levels.")
+            clevs = np.geomspace(dmin, dmax, num_levels)
+        else:
+            clevs = np.linspace(dmin, dmax, num_levels)
+
+        # Precision rules
+        if data_range >= 10:
+            precision = 0  # integers only
+        elif data_range >= 1:
             precision = 1
-        elif 0.1 <= range_val < 1.0:
+        elif data_range >= 0.1:
             precision = 2
-        elif 0.01 <= range_val < 1.0:
+        elif data_range >= 0.01:
             precision = 3
-        elif 0.001 <= range_val < 1.0:
+        elif data_range >= 0.001:
             precision = 4
-            self.ax_opts["cbar_sci_notation"] = True  # Use scientific notation for colorbar
-        elif 0.0001 <= range_val < 1.0:
-            precision = 5
-            self.ax_opts["cbar_sci_notation"] = True  # Use scientific notation for colorbar
+            self.ax_opts["cbar_sci_notation"] = True
+        else:
+            precision = max(5, int(np.ceil(-np.log10(data_range))) + 1)
+            self.ax_opts["cbar_sci_notation"] = True
 
         self.ax_opts["clevs_prec"] = precision
-        self.logger.debug(f"range_val: {range_val}, precision: {precision}")
 
-        # Create contour levels
-        num_levels = int(self.ax_opts.get("num_clevs", 10))
-        if not self.ax_opts.get("create_clevs", True):
-            clevs = np.around(np.linspace(dmin, dmax, 10), decimals=precision)
-        else:
-            clevs = np.around(np.linspace(dmin, dmax, num_levels), decimals=precision)
-            clevs = np.unique(clevs)  # Remove duplicates
+        # Keep exact levels for plotting
+        clevs_display = np.round(clevs, precision)
 
-        # Check if levels are strictly increasing
-        if len(set(clevs)) <= 2:
-            self.logger.debug("Not enough unique contour levels.")
-            # Try with more levels and higher precision
-            clevs = np.linspace(dmin, dmax, 10)
-            clevs = np.unique(np.around(clevs, decimals=6))
-            if len(clevs) <= 2:
-                # As a last resort, just use [dmin, dmax]
-                clevs = np.array([dmin, dmax])
+        # Avoid collapse after rounding
+        if len(np.unique(clevs_display)) < num_levels // 2:
+            precision += 2
+            clevs_display = np.round(clevs, precision)
 
-        # Ensure strictly increasing
-        clevs = np.unique(clevs)
         self.ax_opts["clevs"] = clevs
+        self.ax_opts["clevs_display"] = clevs_display  # for labels
 
         self.logger.debug(f"Created contour levels: {self.ax_opts['clevs']}")
-        if self.ax_opts["clevs"][0] == 0.0:
-            self.ax_opts["extend_value"] = "max"
 
     def line_contours(self, fig, ax, x, y, data2d, transform=None):
         """Add line contours to the plot."""
@@ -426,8 +401,8 @@ class MatplotlibBasePlotter(BasePlotter):
     def set_cartopy_ticks(self, ax, extent, labelsize=10):
         """Add gridlines and tick labels to a Cartopy map."""
 
+        # Sanity check
         if not extent or len(extent) != 4:
-            self.logger.warning(f"Invalid extent {extent}, using default")
             extent = [-180, 180, -90, 90]
 
         try:
@@ -463,8 +438,9 @@ class MatplotlibBasePlotter(BasePlotter):
         Adds gridlines and tick labels (in degrees) outside the map for Lambert and PlateCarree.
         Places longitude labels below the map, latitude on the left.
         """
+
+        # Sanity check
         if not extent or len(extent) != 4:
-            self.logger.warning(f"Invalid extent {extent}, using default")
             extent = [-180, 180, -90, 90]
 
         try:
@@ -644,7 +620,7 @@ class MatplotlibBasePlotter(BasePlotter):
         geom = pu.get_subplot_geometry(ax) if config.compare or config.compare_diff else None
 
         # Handle plot titles for comparison cases
-        if config.compare or config.compare_diff:
+        if config.compare_diff:
             if geom and geom[0] == (3, 1):  # (3,1) subplot structure
                 if geom[1:] == (0, 1, 1, 1):  # Bottom plot
                     title_string = "Difference (top - middle)"
@@ -665,16 +641,25 @@ class MatplotlibBasePlotter(BasePlotter):
                     self.ax_opts['line_contours'] = False
                 else:  # Default case
                     title_string = self._set_axes_title(config, findex)
-            elif geom and (geom[0] == (1, 2) or geom[0] == (1, 3)):
+        elif config.compare:
+            if geom and (geom[0][0] == 1):
                 title_string = self._set_axes_title(config, findex)
-            ax.set_title(title_string, loc=loc, fontsize=title_fontsize)
-            return
-
-        # Non-comparison case
-        level_text = self._format_level_text(config, level)
-        long_name = self.get_long_name(config, data, findex)
-        if not long_name:
-            long_name = field_name
+            else:
+                title_string = field_name
+        else:
+            # Non-comparison case
+            level_text = self._format_level_text(config, level)
+            # For box plots, data is a DataFrame and doesn't have the same attributes as xarray
+            if data is not None and hasattr(data, 'name'):  # Check if it's an xarray-like object
+                long_name = self.get_long_name(config, data, findex)
+            else:
+                long_name = None
+            if not long_name:
+                long_name = field_name
+            title_string = self._set_axes_title(config, findex)
+            
+        ax.set_title(title_string, loc=loc, fontsize=title_fontsize)
+        return
 
         left, width = 0, 1.0
         bottom, height = 0, 1.0

@@ -65,6 +65,21 @@ def mock_history_config():
 
 
 @pytest.fixture
+def mock_app_data():
+    """Create a mock AppData."""
+    app_data = MagicMock(spec=AppData)
+    app_data.inputs = [
+        {
+            'source_name': 'wrf',
+            'location': '/path/to',
+            'name': 'wrfout_file.nc',
+            'filename': 'wrfout_file.nc'
+        }
+    ]
+    return app_data
+
+
+@pytest.fixture
 def mock_config():
     """Create a mock Config."""
     config = MagicMock(spec=Config)
@@ -561,3 +576,155 @@ class TestConfigManager:
         config_manager.real_time = '2023-01-01 12:00'
         assert config_manager.real_time == '2023-01-01 12:00'
         assert config_manager.config._real_time == '2023-01-01 12:00'
+
+
+class TestWRFDimensionDetection:
+    """Test WRF-specific dimension detection functionality."""
+
+    @pytest.fixture
+    def mock_wrf_data_array(self):
+        """Create a mock WRF DataArray with typical soil layer dimensions."""
+        import xarray as xr
+        import numpy as np
+        
+        # Create a mock TSLB-like data array
+        data = np.random.rand(25, 4, 150, 150)  # Time, soil_layers_stag, south_north, west_east
+        coords = {
+            'XLAT': (('south_north', 'west_east'), np.random.rand(150, 150)),
+            'XLONG': (('south_north', 'west_east'), np.random.rand(150, 150)),
+            'XTIME': ('Time', np.arange(25))
+        }
+        dims = ('Time', 'soil_layers_stag', 'south_north', 'west_east')
+        
+        return xr.DataArray(data, dims=dims, coords=coords, name='TSLB')
+
+    @pytest.fixture  
+    def mock_wrf_2d_data_array(self):
+        """Create a mock WRF 2D DataArray (like TSK)."""
+        import xarray as xr
+        import numpy as np
+        
+        # Create a mock TSK-like data array (2D + time)
+        data = np.random.rand(25, 150, 150)  # Time, south_north, west_east
+        coords = {
+            'XLAT': (('south_north', 'west_east'), np.random.rand(150, 150)),
+            'XLONG': (('south_north', 'west_east'), np.random.rand(150, 150)),
+            'XTIME': ('Time', np.arange(25))
+        }
+        dims = ('Time', 'south_north', 'west_east')
+        
+        return xr.DataArray(data, dims=dims, coords=coords, name='TSK')
+
+    @pytest.fixture
+    def wrf_config_manager(self, mock_input_config, mock_output_config, 
+                          mock_system_config, mock_history_config, mock_app_data):
+        """Create a ConfigManager configured for WRF source."""
+        # Create a mock config with WRF-specific settings
+        mock_config = MagicMock()
+        mock_config.app_data = mock_app_data
+        mock_config.source_names = ['wrf']
+        
+        # Set up meta_coordinates with WRF configuration
+        meta_coords = {
+            'tc': {
+                'wrf': {'dim': 'Time'},
+                'gridded': 'time,Time,rec_dim,ntimemax,t,rec_dim'
+            },
+            'zc': {
+                'wrf': {'dim': 'bottom_top,bottom_top_stag,soil_layers,soil_layers_stag'},
+                'gridded': 'lev,level,levels,plev,lm,eta_dim,z,eta_dim'
+            },
+            'xc': {
+                'wrf': {'dim': 'west_east', 'coords': 'XLONG,XLONG_U,XLONG_V'},
+                'gridded': 'lon,longitude,im,Longitude,x,longitude_dim'
+            },
+            'yc': {
+                'wrf': {'dim': 'south_north', 'coords': 'XLAT,XLAT_U,XLAT_V'},
+                'gridded': 'lat,latitude,jm,Latitude,y,latitude_dim'
+            }
+        }
+
+        # Set meta_coords on the config object
+        mock_config.meta_coords = meta_coords
+        
+        config_manager = ConfigManager(
+            input_config=mock_input_config,
+            output_config=mock_output_config,
+            system_config=mock_system_config,
+            history_config=mock_history_config,
+            config=mock_config
+        )
+        
+        # source_names is a property that comes from config
+        config_manager.ds_index = 0
+        
+        # Mock setup_comparison to avoid side effects
+        config_manager.setup_comparison = MagicMock()
+        
+        return config_manager
+
+    def test_get_model_dim_name_for_data_wrf_vertical(self, wrf_config_manager, mock_wrf_data_array):
+        """Test vertical dimension detection for WRF soil layers."""
+        # Test that it finds soil_layers_stag in the TSLB data
+        zc_dim = wrf_config_manager.get_model_dim_name_for_data('zc', mock_wrf_data_array)
+        assert zc_dim == 'soil_layers_stag'
+
+    def test_get_model_dim_name_for_data_wrf_time(self, wrf_config_manager, mock_wrf_data_array):
+        """Test time dimension detection for WRF data."""
+        tc_dim = wrf_config_manager.get_model_dim_name_for_data('tc', mock_wrf_data_array)
+        assert tc_dim == 'Time'
+
+    def test_get_model_dim_name_for_data_no_vertical(self, wrf_config_manager, mock_wrf_2d_data_array):
+        """Test dimension detection for 2D WRF data (no vertical dimension)."""
+        # TSK should not have a vertical dimension
+        zc_dim = wrf_config_manager.get_model_dim_name_for_data('zc', mock_wrf_2d_data_array)
+        assert zc_dim is None
+        
+        # But should still have time dimension
+        tc_dim = wrf_config_manager.get_model_dim_name_for_data('tc', mock_wrf_2d_data_array)
+        assert tc_dim == 'Time'
+
+    def test_get_model_dim_name_for_data_time_sliced(self, wrf_config_manager, mock_wrf_data_array):
+        """Test dimension detection after time slicing."""
+        # Simulate time slicing (removes Time dimension)
+        time_sliced = mock_wrf_data_array.isel(Time=0)
+        
+        # Should still find vertical dimension
+        zc_dim = wrf_config_manager.get_model_dim_name_for_data('zc', time_sliced)
+        assert zc_dim == 'soil_layers_stag'
+        
+        # Should not find time dimension (as expected after slicing)
+        tc_dim = wrf_config_manager.get_model_dim_name_for_data('tc', time_sliced)
+        assert tc_dim is None
+
+    def test_get_model_dim_name_for_data_invalid_input(self, wrf_config_manager):
+        """Test handling of invalid input."""
+        # Test with None data_array
+        result = wrf_config_manager.get_model_dim_name_for_data('zc', None)
+        assert result is None
+        
+        # Test with object without dims attribute
+        class MockObject:
+            pass
+        
+        result = wrf_config_manager.get_model_dim_name_for_data('zc', MockObject())
+        assert result is None
+
+    def test_get_model_dim_name_for_data_unknown_dimension(self, wrf_config_manager, mock_wrf_data_array):
+        """Test handling of unknown dimension names."""
+        result = wrf_config_manager.get_model_dim_name_for_data('unknown_dim', mock_wrf_data_array)
+        assert result is None
+
+    def test_wrf_dimension_priority_order(self, wrf_config_manager):
+        """Test that WRF dimensions are checked in priority order."""
+        import xarray as xr
+        import numpy as np
+        
+        # Create data with both bottom_top and soil_layers_stag
+        # Should prioritize bottom_top (comes first in meta_coordinates)
+        data = np.random.rand(25, 60, 4, 150, 150)
+        dims = ('Time', 'bottom_top', 'soil_layers_stag', 'south_north', 'west_east')
+        data_array = xr.DataArray(data, dims=dims, name='test')
+        
+        zc_dim = wrf_config_manager.get_model_dim_name_for_data('zc', data_array)
+        assert zc_dim == 'bottom_top'  # First match in the list

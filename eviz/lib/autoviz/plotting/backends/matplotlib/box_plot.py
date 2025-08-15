@@ -20,12 +20,17 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
         Args:
             config: Configuration manager
             data_to_plot: Tuple containing (data, categories, values, field_name,
-                          plot_type, findex, fig)
+                          plot_type, findex, fig[, original_data_array])
         
         Returns:
             The created Matplotlib figure and axes
         """
-        data, _, _, field_name, plot_type, findex, fig = data_to_plot
+        # Handle both 7-element and 8-element tuples for backward compatibility
+        if len(data_to_plot) == 8:
+            data, _, _, field_name, plot_type, findex, fig, original_data_array = data_to_plot
+        else:
+            data, _, _, field_name, plot_type, findex, fig = data_to_plot
+            original_data_array = None
 
         if data is None or not isinstance(data, pd.DataFrame) or data.empty:
             return fig
@@ -37,9 +42,11 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
             return fig
 
         self.source_name = config.source_names[config.ds_index]
+        # Use original DataArray for units extraction if available, otherwise fall back to DataFrame
+        units_data = original_data_array if original_data_array is not None else data
         self.units = self.get_units(config, 
                                     field_name, 
-                                    data, 
+                                    units_data, 
                                     findex)
         self.fig = fig
         self.ax_opts = config.ax_opts
@@ -72,9 +79,11 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
             self.ax = ax_temp[0]
 
         self.ax_opts = fig.update_ax_opts(field_name, self.ax, 'box', level=0)
-        self.plot_text(config, field_name, 'box', data=df)
+        # Use original DataArray for plot_text if available, otherwise use DataFrame
+        text_data = original_data_array if original_data_array is not None else df
+        self.plot_text(config, field_name, 'box', data=text_data)
         
-        self._plot_box_data(config, fig, df, field_name, findex)
+        self._plot_box_data(config, fig, df, field_name, findex, original_data_array)
         
         # Handle title for comparison plots
         if config.compare_diff:
@@ -98,7 +107,7 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
                 
         return fig
     
-    def _plot_box_data(self, config, fig, df, field_name, findex):
+    def _plot_box_data(self, config, fig, df, field_name, findex, original_data_array=None):
         """Helper method that plots the box plot data."""
         ax = self.ax
         ax_opts = self.ax_opts
@@ -109,7 +118,9 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
                     'name' in config.spec_data[field_name]:
                 title = config.spec_data[field_name]['name']
             
-            units = self.get_units(config, field_name, df, findex)
+            # Use original DataArray for units extraction if available
+            units_data = original_data_array if original_data_array is not None else df
+            units = self.get_units(config, field_name, units_data, findex)
             
             color_settings = None
             if config.compare or config.compare_diff or config.overlay:

@@ -256,6 +256,11 @@ class DataProcessor:
         if dataset is None:
             return None
 
+        # Skip all processing for WRF and LIS models to avoid coordinate issues
+        if model_name in ['wrf', 'lis']:
+            self.logger.debug(f"Skipping all dataset processing for model {model_name}")
+            return dataset
+
         dataset = self._standardize_coordinates(dataset, model_name)
         dataset = self._normalize_longitude(dataset)
         dataset = self._handle_missing_values(dataset)
@@ -263,20 +268,35 @@ class DataProcessor:
 
         return dataset
 
-    def _normalize_longitude(self, data, target='-180_180', lon_name='lon'):
+    def _normalize_longitude(self, data, target='-180_180', lon_name=None):
         """
         Normalize longitude coordinates in an xarray Dataset or DataArray.
 
         Parameters:
             data: xr.Dataset or xr.DataArray
             target: str, either '-180_180' or '0_360'
-            lon_name: str, name of longitude dimension (default 'lon')
+            lon_name: str, name of longitude dimension (default None, auto-detect)
 
         Returns:
             xr.Dataset or xr.DataArray with normalized longitudes
         """
-        if lon_name not in data.coords:
+        # Auto-detect longitude coordinate if not specified
+        if lon_name is None:
+            lon_name = self._find_longitude_coordinate(data)
+            if lon_name is None:
+                self.logger.debug("No longitude coordinate found for normalization")
+                return data
+        
+        # Check if it's in coordinates or data variables (WRF has XLONG/XLAT as data vars)
+        if lon_name not in data.coords and lon_name not in data.data_vars:
             raise ValueError(f"Longitude coordinate '{lon_name}' not found.")
+        
+        # Skip normalization for multi-dimensional coordinate arrays (like WRF)
+        if lon_name in data.data_vars:
+            lon_data = data[lon_name]
+            if len(lon_data.dims) > 1:
+                self.logger.debug(f"Skipping longitude normalization for multi-dimensional coordinate {lon_name}")
+                return data
 
         lon = data[lon_name]
         lon_vals = lon.values
@@ -302,6 +322,60 @@ class DataProcessor:
         data = data.sortby(lon_name)
 
         return data
+
+    def _find_longitude_coordinate(self, data):
+        """
+        Find longitude coordinate variable in the dataset.
+        
+        Args:
+            data: xr.Dataset or xr.DataArray
+            
+        Returns:
+            str or None: Name of longitude coordinate, or None if not found
+        """
+        # List of common longitude names (same as in ConfigManager)
+        lon_names = ['lon', 'longitude', 'x', 'XLONG', 'LONGITUDE', 'Longitude']
+        
+        # Check coordinates first
+        for coord_name in data.coords:
+            coord_lower = coord_name.lower()
+            if any(ln.lower() in coord_lower for ln in lon_names):
+                return coord_name
+        
+        # If not found in coordinates, check data variables
+        if hasattr(data, 'data_vars'):
+            for var_name in data.data_vars:
+                var_lower = var_name.lower()
+                if any(ln.lower() in var_lower for ln in lon_names):
+                    return var_name
+        
+        return None
+
+    def _is_wrf_like_dataset(self, dataset: xr.Dataset) -> bool:
+        """
+        Detect if a dataset is WRF-like (has WRF-style coordinates).
+        
+        Args:
+            dataset: xarray Dataset to check
+            
+        Returns:
+            bool: True if dataset appears to be WRF-like
+        """
+        # Check for WRF-specific indicators
+        wrf_indicators = [
+            # WRF-specific dimensions
+            'south_north' in dataset.dims,
+            'west_east' in dataset.dims,
+            # WRF-specific coordinate variables
+            'XLONG' in dataset.data_vars or 'XLONG' in dataset.coords,
+            'XLAT' in dataset.data_vars or 'XLAT' in dataset.coords,
+            # WRF-specific global attributes
+            hasattr(dataset, 'attrs') and any(attr.startswith('WRF') for attr in dataset.attrs.keys()),
+            hasattr(dataset, 'attrs') and 'TITLE' in dataset.attrs and 'WRF' in str(dataset.attrs.get('TITLE', '')),
+        ]
+        
+        # If at least 2 indicators are present, assume it's WRF-like
+        return sum(wrf_indicators) >= 2
 
     def _extract_metadata(self, dataset: xr.Dataset, data_source: DataSource) -> None:
         """Extract metadata from the dataset and store it in the data source.
@@ -356,8 +430,14 @@ class DataProcessor:
         """
         self.logger.debug(f"Standardizing coordinates for model name {model_name}")
 
+        # Skip renaming for WRF and LIS models
         if model_name in ['wrf', 'lis']:
-            # Skip renaming for these special models
+            self.logger.debug(f"Skipping coordinate standardization for model {model_name}")
+            return dataset
+        
+        # Auto-detect WRF-like files and skip standardization
+        if self._is_wrf_like_dataset(dataset):
+            self.logger.debug("Detected WRF-like dataset, skipping coordinate standardization")
             return dataset
 
         available_dims = list(dataset.dims)

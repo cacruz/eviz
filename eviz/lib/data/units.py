@@ -44,14 +44,14 @@ def get_airmass(config, dry_run=False):
         config.app_data is not None and hasattr(config.app_data, 'for_inputs')
     ) else None
     
-    airmass_field_name = u.get_nested_key_value(config.app_data.for_inputs, ['airmass_field_name']) if (
-        config.app_data is not None and hasattr(config.app_data, 'for_inputs')
-    ) else 'AIRMASS'
-    
+    airmass_field_name = u.get_nested_key_value(config.app_data.for_inputs, ['airmass_field_name'])
+    if not airmass_field_name:
+        airmass_field_name = 'AIRMASS'
+
     # If no local file specified, use the URL
     if not airmass_file_name:
         airmass_file_name = constants.AIRMASS_URL
-    
+
     # Expand environment variables in the file path if it's a local file
     if airmass_file_name and 'https' not in airmass_file_name:
         airmass_file_name = os.path.expandvars(airmass_file_name)
@@ -395,7 +395,8 @@ def compute_column_DU(
     """
 
     if mixing_ratio.shape != airmass.shape:
-        raise ValueError("mixing_ratio and airmass must have the same shape")
+        logger.error("mixing_ratio and airmass must have the same shape")
+        return mixing_ratio
 
     if mixing_ratio_units == "mol/mol":
         DU_factor = AVOGADRO / (DU_CONVERSION * MOLAR_MASS_AIR)  # ≈ 77552

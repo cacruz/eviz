@@ -1,12 +1,23 @@
+"""
+LEGACY FILE - Partially redirects to eviz.lib.models.factory
+
+This file maintains model-specific factories while redirecting generic ones.
+Generic data sources should use: eviz.lib.models.factory.DataSourceFactory
+"""
+
+import warnings
 from dataclasses import dataclass
 from eviz.lib.config.config_manager import ConfigManager
+
+# Import new architecture for base
+from eviz.lib.models.factory import DataSourceFactory
+
+# Model-specific imports remain here
 from eviz.models.esm.crest import Crest
-from eviz.models.gridded_source import GriddedSource
 from eviz.models.esm.grib import Grib
 from eviz.models.esm.geos import Geos
 from eviz.models.esm.lis import Lis
 from eviz.models.esm.wrf import Wrf
-from eviz.models.obs_source import ObsSource
 from eviz.models.obs.inventory.airnow import Airnow
 from eviz.models.obs.inventory.ghg import Ghg
 from eviz.models.obs.inventory.fluxnet import Fluxnet
@@ -14,40 +25,45 @@ from eviz.models.obs.satellite.landsat import Landsat
 from eviz.models.obs.satellite.mopitt import Mopitt
 from eviz.models.obs.satellite.omi import Omi
 
+# Import legacy sources for compatibility
+from eviz.models.obs_source import ObsSource
+from eviz.models.gridded_source import GriddedSource
+from eviz.models.source_base import GenericSource
 
+# Issue deprecation warning for generic factories
+warnings.warn(
+    "Generic factories in eviz.models.source_factory are deprecated. "
+    "Use eviz.lib.models.factory.DataSourceFactory for new data sources.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
+
+@dataclass
 class BaseSourceFactory:
     """
-    Abstract factory base class for creating data model instances.
-    
-    Defines the interface for concrete factory classes that instantiate
-    specific data model handlers for different data formats and sources.
+    Abstract base factory - should not be instantiated directly.
     """
-    config_manager: ConfigManager
-
     def create_root_instance(self, config_manager: ConfigManager):
-        """
-        Abstract method to create a root instance.
-        
-        Args:
-            config_manager: Configuration manager containing settings for the model.
-            
-        Returns:
-            A model instance configured for data processing and visualization.
-        """
-        raise NotImplementedError(
-            "create_root_instance must be implemented in subclasses")
+        raise NotImplementedError("BaseSourceFactory is abstract and cannot be instantiated")
 
 
 @dataclass
 class GriddedSourceFactory(BaseSourceFactory):
     """
-    Factory for creating GriddedSource model instances that process NetCDF data.
-    
-    Used for generic gridded data, MERRA data, and special CCM/CF streams.
+    Factory for creating GriddedSource model instances.
     """
-
     def create_root_instance(self, config_manager: ConfigManager):
         return GriddedSource(config_manager)
+
+
+@dataclass
+class ObsSourceFactory(BaseSourceFactory):
+    """
+    Factory for creating ObsSource model instances.
+    """
+    def create_root_instance(self, config_manager: ConfigManager):
+        return ObsSource(config_manager)
 
 
 @dataclass
@@ -99,15 +115,6 @@ class GhgFactory(BaseSourceFactory):
     """
     def create_root_instance(self, config_manager: ConfigManager):
         return Ghg(config_manager)
-
-
-@dataclass
-class ObsSourceFactory(BaseSourceFactory):
-    """
-    Factory for creating ObsSource model instances
-    """
-    def create_root_instance(self, config_manager: ConfigManager):
-        return ObsSource(config_manager)
 
 
 @dataclass

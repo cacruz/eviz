@@ -98,9 +98,10 @@ class Figure(mfigure.Figure):
                 # Get the number of variables to compare from the config
                 if hasattr(self.config_manager, 'compare_exp_ids'):
                     num_vars = len(self.config_manager.compare_exp_ids)
-                    self._subplots = (1, num_vars)
+                    # TODO: unless panels shape is specified in config
+                    self._subplots = (num_vars, 1)
                 else:
-                    self._subplots = (1, 2)  # Default to side by side layout
+                    self._subplots = (2, 1)  # Default to side by side layout
                 return
                 
             # Handle comparison with difference plots
@@ -427,10 +428,18 @@ class Figure(mfigure.Figure):
         """Initialize map options for a given field."""
         plot_type = "polar" if self.plot_type.startswith("po") else self.plot_type[:2]
         spec = self.config_manager.spec_data.get(field_name, {}).get(f"{plot_type}plot", {})
+        
 
         existing_rc_params = {}
         if hasattr(self, '_ax_opts') and 'rc_params' in self._ax_opts:
             existing_rc_params = self._ax_opts.get('rc_params', {}).copy()  # Make a copy
+
+        # Preserve existing domain extent and projection from config_manager if available
+        existing_extent = None
+        existing_projection = None
+        if hasattr(self, '_ax_opts'):
+            existing_extent = self._ax_opts.get('extent')
+            existing_projection = self._ax_opts.get('projection')
 
         defaults = {
             'rc_params': existing_rc_params,
@@ -455,8 +464,8 @@ class Figure(mfigure.Figure):
             'add_tropp_height': False,
             'torder': None,
             'add_trend': False,
-            'extent': None,
-            'projection': None,
+            'extent': existing_extent,
+            'projection': existing_projection,
             'num_clevs': 10,
             'time_lev': 0,
             'is_diff_field': False,
