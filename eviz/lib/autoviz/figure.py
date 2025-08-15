@@ -428,6 +428,7 @@ class Figure(mfigure.Figure):
         """Initialize map options for a given field."""
         plot_type = "polar" if self.plot_type.startswith("po") else self.plot_type[:2]
         spec = self.config_manager.spec_data.get(field_name, {}).get(f"{plot_type}plot", {})
+        
 
         existing_rc_params = {}
         if hasattr(self, '_ax_opts') and 'rc_params' in self._ax_opts:

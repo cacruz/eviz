@@ -190,14 +190,22 @@ class ObservationalDataSource(GenericDataSource):
         
         This method extracts the geographical extent from the data array and
         updates the configuration manager's ax_opts with the extent information.
+        Only applies if there's no pre-configured extent from specs.
         
         Args:
             data_array (xr.DataArray): The data array to extract extent from
             field_name (str, optional): Field name for logging purposes
         """
-        extent = self.get_data_extent(data_array)
+        # Check if there's already a named extent configured (e.g., "conus", "global")
+        current_extent = self.config_manager.ax_opts.get('extent')
+        if isinstance(current_extent, str):
+            self.logger.debug(f"Keeping pre-configured extent: {current_extent}")
+            return
         
+        # Only apply data extent if no specs extent is configured
+        extent = self.get_data_extent(data_array)
         self.config_manager.ax_opts['extent'] = extent
+        self.logger.debug(f"Applied data-derived extent: {extent}")
         
         central_lon = (extent[0] + extent[1]) / 2
         central_lat = (extent[2] + extent[3]) / 2

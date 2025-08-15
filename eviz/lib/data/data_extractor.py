@@ -93,11 +93,19 @@ class DataExtractor:
                     y_flat = y.flatten()
                     values = d2d.values.flatten()
                 else:
-                    self.logger.debug("Processing 1D coordinates (regular grid)")
-                    xx, yy = np.meshgrid(x, y)
-                    x_flat = xx.flatten()
-                    y_flat = yy.flatten()
-                    values = d2d.values.flatten()
+                    # Check if coordinates are already paired (same length as data)
+                    data_flat = d2d.values.flatten()
+                    if len(x) == len(data_flat) and len(y) == len(data_flat):
+                        self.logger.debug("Processing 1D coordinates (already paired)")
+                        x_flat = x
+                        y_flat = y  
+                        values = data_flat
+                    else:
+                        self.logger.debug("Processing 1D coordinates (regular grid - creating meshgrid)")
+                        xx, yy = np.meshgrid(x, y)
+                        x_flat = xx.flatten()
+                        y_flat = yy.flatten()
+                        values = data_flat
             else:
                 self.logger.debug("No coordinate dimensions found, using indices")
                 values = d2d.values.flatten()

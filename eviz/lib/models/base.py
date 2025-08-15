@@ -97,3 +97,16 @@ class GenericDataSource(ABC):
             List of supported plot type strings
         """
         return ['xy', 'xt', 'tx', 'yz', 'scatter', 'box', 'polar']
+    
+    def __call__(self):
+        """
+        Execute the data source by running the plot manager.
+        
+        This method is called by the main Autoviz application to trigger
+        the visualization process for this data source.
+        """
+        if self.plot_manager is None:
+            raise RuntimeError("Plot manager not initialized. Call __post_init__ first.")
+        
+        self.logger.debug("Executing data source visualization")
+        self.plot_manager.plot()

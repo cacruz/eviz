@@ -114,11 +114,15 @@ class PlotManager:
 
     def register_plot_type(self, field_name, plot_type):
         """Register the plot type for a field."""
-        self.config_manager._plot_type_registry[field_name] = plot_type
+        if not hasattr(self, '_plot_type_registry'):
+            self._plot_type_registry = {}
+        self._plot_type_registry[field_name] = plot_type
         
     def get_plot_type(self, field_name, default='xy'):
         """Get the plot type for a field."""
-        return self.config_manager._plot_type_registry.get(field_name, default)
+        if not hasattr(self, '_plot_type_registry'):
+            self._plot_type_registry = {}
+        return self._plot_type_registry.get(field_name, default)
     
     def create_plotter(self, field_name: str, plot_type: str, backend=None):
         """Create a plotter for the given field.
@@ -416,9 +420,13 @@ class PlotManager:
         if plot_type in ['line', 'box', 'xt', 'tx']:
             return data2d, None, None, field_name, plot_type, file_index, figure, global_vmin, global_vmax
         elif plot_type in ['sc']:
-            # TODO: temporary:
-            extent = self._get_data_extent(data_array)
-            self.config_manager.ax_opts['extent'] = extent
+            # Check if there's already a named extent configured (e.g., "conus", "global")
+            current_extent = self.config_manager.ax_opts.get('extent')
+            if not isinstance(current_extent, str):
+                # Only override extent if no named extent is configured
+                extent = self._get_data_extent(data_array)
+                self.config_manager.ax_opts['extent'] = extent
+                
             self.config_manager.ax_opts['central_lon'] = self.config_manager.central_longitude
             self.config_manager.ax_opts['central_lat'] = self.config_manager.central_latitude
             return data2d[0], data2d[1], data2d[2], field_name, plot_type, file_index, figure
@@ -1286,6 +1294,9 @@ class PlotManager:
     def _process_scatter_plot(self, data_array, field_name, file_index, plot_type, figure):
         """Process a scatter plot."""
         self.logger.debug("Starting scatter plot processing")
+        self.logger.debug(f"ax_opts keys: {list(self.config_manager.ax_opts.keys())}")
+        self.logger.debug(f"ax_opts projection: {self.config_manager.ax_opts.get('projection', 'NOT SET')}")
+        self.logger.debug(f"ax_opts extent: {self.config_manager.ax_opts.get('extent', 'NOT SET')}")
         self.config_manager.level = None
         time_level_config = self.config_manager.ax_opts.get('time_lev', 0)
         tc_dim = self.config_manager.get_model_dim_name('tc') or 'time'
