@@ -141,19 +141,21 @@ class PlotManager:
             self.logger.error(f"Error creating plotter for {field_name}: {e}")
             return None
     
-    def create_plot(self, field_name, data_to_plot):
+    def create_plot(self, field_name, data_to_plot, plot_type=None):
         """Create a plot using the appropriate plotter.
         
         Args:
             field_name: Name of the field to plot
             data_to_plot: Tuple containing plot data
+            plot_type: Optional plot type to override registry lookup
             
         Returns:
             The created plot object
         """
         backend = getattr(self.config_manager, 'output_backend', 'matplotlib')
         
-        plot_type = self.get_plot_type(field_name)
+        if plot_type is None:
+            plot_type = self.get_plot_type(field_name)
         plotter = self.create_plotter(field_name, plot_type, backend)
         if plotter is None:
             return None
@@ -911,7 +913,32 @@ class PlotManager:
                         for plot_type in plot_types:
                             if plot_type == 'corr':
                                 self.logger.info(f"Plotting {field_name}, {plot_type} plot")
-                                self.process_plot(field_data_array, field_name, file_idx, plot_type)
+                                # For correlation plots, we need to use the model object, not just the data source
+                                self.logger.debug(f"Data source type: {type(data_source).__name__}")
+                                self.logger.debug(f"Data source has process_plot: {hasattr(data_source, 'process_plot')}")
+                                
+                                # Get the model name from config manager
+                                model_name = getattr(data_source, 'model_name', None)
+                                if model_name:
+                                    from eviz.lib.models.factory import DataSourceFactory
+                                    model_factory = DataSourceFactory()
+                                    try:
+                                        # Create the model object for correlation processing
+                                        model_obj = model_factory.create(model_name, self.config_manager)
+                                        if hasattr(model_obj, 'process_plot'):
+                                            self.logger.info(f"Using model object ({type(model_obj).__name__}) process_plot method")
+                                            model_obj.process_plot(field_data_array, field_name, file_idx, plot_type)
+                                        else:
+                                            self.logger.warning(f"Model object {type(model_obj).__name__} doesn't have process_plot method")
+                                            self.process_plot(field_data_array, field_name, file_idx, plot_type)
+                                    except Exception as e:
+                                        self.logger.warning(f"Failed to create model object for {model_name}: {e}")
+                                        import traceback
+                                        self.logger.debug(f"Full traceback: {traceback.format_exc()}")
+                                        self.process_plot(field_data_array, field_name, file_idx, plot_type)
+                                else:
+                                    self.logger.info(f"No model name found, falling back to plot manager process_plot method")
+                                    self.process_plot(field_data_array, field_name, file_idx, plot_type)
                                 
                         # Only need to process one of the fields for correlation
                         break
@@ -978,7 +1005,26 @@ class PlotManager:
                 for plot_type in plot_types:
                     if plot_type == 'corr':
                         self.logger.info(f"Plotting {field_name}, {plot_type} plot")
-                        self.process_plot(field_data_array, field_name, idx, plot_type)
+                        # For correlation plots, we need to use the model object, not just the data source
+                        model_name = getattr(data_source, 'model_name', None)
+                        if model_name:
+                            from eviz.lib.models.factory import DataSourceFactory
+                            model_factory = DataSourceFactory()
+                            try:
+                                # Create the model object for correlation processing
+                                model_obj = model_factory.create(model_name, self.config_manager)
+                                if hasattr(model_obj, 'process_plot'):
+                                    self.logger.info(f"Using model object ({type(model_obj).__name__}) process_plot method")
+                                    model_obj.process_plot(field_data_array, field_name, idx, plot_type)
+                                else:
+                                    self.logger.warning(f"Model object {type(model_obj).__name__} doesn't have process_plot method")
+                                    self.process_plot(field_data_array, field_name, idx, plot_type)
+                            except Exception as e:
+                                self.logger.warning(f"Failed to create model object for {model_name}: {e}")
+                                self.process_plot(field_data_array, field_name, idx, plot_type)
+                        else:
+                            self.logger.info(f"No model name found, falling back to plot manager process_plot method")
+                            self.process_plot(field_data_array, field_name, idx, plot_type)
 
     def _process_xy_plot(self, 
                          data_array: xr.DataArray, 

@@ -555,7 +555,7 @@ class ObservationalDataSource(GenericDataSource):
             
             correlation_to_plot = (data_tuple,) + field_to_plot[1:]
             
-            plot_result = self.create_plot(field_name, correlation_to_plot)
+            plot_result = self.create_plot(field_name, correlation_to_plot, plot_type)
             if isinstance(plot_result, tuple) and len(plot_result) >= 1:
                 fig = plot_result[0]  # Extract the figure from the tuple
                 pu.print_map(self.config_manager, 
@@ -568,3 +568,23 @@ class ObservationalDataSource(GenericDataSource):
                             plot_type, 
                             self.config_manager.findex, 
                             plot_result)
+
+    def _prepare_field_to_plot(self, 
+                               data_array: xr.DataArray, 
+                               field_name: str,
+                               file_index: int, 
+                               plot_type: str, 
+                               figure, 
+                               time_level,
+                               level=None,
+                               global_vmin=None,
+                               global_vmax=None):
+        """Prepare the field data for plotting by delegating to plot manager."""
+        return self.plot_manager._prepare_field_to_plot(
+            data_array, field_name, file_index, plot_type, figure, 
+            time_level, level, global_vmin, global_vmax
+        )
+
+    def create_plot(self, field_name, data_to_plot, plot_type=None):
+        """Create a plot by delegating to plot manager."""
+        return self.plot_manager.create_plot(field_name, data_to_plot, plot_type)

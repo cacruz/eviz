@@ -112,4 +112,5 @@ DataSourceFactory.register('wrf', GriddedDataSource)
 DataSourceFactory.register('lis', GriddedDataSource)
 DataSourceFactory.register('geos', GriddedDataSource)
 DataSourceFactory.register('nuwrf', GriddedDataSource)
-DataSourceFactory.register('crest', GriddedDataSource)
+from eviz.models.esm.crest import Crest
+DataSourceFactory.register('crest', Crest)
