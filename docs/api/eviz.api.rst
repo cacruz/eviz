@@ -1,5 +1,5 @@
-EViz API
-========
+EViz API Reference
+==================
 
 Users, developers and maintainers of earth system models often find themselves in need to visualize output produced by
 those modeling systems. Output from such systems can come in a variety of formats and can also be quite voluminous.
@@ -37,19 +37,13 @@ text format such as CSV. The current implementation assumes NetCDF but a signifi
 other data formats such as HDF5 and CSV. We expect that future releases will have support for most common data formats
 used in Earth system modeling frameworks.
 
-Packages
-********
-
-.. automodule:: eviz
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Core API Documentation
+**********************
 
 .. toctree::
    :maxdepth: 2
 
-   eviz.lib
-   eviz.models
+   eviz
 
 Main Entry Points
 *****************
@@ -59,3 +53,32 @@ Main Entry Points
 
    autoviz
    metadump
+
+Quick API Reference
+*******************
+
+The EViz library provides a comprehensive set of modules for Earth system data visualization. 
+Here are the key components organized by functionality:
+
+**Core Classes:**
+  - :doc:`eviz.lib.autoviz.base` - Main Autoviz application class
+  - :doc:`eviz.lib.config.config_manager` - Configuration management
+  - :doc:`eviz.lib.data.pipeline.pipeline` - Data processing pipeline
+  - :doc:`eviz.lib.autoviz.plotting.plot_manager` - Plot management
+
+**Configuration System:**
+  - :doc:`eviz.lib.config.config` - Main configuration class
+  - :doc:`eviz.lib.config.input_config` - Input configuration
+  - :doc:`eviz.lib.config.output_config` - Output configuration
+  - :doc:`eviz.lib.config.system_config` - System configuration
+
+**Data Processing:**
+  - :doc:`eviz.lib.data.pipeline.reader` - Data readers
+  - :doc:`eviz.lib.data.pipeline.processor` - Data processors
+  - :doc:`eviz.lib.data.pipeline.transformer` - Data transformers
+  - :doc:`eviz.lib.data.pipeline.integrator` - Data integrators
+
+**Plotting Backends:**
+  - :doc:`eviz.lib.autoviz.plotting.backends.matplotlib` - Matplotlib backend
+  - :doc:`eviz.lib.autoviz.plotting.backends.hvplot` - HvPlot backend
+  - :doc:`eviz.lib.autoviz.plotting.backends.altair` - Altair backend

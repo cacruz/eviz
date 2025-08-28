@@ -1,37 +1,17 @@
 eviz.models.obs.satellite package
 =================================
 
+.. automodule:: eviz.models.obs.satellite
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Submodules
 ----------
 
-eviz.models.obs.satellite.landsat module
-----------------------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: eviz.models.obs.satellite.landsat
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-eviz.models.obs.satellite.mopitt module
----------------------------------------
-
-.. automodule:: eviz.models.obs.satellite.mopitt
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-eviz.models.obs.satellite.omi module
-------------------------------------
-
-.. automodule:: eviz.models.obs.satellite.omi
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: eviz.models.obs.satellite
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   eviz.models.obs.satellite.landsat
+   eviz.models.obs.satellite.mopitt
+   eviz.models.obs.satellite.omi

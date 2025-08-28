@@ -1,11 +1,16 @@
 eviz.lib.data package
 =====================
 
+.. automodule:: eviz.lib.data
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 4
 
    eviz.lib.data.factory
    eviz.lib.data.pipeline
@@ -14,18 +19,10 @@ Subpackages
 Submodules
 ----------
 
-eviz.lib.data.units module
---------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: eviz.lib.data.units
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-eviz.lib.data.utils module
---------------------------
-
-.. automodule:: eviz.lib.data.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   eviz.lib.data.data_extractor
+   eviz.lib.data.units
+   eviz.lib.data.url_validator
+   eviz.lib.data.utils

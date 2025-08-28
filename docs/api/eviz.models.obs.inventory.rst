@@ -1,29 +1,17 @@
 eviz.models.obs.inventory package
 =================================
 
+.. automodule:: eviz.models.obs.inventory
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Submodules
 ----------
 
-eviz.models.obs.inventory.airnow module
----------------------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: eviz.models.obs.inventory.airnow
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-eviz.models.obs.inventory.fluxnet module
-----------------------------------------
-
-.. automodule:: eviz.models.obs.inventory.fluxnet
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: eviz.models.obs.inventory
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   eviz.models.obs.inventory.airnow
+   eviz.models.obs.inventory.fluxnet
+   eviz.models.obs.inventory.ghg
