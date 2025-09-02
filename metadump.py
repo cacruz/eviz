@@ -91,12 +91,29 @@ class MetadataExtractor:
         specs_dict = self._generate_specs_dict()
         app_dict = self._generate_app_dict()
 
-        if self.config.specs_output:
-            self._write_specs_yaml(specs_dict)
-        if self.config.app_output:
-            self._write_app_yaml(app_dict)
+        # Auto-generate filenames using source name if not provided
+        specs_output = self.config.specs_output
+        app_output = self.config.app_output
+        
+        if not specs_output and not app_output:
+            # Generate default filenames using source name
+            specs_output = f"{self.config.source}_specs.yaml"
+            app_output = f"{self.config.source}.yaml"
+        elif specs_output and not app_output:
+            # If only specs provided, generate app filename
+            app_output = f"{self.config.source}.yaml"
+        elif app_output and not specs_output:
+            # If only app provided, generate specs filename  
+            specs_output = f"{self.config.source}_specs.yaml"
 
-        if not (self.config.specs_output or self.config.app_output):
+        if specs_output:
+            self._write_specs_yaml(specs_dict, specs_output)
+            logger.info(f"Generated specs file: {specs_output}")
+        if app_output:
+            self._write_app_yaml(app_dict, app_output)
+            logger.info(f"Generated app file: {app_output}")
+
+        if not (specs_output or app_output):
             filtered_vars = self.get_plottable_vars()
             logger.info(f"Plottable variables: {filtered_vars}")
 
@@ -253,18 +270,20 @@ class MetadataExtractor:
             "cmap": "coolwarm"
         }
 
-    def _write_specs_yaml(self, specs_dict: Dict) -> None:
+    def _write_specs_yaml(self, specs_dict: Dict, output_file: str = None) -> None:
         """Write specifications dictionary to YAML file."""
-        with open(self.config.specs_output, 'w') as file:
+        filename = output_file or self.config.specs_output
+        with open(filename, 'w') as file:
             for key in sorted(specs_dict.keys()):
                 yaml_content = yaml.dump({key: specs_dict[key]}, 
                                        default_flow_style=False)
                 yaml_content = yaml_content.replace("'yes'", "yes")
                 file.write(yaml_content + '\n')
 
-    def _write_app_yaml(self, app_dict: Dict) -> None:
+    def _write_app_yaml(self, app_dict: Dict, output_file: str = None) -> None:
         """Write application dictionary to YAML file."""
-        with open(self.config.app_output, 'w') as file:
+        filename = output_file or self.config.app_output
+        with open(filename, 'w') as file:
             if 'inputs' in app_dict and 'to_plot' in app_dict['inputs'][0]:
                 app_dict['inputs'][0]['to_plot'] = \
                     {k: app_dict['inputs'][0]['to_plot'][k] 
