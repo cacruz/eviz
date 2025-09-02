@@ -21,7 +21,6 @@ Quick Links
 
 * :doc:`🚀 Getting Started <usage/quickstart>` - Installation instructions and basic usage examples
 * :doc:`📊 Usage Guide <usage/autoviz.use>` - Detailed usage examples and supported models  
-* :doc:`🗂️ Data Sources <usage/data_sources>` - Supported data formats and configuration
 * :doc:`🔧 API Reference <api/eviz.api>` - Complete API documentation
 
 Contents
@@ -33,7 +32,6 @@ Contents
 
    usage/quickstart
    usage/autoviz.use
-   usage/data_sources
 
 .. toctree::
    :maxdepth: 2
