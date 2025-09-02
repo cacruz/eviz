@@ -4,6 +4,8 @@ Welcome back, future visualization expert! In [Chapter 3: Metadump Tool (Metadat
 
 But how does the chef know *exactly* what recipe to follow? Where are all the detailed instructions stored – like which variables to plot, what units to use, what colors, and where to save the pictures? This is where the **Configuration Manager (ConfigManager)** steps in!
 
+## Overview
+
 ### What Problem Does ConfigManager Solve?
 
 Imagine you're trying to bake a very complex cake. You have all your ingredients, and a skilled chef. But for the cake to turn out perfectly, the chef needs a detailed recipe:
@@ -30,6 +32,8 @@ Let's say you're a scientist, and you have a standard way you like to visualize 
 
 `ConfigManager` is the core component that loads and manages these recipes, making them available to `Autoviz` and other parts of the visualization system.
 
+## Core Concepts
+
 ### Key Concepts: Your Visualization's Brain
 
 ConfigManager is like the central brain or control panel for your visualization project.
@@ -42,6 +46,8 @@ ConfigManager is like the central brain or control panel for your visualization 
 *   **Command-Line Inputs:** Sometimes you want to quickly change a setting without editing a YAML file (e.g., specifying an input file or output directory when running `autoviz.py`). `ConfigManager` also incorporates these inputs, often overriding settings from YAML files.
 *   **Centralized Source of Truth:** Every other component in EViz (like the data loader, the plotter, the output saver) consults `ConfigManager` when it needs to know how to do something. This ensures that everyone is working with the same, consistent set of rules.
 *   **Organized Settings:** Instead of one giant list of settings, `ConfigManager` organizes them into logical groups (like input settings, output settings, system settings).
+
+## Getting Started
 
 ### How Autoviz Uses ConfigManager
 
@@ -58,6 +64,8 @@ When you run `Autoviz` with your configuration files (e.g., `python autoviz.py -
     *   "Hey `ConfigManager`, should I `make_gif`?"
 
 The `ConfigManager` will respond with the correct setting, allowing `Autoviz` and its delegated components to execute the visualization precisely as you've defined in your configuration.
+
+## Technical Details
 
 ### Under the Hood: ConfigManager's Workflow
 
@@ -278,6 +286,8 @@ class ConfigManager:
 *   `ConfigManager` is initialized with instances of `InputConfig`, `OutputConfig`, and the central `Config` object. It acts as a wrapper around them.
 *   It has `@property` decorators (like `output_dir` and `make_gif`) that provide direct, easy access to frequently used settings. These properties simply "delegate" the request to the correct sub-configuration (e.g., `self.output_config.output_dir`).
 *   The magical `__getattr__` method is key! If you try to access `config_manager.some_setting` and `some_setting` isn't directly defined in `ConfigManager` or `Config`, `__getattr__` will automatically search `InputConfig`, `OutputConfig`, etc., until it finds `some_setting` or raises an error. This makes `ConfigManager` incredibly flexible and user-friendly for other EViz components, as they don't need to know *exactly* which sub-configuration holds a specific setting.
+
+## Summary
 
 ### Conclusion
 

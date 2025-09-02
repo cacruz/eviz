@@ -155,7 +155,7 @@ class GenericSource(BaseSource):
             
             - *Side-by-side plots*: Multiple plots shown next to each other.
             - *Overlay plots*: All data sources are plotted on a single set of axes 
-            (usually for line plots); can include more than two data sources.
+              (usually for line plots); can include more than two data sources.
             - *Difference plots*: Visualize the difference between datasets.
 
         Notes

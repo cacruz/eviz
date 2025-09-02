@@ -4,6 +4,8 @@ Welcome back! In our last chapter, [Chapter 8: Plot Manager (PlotManager)](08_pl
 
 Now, imagine the director has made all the decisions and has the script (instructions), the actors (data), and the stage (a blank figure). Who actually *performs* the scene and paints the beautiful picture? That's the job of the **Plotter**!
 
+## Overview
+
 ### What Problem Do Plotters Solve?
 
 Think of a plotting library like a set of art supplies:
@@ -32,6 +34,8 @@ For this, the `PlotManager` will need to:
 
 The `MatplotlibXYPlotter` will then use Matplotlib's functions to actually render the map and return the completed [Figure](10_figure__eviz_figure__.md).
 
+## Core Concepts
+
 ### Key Concepts: The Specialized Artists
 
 Plotters are the hands-on workers who turn data into visible plots.
@@ -48,6 +52,8 @@ Plotters are the hands-on workers who turn data into visible plots.
     *   They each have unique code in their `plot()` method to draw the specific visualization using their chosen library.
 *   **The Plotter Factory:** The [Plot Manager](08_plot_manager__plotmanager__.md) doesn't directly create a `MatplotlibXYPlotter`. Instead, it asks a `PlotterFactory`, "Give me an XY Plotter that uses Matplotlib," and the factory hands back the correct instance.
 
+## Getting Started
+
 ### How Plotters are Used (by PlotManager)
 
 As a user, you don't directly interact with Plotters. You simply specify in your configuration (managed by [ConfigManager](04_configuration_manager__configmanager__.md)) which `plot_type` (e.g., `xy`) and `backend` (e.g., `matplotlib`) you want.
@@ -59,6 +65,8 @@ The [Plot Manager (PlotManager)](08_plot_manager__plotmanager__.md) then handles
 3.  **`PlotManager` tells the Plotter to `plot()`:** Finally, it calls the `plot()` method of the chosen Plotter, passing it the prepared data, the configuration, and the `Figure` object.
 
 This flow completely hides the complexity of different plotting libraries from the rest of EViz.
+
+## Technical Details
 
 ### Under the Hood: Plotter's Workflow
 
@@ -387,6 +395,8 @@ class HvplotXYPlotter(XYPlotter):
 *   The `plot_object` here stores a `holoviews.core.spaces.HoloMap` or `holoviews.Image` object.
 
 These different Plotters demonstrate how EViz abstracts away the details of various plotting libraries, providing a consistent interface (`plot`, `save`, `show`) for the [Plot Manager](08_plot_manager__plotmanager__.md) to work with.
+
+## Summary
 
 ### Conclusion
 

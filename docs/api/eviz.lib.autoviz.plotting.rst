@@ -12,6 +12,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   eviz.lib.autoviz.plotting.backends
    eviz.lib.autoviz.plotting.base
    eviz.lib.autoviz.plotting.factory
    eviz.lib.autoviz.plotting.plot_manager

@@ -5,6 +5,7 @@ eviz.lib.data.pipeline package
    :members:
    :show-inheritance:
    :undoc-members:
+   :no-index:
 
 Submodules
 ----------

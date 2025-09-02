@@ -4,6 +4,8 @@ Welcome back, future visualization expert! In our last chapter, [Chapter 9: Plot
 
 Now, imagine an artist has all their tools and knows *how* to paint. But where do they put their masterpiece? They need a **canvas**! In EViz, that canvas is the **Figure**, specifically the `eViz Figure`.
 
+## Overview
+
 ### What Problem Does eViz Figure Solve?
 
 Think of a traditional Matplotlib `Figure` as a basic blank canvas. It's functional, but for complex scientific visualizations, you often need a "smarter" canvas that helps with many tasks automatically:
@@ -23,6 +25,8 @@ Let's say you want to visualize two temperature maps from different models side-
 
 The `eViz Figure` is the smart canvas that handles all these layout and geographical setup tasks, making it easy for the `Plotter` to just "paint" the data onto the prepared sub-canvases.
 
+## Core Concepts
+
 ### Key Concepts: Your Smart Canvas Explained
 
 The `eViz Figure` is an enhanced version of the standard `matplotlib.figure.Figure`. Here are its key features:
@@ -33,6 +37,8 @@ The `eViz Figure` is an enhanced version of the standard `matplotlib.figure.Figu
 *   **Automatic Sizing (`_calculate_optimal_figsize`):** It intelligently calculates the best width and height for the entire figure. It considers how many subplots there are, what type of plots they are (maps often need more space), and adds appropriate margins for titles and colorbars.
 *   **`axes_array`:** This is a list that stores all the individual "sub-canvases" (Matplotlib `Axes` objects) that have been created on the `Figure`. The `Plotter` then draws directly onto these `Axes` objects.
 *   **`_ax_opts`:** An internal dictionary where the `Figure` stores various options for its axes, like the geographical `extent` (bounding box) or the `projection` to use. These options are often read from the [Configuration Manager](04_configuration_manager__configmanager__.md).
+
+## Getting Started
 
 ### How to Use eViz Figure (Through PlotManager)
 
@@ -47,6 +53,8 @@ When the [Plot Manager](08_plot_manager__plotmanager__.md) is tasked with creati
 5.  **`eViz Figure` handles saving:** After the `Plotter` has drawn everything, the `Plot Manager` tells the `eViz Figure` to `save_plot()` to a file, using the output settings from the [Configuration Manager](04_configuration_manager__configmanager__.md).
 
 This streamlined process means that when you configure EViz to make a map, the `eViz Figure` automatically provides a perfectly set-up geographical canvas for the `Plotter` to work on.
+
+## Technical Details
 
 ### Under the Hood: eViz Figure's Workflow
 
@@ -379,6 +387,8 @@ class Figure(mfigure.Figure):
 *   `output_dir`, `file_ext`: Retrieves the output directory and file format (e.g., 'png') from the `ConfigManager`.
 *   `self.savefig(...)`: This is Matplotlib's powerful built-in method to save the `Figure` to a file. `dpi=300` sets the resolution, and `bbox_inches='tight'` ensures no extra white space around the plot.
 *   `plt.close(self)`: After saving, it's good practice to close the figure to release memory, especially when generating many plots automatically.
+
+## Summary
 
 ### Conclusion
 

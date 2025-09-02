@@ -4,6 +4,8 @@ Welcome back! In our last chapter, [Chapter 5: Model Source (GenericDataSource /
 
 Think of it like this: a chef (our Model Source) knows how to prepare a delicious meal. But first, they need someone to go to the pantry and actually fetch the ingredients from their various containers (boxes, bags, jars). This "someone" is the **Data Source (DataSource)**.
 
+## Overview
+
 ### What Problem Does DataSource Solve?
 
 Scientific data comes in many different file formats, each like a different type of container:
@@ -25,6 +27,8 @@ Let's say you have a standard NetCDF file, `output.nc`, which contains your mode
 
 The `NetCDFDataSource` is the expert for this task. It knows exactly how to open a NetCDF file and prepare its contents for EViz.
 
+## Core Concepts
+
 ### Key Concepts: The Universal File Opener
 
 DataSource is all about providing a consistent way to get data, no matter its origin.
@@ -37,6 +41,8 @@ DataSource is all about providing a consistent way to get data, no matter its or
     *   `GRIBDataSource` knows how to open GRIB files.
 *   **`xarray.Dataset` (The Standard Container):** No matter what file type `DataSource` opens, it always puts the data into an `xarray.Dataset` object. Think of `xarray.Dataset` as a standardized, labeled "bowl" that holds all your ingredients (variables, dimensions, attributes) in an organized way. This is critical because once data is in this `xarray` "bowl," all other EViz components (like the [Data Processing Pipeline](07_data_processing_pipeline__datapipeline__.md) and [Plot Manager](08_plot_manager__plotmanager__.md)) can easily work with it, regardless of where it originally came from.
 *   **Common Actions:** Besides `load_data`, `DataSource` defines actions like `validate_data` (check if the loaded data makes sense), `get_field` (grab a specific variable like 'temperature'), and `get_metadata` (get information about the data).
+
+## Getting Started
 
 ### How to Use DataSource (Through Model Sources)
 
@@ -52,6 +58,8 @@ Here's the conceptual flow for our use case (loading `output.nc` for a `GriddedD
 4.  It then creates a `NetCDFDataSource` and tells it to `load_data` from `output.nc`.
 5.  The `NetCDFDataSource` opens `output.nc` and converts it into an `xarray.Dataset`.
 6.  This `xarray.Dataset` is then made available to the `DataExtractor`, which passes it back to the `GriddedDataSource` for further processing.
+
+## Technical Details
 
 ### Under the Hood: DataSource's Workflow
 
@@ -273,6 +281,8 @@ class GRIBDataSource(DataSource):
 ```
 **Explanation:**
 *   Similar to HDF5, it uses `xr.open_dataset` but specifies `engine="cfgrib"` (or `pynio` as a fallback). This tells `xarray` to use the appropriate library for GRIB files.
+
+## Summary
 
 ### Conclusion
 

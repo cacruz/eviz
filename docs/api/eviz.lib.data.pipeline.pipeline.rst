@@ -5,3 +5,4 @@ eviz.lib.data.pipeline.pipeline module
    :members:
    :show-inheritance:
    :undoc-members:
+   :no-index:

@@ -2,6 +2,8 @@
 
 Welcome back! In [Chapter 1: Streamlit Web Interface (sViz)](01_streamlit_web_interface__sviz__.md), we learned about `sViz` – the user-friendly website that lets you click buttons and select options to get your visualizations. Think of `sViz` as the "face" of EViz, making everything look easy. But who does the heavy lifting behind that friendly face? That's where **Autoviz Application Core (Autoviz)** comes in.
 
+## Overview
+
 ### What Problem Does Autoviz Solve?
 
 Imagine you want to bake a cake. `sViz` is like the online ordering app where you pick your cake type and frosting. But Autoviz is the *chef* in the kitchen!
@@ -25,6 +27,8 @@ Let's say you're a scientist or data analyst, and you don't always want to use a
 
 Autoviz is designed to handle this workflow seamlessly, acting as the brain for the entire visualization process.
 
+## Core Concepts
+
 ### Key Concepts: The Central Conductor
 
 Autoviz plays a crucial role, like a conductor leading an orchestra. Here are its main responsibilities:
@@ -36,6 +40,8 @@ Autoviz plays a crucial role, like a conductor leading an orchestra. Here are it
 *   **Orchestration and Delegation:** Autoviz itself doesn't draw the plots or read the data directly. Instead, it delegates these tasks to specialized "musicians" (other EViz components). It makes sure everyone plays their part at the right time.
     *   It identifies the type of data using a "factory" that creates the correct [Model Source (GenericDataSource / GriddedDataSource / ObservationalDataSource)](05_model_source__genericdatasource___griddeddatasource___observationaldatasource__.md) object.
     *   This "model" then coordinates the actual [Data Processing Pipeline (DataPipeline)](07_data_processing_pipeline__datapipeline__.md) and [Plot Manager (PlotManager)](08_plot_manager__plotmanager__.md).
+
+## Getting Started
 
 ### How to Use Autoviz
 
@@ -100,6 +106,8 @@ if __name__ == "__main__":
 *   `parse_command_line()`: This function looks at what you typed after `python autoviz.py` and neatly organizes those instructions (like `-s gridded`) into an `args` object.
 *   `autoviz = Autoviz([source], args=args)`: This line creates a new "Autoviz conductor" object. We pass it the `source` (like 'gridded') and all the `args` (your instructions).
 *   `autoviz.run()`: This is the command that tells the conductor to start the concert – to begin the entire visualization process.
+
+## Technical Details
 
 ### Under the Hood: Autoviz's Workflow
 
@@ -236,6 +244,8 @@ class Autoviz:
 *   `for factory in self.factory_sources:`: Since you might want to process multiple data sources, Autoviz loops through each one.
 *   `model = factory.create_root_instance(self._config_manager)`: This is where the `factory` (e.g., `GriddedSourceFactory`) actually *creates* the specialized [Model Source (GenericDataSource / GriddedDataSource / ObservationalDataSource)](05_model_source__genericdatasource___griddeddatasource___observationaldatasource__.md) object (e.g., `GriddedDataSource`). This `model` object is the "expert" for your specific data.
 *   `model()`: This seemingly simple line is the magic! It's a special way to call the `run` method of the `model` object itself. This is where the `GriddedDataSource` takes control, uses the [Data Processing Pipeline (DataPipeline)](07_data_processing_pipeline__datapipeline__.md) to get data, passes it to the [Plot Manager (PlotManager)](08_plot_manager__plotmanager__.md) to create plots, and saves them.
+
+## Summary
 
 ### Conclusion
 

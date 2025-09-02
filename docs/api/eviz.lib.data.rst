@@ -5,6 +5,7 @@ eviz.lib.data package
    :members:
    :show-inheritance:
    :undoc-members:
+   :no-index:
 
 Subpackages
 -----------

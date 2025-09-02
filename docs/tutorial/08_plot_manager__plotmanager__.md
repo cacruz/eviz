@@ -4,6 +4,8 @@ Welcome back, future visualization expert! In our previous chapter, [Chapter 7: 
 
 But what happens next? How do we actually turn that perfectly prepared data into a beautiful, insightful map or graph? This is where the **Plot Manager (PlotManager)** steps in.
 
+## Overview
+
 ### What Problem Does PlotManager Solve?
 
 Imagine you're the head chef (our [Model Source](05_model_source__genericdatasource___griddeddatasource___observationaldatasource__.md)) in a busy kitchen. You've received all your perfectly prepped ingredients (the `xarray.Dataset` from the [Data Processing Pipeline](07_data_processing_pipeline__datapipeline__.md)). Now it's time to plate the dish for your guests (the users).
@@ -31,6 +33,8 @@ Let's say you have a beautifully prepared 2D slice of temperature data (e.g., fr
 
 The `PlotManager` is the central component that will make this happen, directing the entire visualization process.
 
+## Core Concepts
+
 ### Key Concepts: Your Visualization's Director
 
 The PlotManager is the central figure in turning processed data into visible plots.
@@ -41,6 +45,8 @@ The PlotManager is the central figure in turning processed data into visible plo
 *   **Choosing the Right Plotting Tool (Backend):** EViz can use different Python libraries for plotting (Matplotlib, HvPlot, etc.). The `PlotManager` decides which one to use based on your configuration or the type of plot requested. It then uses a "Plotter Factory" to get an instance of the specific "Plotter" (e.g., a `MatplotlibPlotter`).
 *   **Choosing the Right Plot Type:** Is it a 2D map (`xy` plot)? A time series (`xt` plot)? A vertical profile (`yz` plot)? The `PlotManager` interprets the configuration to choose the correct visualization style.
 *   **Orchestrating Creation & Output:** Once it has the data, the Plotter, and the plot type, the `PlotManager` tells the chosen Plotter to create the actual [Figure](10_figure__eviz_figure__.md) and draw the plot. Finally, it handles saving the generated image or GIF to the specified output directory.
+
+## Getting Started
 
 ### How Model Source Uses PlotManager
 
@@ -115,6 +121,8 @@ The `GenericDataSource` (the base class for all Model Sources) is responsible fo
     *   It then calls `self.plot_manager.process_plot()`, directly telling the `PlotManager` to make one specific plot with the provided `data_array`. The `0` is likely an index for plot parameters, but we can simplify its role for this tutorial.
 
 For our use case, when `plot_manager.plot()` is called, it will look at the `ConfigManager`, find the instruction to plot 'temperature' as an 'xy' map, and then orchestrate that specific plot.
+
+## Technical Details
 
 ### Under the Hood: PlotManager's Workflow
 
@@ -263,6 +271,8 @@ class PlotManager:
     *   `figure.save_plot(...)`: Finally, it checks the output options from `config_manager` and, if saving is enabled, tells the `figure` to save itself to a file.
 
 By orchestrating these steps, the `PlotManager` ensures that your processed data is correctly transformed into the desired visualization and delivered as specified.
+
+## Summary
 
 ### Conclusion
 

@@ -4,6 +4,8 @@ Welcome back! In [Chapter 4: Configuration Manager (ConfigManager)](04_configura
 
 Now, imagine our chef `Autoviz` has a recipe to bake a cake. But what if the "ingredients" are very different? One recipe might call for precisely measured, neatly packaged flour and sugar (like regularly gridded weather model data). Another might require fresh, irregularly shaped vegetables straight from the garden (like satellite observations or in-situ measurements). Our chef needs different tools and expertise for each!
 
+## Overview
+
 ### What Problem Do Model Sources Solve?
 
 Scientific data comes in many forms. Data from a global weather model is often structured in a very regular grid (like a perfect spreadsheet of temperatures for every latitude and longitude). Satellite measurements, however, might be irregularly sampled along a satellite's path, or come from instruments with varied spatial resolutions.
@@ -23,6 +25,8 @@ Let's say you have a dataset from a weather model that produces regularly gridde
 
 The `GriddedDataSource` is the expert for this task. It understands how to work with regularly gridded data to make it ready for visualization.
 
+## Core Concepts
+
 ### Key Concepts: The Specialized Data Experts
 
 Think of Model Sources as a team of data preparation specialists:
@@ -32,6 +36,8 @@ Think of Model Sources as a team of data preparation specialists:
 *   **`ObservationalDataSource` (The Observational Data Expert):** This expert deals with data that is often less structured. This includes data from satellites (which might cover specific "swaths" of Earth at irregular intervals) or ground-based sensors (which provide point measurements). This specialist knows how to figure out the geographical extent of such irregular data, which is crucial for plotting.
 *   **Receiving Instructions:** All these Model Sources get their specific instructions (like which variable to process or what region to focus on) from the [Configuration Manager (ConfigManager)](04_configuration_manager__configmanager__.md).
 *   **Preparing for Plotting, Not Plotting Itself:** It's important to remember that these Model Sources *prepare* the data. They don't draw the plots themselves! Once the data is perfectly prepared, they hand it over to the [Plot Manager (PlotManager)](08_plot_manager__plotmanager__.md) to do the actual visualization.
+
+## Getting Started
 
 ### How Autoviz Uses Model Sources
 
@@ -44,6 +50,8 @@ When you run `Autoviz` (either through `sViz` or from the command line, as seen 
 3.  **The Model Source gets to work:** This `GriddedDataSource` object then takes over. It uses the instructions from `ConfigManager` to load the data (with help from other components like the [Data Source (DataSource)](06_data_source__datasource__.md) and [Data Processing Pipeline (DataPipeline)](07_data_processing_pipeline__datapipeline__.md)), processes it according to its specialized knowledge, and then triggers the plotting process using the `PlotManager`.
 
 So, for our use case of plotting gridded weather model data: you tell `Autoviz` it's `gridded` data, and `Autoviz` automatically selects the `GriddedDataSource` expert to prepare your data.
+
+## Technical Details
 
 ### Under the Hood: How Model Sources Work
 
@@ -305,6 +313,8 @@ class ObservationalDataSource(GenericDataSource):
 *   `get_data_extent` and `apply_extent_to_config`: These methods are excellent examples of observational data specialization. They actively determine the geographical boundaries of the data (even if it's an irregular "swath") and then update the `ConfigManager` so that the `PlotManager` knows how to set up the map properly.
 
 These Model Sources ensure that EViz can adapt to the specific needs of different scientific data types, leading to accurate and relevant visualizations.
+
+## Summary
 
 ### Conclusion
 

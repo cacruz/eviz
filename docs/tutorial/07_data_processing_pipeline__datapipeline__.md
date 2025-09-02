@@ -6,6 +6,8 @@ Now, imagine you've just picked up all your ingredients from the grocery store. 
 
 This is where the **Data Processing Pipeline (DataPipeline)** comes in. It's like your highly organized kitchen's **assembly line**, ensuring every ingredient is perfectly prepared for cooking (visualization).
 
+## Overview
+
 ### What Problem Does DataPipeline Solve?
 
 Raw scientific data, even after being loaded into an `xarray.Dataset`, might still have issues:
@@ -28,6 +30,8 @@ Let's say you have two NetCDF files, `model_output_day1.nc` and `model_output_da
 5.  **Combine (concatenate) the data** from both files into a single dataset, ordered by time.
 
 The `DataPipeline` orchestrates all these steps to deliver a single, clean, and combined `xarray.Dataset` ready for plotting.
+
+## Core Concepts
 
 ### Key Concepts: The Data Assembly Line Components
 
@@ -58,6 +62,8 @@ The `DataPipeline` acts as the overall manager of your data assembly line. It do
 
 Each component passes its output (an `xarray.Dataset`) to the next, ensuring a smooth, systematic flow of data through the entire preparation process.
 
+## Getting Started
+
 ### How to Use DataPipeline (Through Model Sources and Autoviz)
 
 You, as a user, typically interact with the `DataPipeline` indirectly. The [Model Source](05_model_source__genericdatasource___griddeddatasource___observationaldatasource__.md) (like `GriddedDataSource`) is the one that sets up and uses the `DataPipeline`.
@@ -72,6 +78,8 @@ Here's how our use case (loading, processing, and combining two gridded NetCDF f
 6.  **Ready for Plotting:** The `DataPipeline` returns a single, clean, and combined `xarray.Dataset` to the `GriddedDataSource`, which is now perfectly ready to be handed off to the [Plot Manager (PlotManager)](08_plot_manager__plotmanager__.md).
 
 You don't need to write code to call each step (`reader.read_file`, `processor.process_data_source`, `integrator.integrate_data_sources`) individually. The `DataPipeline`'s `process_files` and `integrate_data_sources` methods abstract this complexity.
+
+## Technical Details
 
 ### Under the Hood: DataPipeline's Workflow
 
@@ -397,6 +405,8 @@ class DataIntegrator:
 *   `_concatenate_datasets`: Uses `xr.concat` to join datasets along a dimension (like `time`), and includes important steps like sorting by time and removing duplicates to ensure a clean final dataset.
 
 Together, these components in the `DataPipeline` ensure that the data is meticulously prepared, cleaned, and combined, just like a well-oiled assembly line.
+
+## Summary
 
 ### Conclusion
 

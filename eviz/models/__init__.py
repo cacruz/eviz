@@ -3,7 +3,7 @@
 This package contains the LEGACY model architecture. New code should use eviz.lib.models.
 
 MIGRATION NOTICE:
-================
+=================
 This package is being migrated to eviz.lib.models for better separation of concerns.
 
 New imports (preferred):

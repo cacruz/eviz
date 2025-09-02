@@ -2,6 +2,8 @@
 
 Welcome back! In [Chapter 2: Autoviz Application Core (Autoviz)](02_autoviz_application_core__autoviz__.md), we learned that Autoviz is the "chef" of EViz, taking your instructions and cooking up beautiful visualizations. But what if the chef needs to know *what ingredients are available* in your scientific data file before starting to cook? That's where the **Metadump Tool (MetadataExtractor)** comes in!
 
+## Overview
+
 ### What Problem Does Metadump Solve?
 
 Imagine you've just received a big box of ingredients (a scientific data file, like a NetCDF file). You want to bake a cake (create visualizations), but you don't know what's inside the box! Is there flour, sugar, eggs? Are they fresh? What quantities?
@@ -19,6 +21,8 @@ Let's say you're a scientist and you've received a new NetCDF file named `model_
 
 Metadump is designed to make this initial data exploration and setup incredibly simple.
 
+## Core Concepts
+
 ### Key Concepts: Your Data's Librarian
 
 Metadump's job is to make sense of your data files. Here are its core ideas:
@@ -28,6 +32,8 @@ Metadump's job is to make sense of your data files. Here are its core ideas:
 *   **Structured Metadata (JSON):** "Metadata" is simply "data about data." Metadump extracts this information (variable names, units, dimensions, descriptions) and organizes it into a clear, easy-to-read format like JSON (JavaScript Object Notation), which is excellent for computers and people to understand.
 *   **Configuration Files (YAML):** Besides just listing what's in the file, Metadump can also *suggest* how to plot things. It can generate basic configuration files (in YAML format) that tell Autoviz, "Hey, for `T2`, you can probably make an `xy` (map) plot and an `xt` (time-series) plot!" This is like the librarian giving you a suggested "reading list" based on the book's content.
 *   **Crucial for Autoviz:** Autoviz needs these "ingredient lists" and "suggested recipes" from Metadump. Without them, Autoviz wouldn't know what to plot or how to set up the plots correctly.
+
+## Getting Started
 
 ### How to Use Metadump
 
@@ -154,6 +160,8 @@ This JSON file clearly shows you:
 
 This is much easier to read and use than manually inspecting a complex NetCDF file!
 
+## Technical Details
+
 ### Under the Hood: Metadump's Workflow
 
 Let's take a quick peek at how our "librarian" works internally when you ask it to process a file.
@@ -259,6 +267,8 @@ class MetadataExtractor:
 *   `json.dump(metadata, json_file, indent=4)`: After collecting all the information, this line writes the entire `metadata` dictionary into the JSON file, making it easy to read with 4 spaces for indentation.
 
 Metadump also has methods like `_generate_specs_dict()` and `_generate_app_dict()` (not shown in detail here) that perform similar loops and logic to create the YAML configuration files for plot specifications and application settings, respectively. This is where it intelligently suggests plot types (like `xyplot`, `xtplot`, `yzplot`) based on the variable's dimensions.
+
+## Summary
 
 ### Conclusion
 
