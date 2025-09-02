@@ -361,12 +361,16 @@ def parse_command_line() -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=textwrap.dedent('''
         Examples:
+          # Generic NetCDF files (uses gridded source by default)
           python metadump.py /path/to/file.nc
           python metadump.py /path/to/file.nc --json
           python metadump.py /path/to/file.nc --app foo.yaml --specs foo_specs.yaml
-          python metadump.py /path/to/file.nc --app foo.yaml --specs foo_specs.yaml --ignore Var
-          python metadump.py /path/to/file.nc --app foo.yaml --specs foo_specs.yaml --vars var1 var2 var3
-          python metadump.py /path/to/file.nc --source wrf
+          
+          # WRF model output files (use --source wrf)
+          python metadump.py /path/to/wrfout_d01 --source wrf
+          
+          # Filter variables
+          python metadump.py /path/to/file.nc --ignore Var --vars var1 var2 var3
         ''')
     )
     
@@ -383,7 +387,7 @@ def parse_command_line() -> argparse.Namespace:
     parser.add_argument('--vars', nargs='*', default=None,
                        help='Variables to include when generating YAML files. If not provided, all variables are included.')
     parser.add_argument('--source', nargs='?', default='gridded',
-                       help='Source name (default is gridded).')
+                       help='Source type: gridded (default, for generic NetCDF files), wrf (for WRF model output), lis (for LIS model output), etc.')
     
     return parser.parse_args()
 
