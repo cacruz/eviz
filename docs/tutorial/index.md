@@ -1,73 +1,70 @@
-# Tutorial: eviz-dev
+# Tutorial: EViz
 
-eviz-dev is an automatic visualization system for **scientific data**, such as
-climate model outputs and observations. It uses a **central configuration** to
-manage settings and orchestrates a **data pipeline** to read and process data
-from various *file formats*. Specialized **handlers** process different data
-types, which are then passed to **plotter backends** to generate *customizable
-visualizations* on dedicated **figure** containers.
+EViz is an **automatic visualization system** designed to *simplify the plotting of scientific data* from Earth System Models and observations. It takes configuration instructions and various data file formats (like NetCDF or HDF5), processes them through an *orchestrated pipeline*, and then intelligently generates a wide range of plots, such as **maps, time series, and vertical profiles**. Users can interact with it either through a **command-line interface** for advanced control or a *user-friendly web dashboard* for quick, interactive visualizations, aided by a tool that *automatically extracts metadata* to streamline setup.
 
 
-**Source Repository:** [EViz](https://github.com/cacruz/eviz.git)
+**Source Repository:** [None](None)
 
 ```{mermaid}
 flowchart TD
-    A0["Config Manager
+    A0["Autoviz Application Core (Autoviz)
 "]
-    A1["YAML Parser
+    A1["Configuration Manager (ConfigManager)
 "]
-    A2["Data Source
+    A2["Data Processing Pipeline (DataPipeline)
 "]
-    A3["Data Pipeline
+    A3["Data Source (DataSource)
 "]
-    A4["Model/Source Handler
+    A4["Model Source (GenericDataSource / GriddedDataSource / ObservationalDataSource)
 "]
-    A5["Figure
+    A5["Plot Manager (PlotManager)
 "]
-    A6["Plotter Backend
+    A6["Plotter (BasePlotter and backends)
 "]
-    A7["Autoviz (Main Application)
+    A7["Figure (eViz Figure)
 "]
-    A8["Metadata Tool (metadump)
+    A8["Metadump Tool (MetadataExtractor)
 "]
-    A7 -- "Creates" --> A0
-    A1 -- "Populates" --> A0
-    A4 -- "Uses Config" --> A0
-    A3 -- "Uses Config" --> A0
-    A5 -- "Uses Config" --> A0
-    A6 -- "Uses Config" --> A0
-    A3 -- "Reads" --> A2
-    A7 -- "Orchestrates" --> A3
-    A4 -- "Accesses" --> A3
-    A7 -- "Uses Handler" --> A4
-    A4 -- "Creates Figure" --> A5
-    A6 -- "Plots On" --> A5
-    A4 -- "Uses Plotter" --> A6
-    A7 -- "Launches metadump" --> A8
-    A8 -- "Outputs config" --> A0
+    A9["Streamlit Web Interface (sViz)
+"]
+    A0 -- "Initializes ConfigManager" --> A1
+    A0 -- "Creates Model Sources" --> A4
+    A0 -- "Invokes Metadump" --> A8
+    A1 -- "Manages Pipeline" --> A2
+    A1 -- "Configures Model Sources" --> A4
+    A1 -- "Configures PlotManager" --> A5
+    A1 -- "Configures Figures" --> A7
+    A2 -- "Creates Data Sources" --> A3
+    A2 -- "Provides Data" --> A4
+    A3 -- "Provides Dataset" --> A2
+    A3 -- "Provides Data" --> A4
+    A4 -- "Orchestrates Plotting" --> A5
+    A5 -- "Creates Plotters" --> A6
+    A5 -- "Creates Figures" --> A7
+    A6 -- "Receives Config" --> A1
+    A6 -- "Draws on Figure" --> A7
+    A7 -- "Uses ConfigManager" --> A1
+    A8 -- "Reads Data" --> A3
+    A9 -- "Runs Autoviz CLI" --> A0
+    A9 -- "Runs Metadump Tool" --> A8
 ```
 
 ## Chapters
 
-1. [Data Source
-](01_data_source_.md)
-2. [Config Manager
-](02_config_manager_.md)
-3. [YAML Parser
-](03_yaml_parser_.md)
-4. [Autoviz (Main Application)
-](04_autoviz__main_application__.md)
-5. [Data Pipeline
-](05_data_pipeline_.md)
-6. [Model/Source Handler
-](06_model_source_handler_.md)
-7. [Figure
-](07_figure_.md)
-8. [Plotter Backend
-](08_plotter_backend_.md)
-9. [Metadump
-](09_metadata_tool__metadump__.md)
+```{toctree}
+:maxdepth: 1
 
+01_streamlit_web_interface__sviz__
+02_autoviz_application_core__autoviz__
+03_metadump_tool__metadataextractor__
+04_configuration_manager__configmanager__
+05_model_source__genericdatasource___griddeddatasource___observationaldatasource__
+06_data_source__datasource__
+07_data_processing_pipeline__datapipeline__
+08_plot_manager__plotmanager__
+09_plotter__baseplotter_and_backends__
+10_figure__eviz_figure__
+```
 
 
 ---
