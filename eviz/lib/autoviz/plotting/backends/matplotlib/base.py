@@ -620,32 +620,35 @@ class MatplotlibBasePlotter(BasePlotter):
         geom = pu.get_subplot_geometry(ax) if config.compare or config.compare_diff else None
 
         # Handle plot titles for comparison cases
-        if config.compare_diff:
-            if geom and geom[0] == (3, 1):  # (3,1) subplot structure
-                if geom[1:] == (0, 1, 1, 1):  # Bottom plot
-                    title_string = "Difference (top - middle)"
-                elif geom[1:] in [(1, 1, 0, 1), (0, 1, 0, 1)]:  # Top/Middle plots
+        if config.compare_diff or config.compare:
+            if config.compare_diff:
+                if geom and geom[0] == (3, 1):  # (3,1) subplot structure
+                    if geom[1:] == (0, 1, 1, 1):  # Bottom plot
+                        title_string = "Difference (top - middle)"
+                    elif geom[1:] in [(1, 1, 0, 1), (0, 1, 0, 1)]:  # Top/Middle plots
+                        title_string = self._set_axes_title(config, findex)
+                elif self.fig.subplots == (2, 2):  # (2,2) subplot structure
+                    if geom[1:] == (0, 1, 1, 0):
+                        title_string = "Difference (left - right)"
+                    elif geom[1:] == (0, 0, 1, 1):  # Extra diff plot
+                        diff_labels = {
+                            "percd": ("% Diff", "%"),
+                            "percc": ("% Change", "%"),
+                            "ratio": ("Ratio Diff", "ratio"),
+                        }
+                        diff_type = config.extra_diff_plot
+                        title_string, self.ax_opts['clabel'] = diff_labels.get(
+                            diff_type, ("Difference (left - right)", None))
+                        self.ax_opts['line_contours'] = False
+                    else:  # Default case
+                        title_string = self._set_axes_title(config, findex)
+            elif config.compare:
+                if geom and (geom[0][0] == 1):
                     title_string = self._set_axes_title(config, findex)
-            elif self.fig.subplots == (2, 2):  # (2,2) subplot structure
-                if geom[1:] == (0, 1, 1, 0):
-                    title_string = "Difference (left - right)"
-                elif geom[1:] == (0, 0, 1, 1):  # Extra diff plot
-                    diff_labels = {
-                        "percd": ("% Diff", "%"),
-                        "percc": ("% Change", "%"),
-                        "ratio": ("Ratio Diff", "ratio"),
-                    }
-                    diff_type = config.extra_diff_plot
-                    title_string, self.ax_opts['clabel'] = diff_labels.get(
-                        diff_type, ("Difference (left - right)", None))
-                    self.ax_opts['line_contours'] = False
-                else:  # Default case
-                    title_string = self._set_axes_title(config, findex)
-        elif config.compare:
-            if geom and (geom[0][0] == 1):
-                title_string = self._set_axes_title(config, findex)
-            else:
-                title_string = field_name
+                else:
+                    title_string = field_name
+            ax.set_title(title_string, loc=loc, fontsize=title_fontsize)
+            return
         else:
             # Non-comparison case
             level_text = self._format_level_text(config, level)
@@ -656,10 +659,6 @@ class MatplotlibBasePlotter(BasePlotter):
                 long_name = None
             if not long_name:
                 long_name = field_name
-            title_string = self._set_axes_title(config, findex)
-            
-        ax.set_title(title_string, loc=loc, fontsize=title_fontsize)
-        return
 
         left, width = 0, 1.0
         bottom, height = 0, 1.0
