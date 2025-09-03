@@ -20,11 +20,17 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
         Args:
             config: Configuration manager
             data_to_plot: Tuple containing (data2d, x, y, field_name, plot_type, findex, fig)
+                         or (data2d, x, y, field_name, plot_type, findex, fig, global_vmin, global_vmax)
         
         Returns:
             The created figure
         """
-        data2d, x, y, field_name, plot_type, findex, fig = data_to_plot
+        # Handle both old 7-element and new 9-element tuples (with global min/max for GIF consistency)
+        if len(data_to_plot) == 9:
+            data2d, x, y, field_name, plot_type, findex, fig, global_vmin, global_vmax = data_to_plot
+        else:
+            data2d, x, y, field_name, plot_type, findex, fig = data_to_plot
+            global_vmin, global_vmax = None, None
 
         if data2d is None:
             return fig
