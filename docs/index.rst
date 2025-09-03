@@ -35,7 +35,13 @@ Contents
 
 .. toctree::
    :maxdepth: 2
-   :caption: Tutorials:
+   :caption: Examples:
+   
+   examples/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Architecture Guide:
    
    tutorial/index
 

@@ -1,9 +1,9 @@
-# Tutorial: EViz
+# EViz Architecture Guide
 
 EViz is an **automatic visualization system** designed to *simplify the plotting of scientific data* from Earth System Models and observations. It takes configuration instructions and various data file formats (like NetCDF or HDF5), processes them through an *orchestrated pipeline*, and then intelligently generates a wide range of plots, such as **maps, time series, and vertical profiles**. Users can interact with it either through a **command-line interface** for advanced control or a *user-friendly web dashboard* for quick, interactive visualizations, aided by a tool that *automatically extracts metadata* to streamline setup.
 
 
-**Source Repository:** [None](None)
+**Source Repository:** [EViz](https://github.com/cacruz/eviz-dev)
 
 ```{mermaid}
 flowchart TD

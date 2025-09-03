@@ -1,10 +1,10 @@
-==============================
-autoViz: a map-generating tool
-==============================
+=============================
+EViz: a visualization toolkit
+=============================
 
-The plotting tool, **autoviz.py** or **autoViz** for short, is a highly configurable CLI-driven tool that can be used to
-generate a variety of plots used to diagnose Earth system model output. What follows is a description of several use
-cases that allow users to quickly generate maps using **autoViz**.
+The plotting tool, **autoviz.py**, is a highly configurable command-line interface that can be used to
+generate a variety of plots for diagnosing Earth system model output and observational data. What follows is a description of several use
+cases that allow users to quickly generate visualizations using EViz.
 
 
 1. `Visualize one field from a single netCDF file`_
@@ -40,9 +40,9 @@ to **autoViz**. In addition, you have to specify the model template (or **APP**)
 
 .. code-block::
    
-   python autoviz.py --configfile /path/to/my_config.yaml -s my_model
+   python autoviz.py -f /path/to/my_config.yaml -s my_model
 
-In `EViz`, my_model can be one of the following: **gridded**, **geos**, **ccm**, **cf**, **wrf** ,or **lis**. These are
+In `EViz`, my_model can be one of the following: **gridded**, **geos**, **ccm**, **cf**, **wrf**, **lis**, **crest**, **airnow**, **omi**, or **grib**. These are
 the 'supported models'. Supported models are data sources for which predefined configurations have been made available
 within **autoViz**.
 
@@ -51,11 +51,11 @@ source of the data. For example:
 
 .. code-block::
 
-   python autoviz.py --config /path/to/config -s my_model
+   python autoviz.py -c /path/to/config -s my_model
 
 will search for my_model.yaml in /path/to/config/my_model.
 
-The `--config /path/to/config` option is equivalent to setting the environment variable EVIZ_CONFIG_PATH as follows:
+The `-c /path/to/config` option is equivalent to setting the environment variable EVIZ_CONFIG_PATH as follows:
 
 .. code-block::
 
@@ -117,17 +117,40 @@ Creating the APP and SPECS files can be time consuming. To expedite the creation
 
 .. code-block::
 
-   python metadump.py /path/to/model_output.nc --specs model_output.yaml --app model_output_specs.yaml
+   python metadump.py /path/to/model_output.nc
 
-The above command will create configuration files containing information about all the plottable variables as well
-as the allowable plot types for each variable. Note that most settings will default to "reasonable" values and will
-probably need to be tweaked if you wish to generate different output than that provided by the defaults.
+The above command will create configuration files (``model_output.yaml`` and ``model_output_specs.yaml``) containing 
+information about all the plottable variables as well as the allowable plot types for each variable. Note that most 
+settings will default to "reasonable" values and will probably need to be tweaked if you wish to generate different 
+output than that provided by the defaults.
 
-Additionally, you can create configuration files to contain details about selected variables. For example:
+You can also specify custom output filenames:
 
 .. code-block::
 
-   python metadump.py /path/to/model_output.nc --specs model_output.yaml --app model_output_specs.yaml --vars VAR1 VAR2
+   python metadump.py /path/to/model_output.nc --app my_config.yaml --specs my_config_specs.yaml
+
+Additionally, you can create configuration files to contain details about selected variables:
+
+.. code-block::
+
+   python metadump.py /path/to/model_output.nc --vars VAR1 VAR2
+
+For model-specific output (e.g., WRF), specify the source type:
+
+.. code-block::
+
+   python metadump.py /path/to/wrfout_d01 --source wrf
+
+Other useful options include:
+
+.. code-block::
+
+   # Generate JSON metadata file
+   python metadump.py /path/to/model_output.nc --json
+   
+   # Exclude specific variables
+   python metadump.py /path/to/model_output.nc --ignore TIME_BNDS history
 
 
 Visualize multiple fields from a single netCDF file
@@ -188,7 +211,7 @@ Note that we still run `autoViz` as before:
 
 .. code-block::
    
-   python autoviz.py --config /path/to/config -s my_model
+   python autoviz.py -c /path/to/config -s my_model
 
 
 but now, the SPECS file, if found, will be used and the configurations therein will be applied to the maps specified
@@ -235,10 +258,10 @@ the config/ directory.
 
 **Notes**
 
-Pre-defined SPECS files are included in the config directory and are already configure to work with sample data on NASA's
-DISCOVER system. These can be used with the “supported” data sources that include **gridded, geos, ccm, cf, lis and wrf**.
+Pre-defined SPECS files are included in the config directory and are already configured to work with sample data on NASA's
+DISCOVER system. These can be used with the "supported" data sources that include **gridded**, **geos**, **ccm**, **cf**, **lis**, **wrf**, **crest**, **airnow**, **omi**, and **grib**.
 So, for example, we can use the predefined gridded model to create plots from various data sources – as long as they
-are in netCDF format (that’s what gridded refers to).
+are in netCDF format (that's what gridded refers to).
 
 
 Use your own APP/SPECS
@@ -296,7 +319,7 @@ For this case we run **autoViz** as follows:
 
 .. code-block::
    
-   python autoviz.py --source gridded
+   python autoviz.py -s gridded
 
 or
 
@@ -462,6 +485,7 @@ Notes
 ^^^^^
 - Ensure that dependencies, specified in environment.yaml, are installed in your Python environment before running the driver.
 - Ensure compatibility with the expected YAML configuration schema. Use `metadump.py` for guidance on creating configurations.
+- For hands-on examples with actual command-line usage and expected outputs, see the :doc:`Examples section <../examples/index>`.
 - Refer to the documentation_ for details on supported data formats, fields, and advanced plotting capabilities.
 
 .. _documentation: https://astg.pages.smce.nasa.gov/visualization/eviz
