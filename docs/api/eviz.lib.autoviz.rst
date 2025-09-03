@@ -22,5 +22,4 @@ Submodules
 
    eviz.lib.autoviz.base
    eviz.lib.autoviz.figure
-   eviz.lib.autoviz.plotter
    eviz.lib.autoviz.utils

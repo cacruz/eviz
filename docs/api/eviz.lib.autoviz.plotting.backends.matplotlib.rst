@@ -17,6 +17,7 @@ Submodules
    eviz.lib.autoviz.plotting.backends.matplotlib.metric_plot
    eviz.lib.autoviz.plotting.backends.matplotlib.polar_plot
    eviz.lib.autoviz.plotting.backends.matplotlib.scatter_plot
+   eviz.lib.autoviz.plotting.backends.matplotlib.simple_plot
    eviz.lib.autoviz.plotting.backends.matplotlib.tx_plot
    eviz.lib.autoviz.plotting.backends.matplotlib.xt_plot
    eviz.lib.autoviz.plotting.backends.matplotlib.xy_plot

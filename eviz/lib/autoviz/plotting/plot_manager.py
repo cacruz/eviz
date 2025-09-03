@@ -3,7 +3,7 @@ import os
 import numpy as np
 import xarray as xr
 import pandas as pd
-from eviz.lib.autoviz.plotter import SimplePlotter
+from eviz.lib.autoviz.plotting.backends.matplotlib.simple_plot import SimplePlotter
 from eviz.lib.autoviz.plotting.factory import PlotterFactory
 from eviz.lib.autoviz.figure import Figure
 import eviz.lib.utils as u
@@ -570,6 +570,76 @@ class PlotManager:
     def process_simple_plots(self, plotter):
         """Generate simple plots."""
         self.logger.info("Generating simple plots")
+        
+        # Get data sources
+        all_data_sources_dict = self.config_manager.pipeline.get_all_data_sources()
+        if not all_data_sources_dict:
+            self.logger.error("No data sources available for simple plots")
+            return
+        
+        all_data_sources = list(all_data_sources_dict.values())
+        self.logger.debug(f"Found {len(all_data_sources)} data sources")
+            
+        # Process each input file and its to_plot fields
+        for input_entry in self.config_manager.app_data.inputs:
+            to_plot = input_entry.get('to_plot', {})
+            
+            for field_name, plot_type in to_plot.items():
+                self.logger.info(f"Processing simple plot: {field_name} ({plot_type})")
+                
+                # Get the data from data sources
+                data = None
+                for i, data_source in enumerate(all_data_sources):
+                    self.logger.debug(f"Checking data source {i}: {type(data_source)}")
+                    
+                    # Check different ways the dataset might be stored
+                    dataset = None
+                    if hasattr(data_source, 'dataset') and data_source.dataset is not None:
+                        dataset = data_source.dataset
+                        self.logger.debug(f"Found dataset via .dataset attribute")
+                    elif hasattr(data_source, 'data') and data_source.data is not None:
+                        dataset = data_source.data
+                        self.logger.debug(f"Found dataset via .data attribute")
+                    elif hasattr(data_source, '__dict__'):
+                        # Check if it's a dictionary-like structure with datasets
+                        for key, value in data_source.__dict__.items():
+                            if isinstance(value, xr.Dataset):
+                                dataset = value
+                                self.logger.debug(f"Found dataset via .{key} attribute")
+                                break
+                    
+                    if dataset is not None:
+                        self.logger.debug(f"Dataset has {len(dataset.data_vars)} data variables")
+                        self.logger.debug(f"Available variables: {list(dataset.data_vars.keys())[:10]}...")
+                        
+                        if field_name in dataset.data_vars:
+                            data = dataset[field_name]
+                            self.logger.debug(f"Found field '{field_name}' in data source {i}")
+                            break
+                        elif field_name in dataset.variables:
+                            data = dataset[field_name] 
+                            self.logger.debug(f"Found field '{field_name}' in variables of data source {i}")
+                            break
+                    else:
+                        self.logger.debug(f"No dataset found in data source {i}")
+                
+                if data is not None:
+                    try:
+                        self.logger.info(f"Creating simple {plot_type} plot for {field_name}")
+                        plotter.plot(self.config_manager, field_name, plot_type, data)
+                    except Exception as e:
+                        self.logger.error(f"Failed to create simple plot for {field_name}: {str(e)}")
+                        import traceback
+                        self.logger.debug(traceback.format_exc())
+                else:
+                    self.logger.warning(f"Field '{field_name}' not found in any data source")
+                    # Additional debugging
+                    self.logger.debug("Debug info:")
+                    for i, ds in enumerate(all_data_sources):
+                        if hasattr(ds, 'dataset') and ds.dataset is not None:
+                            self.logger.debug(f"  Data source {i} has {len(ds.dataset.data_vars)} variables")
+                        else:
+                            self.logger.debug(f"  Data source {i} has no dataset or dataset is None")
 
     def process_single_plots(self):
         """Generate single plots."""
