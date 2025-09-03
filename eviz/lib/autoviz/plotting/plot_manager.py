@@ -1107,10 +1107,17 @@ class PlotManager:
         do_zsum = self.config_manager.ax_opts.get('zsum', False)
 
         time_level_config = self.config_manager.ax_opts.get('time_lev', 0)
+        tave_setting = self.config_manager.ax_opts.get('tave', False)
         tc_dim = self.config_manager.get_model_dim_name('tc') or 'time'
         zc_dim = self.config_manager.get_model_dim_name_for_data('zc', data_array) or 'lev'
         num_times = data_array[tc_dim].size if tc_dim in data_array.dims else 1
-        time_levels = range(num_times) if time_level_config == 'all' else [time_level_config]
+        
+        # Handle time averaging case - process full time series instead of individual levels
+        if tave_setting and tc_dim in data_array.dims and num_times > 1:
+            self.logger.info(f"Processing time-averaged plot for {field_name} with {num_times} time levels")
+            time_levels = ['average']  # Special marker for time averaging
+        else:
+            time_levels = range(num_times) if time_level_config == 'all' else [time_level_config]
 
         if not levels and not do_zsum:
             return
@@ -1199,7 +1206,11 @@ class PlotManager:
             self.config_manager.level = level_val
             for t in time_levels:
                 self.logger.debug(f"Processing time level {t} for field {field_name}, level {level_val}")
-                if tc_dim in data_array.dims:
+                if t == 'average':
+                    # Special case for time averaging - pass full time series
+                    data_at_time = data_array
+                    self.logger.info(f"Using full time series for averaging, shape: {data_at_time.shape}")
+                elif tc_dim in data_array.dims:
                     data_at_time = data_array.isel({tc_dim: t})
                 else:
                     data_at_time = data_array.squeeze()  # Assume single time if no time dim
@@ -1208,7 +1219,14 @@ class PlotManager:
                     self.logger.debug(f"Skipping time level {t} for {field_name} - all values are NaN")
                     continue
                     
-                self._set_time_config(t, data_at_time)
+                # Handle time config differently for averaging
+                if t == 'average':
+                    # For averaging, set special time averaging text
+                    self.config_manager.real_time = "Averaged over all times"
+                    self.config_manager.time_level = 'average'
+                else:
+                    self._set_time_config(t, data_at_time)
+                    
                 # Create a new figure for each level to avoid reusing axes
                 figure = Figure.create_eviz_figure(self.config_manager, plot_type)
                 self.config_manager.ax_opts = figure.init_ax_opts(field_name)
@@ -1221,7 +1239,7 @@ class PlotManager:
                                                                 file_index, 
                                                                 plot_type, 
                                                                 figure, 
-                                                                time_level=t,
+                                                                time_level=None if t == 'average' else t,
                                                                 global_vmin=global_vmin,
                                                                 global_vmax=global_vmax)
                 else:
@@ -1230,7 +1248,7 @@ class PlotManager:
                                                                 file_index, 
                                                                 plot_type, 
                                                                 figure, 
-                                                                time_level=t, 
+                                                                time_level=None if t == 'average' else t, 
                                                                 level=level_val,
                                                                 global_vmin=global_vmin,
                                                                 global_vmax=global_vmax)

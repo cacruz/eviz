@@ -266,7 +266,8 @@ class DataExtractor:
 
         # Almost done...
         data2d = d_temp
-        if self.config_manager.ax_opts.get('tave', False):
+        tave_setting = self.config_manager.ax_opts.get('tave', False)
+        if tave_setting:
             if tc_dim is not None and tc_dim in data2d.dims:
                 num_tc = data2d[tc_dim].size
                 if num_tc > 1:
