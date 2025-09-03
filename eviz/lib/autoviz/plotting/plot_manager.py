@@ -2220,7 +2220,7 @@ class PlotManager:
                     self.data2d_list = []
                 self.data2d_list.append(field_to_plot[0])
         if field_to_plot:
-            self.plot_result = self.create_plot(field_name, field_to_plot)
+            self.plot_result = self.create_plot(field_name, field_to_plot, plot_type)
 
     def _process_2x2_comparison_plot(self, 
                                      file_index, 
@@ -2316,4 +2316,4 @@ class PlotManager:
                 self.data2d_list.append(field_to_plot[0])
 
         if field_to_plot:
-            self.plot_result = self.create_plot(field_name, field_to_plot)
+            self.plot_result = self.create_plot(field_name, field_to_plot, plot_type)
