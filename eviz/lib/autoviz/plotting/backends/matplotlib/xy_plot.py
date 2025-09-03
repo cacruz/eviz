@@ -65,6 +65,9 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
                 self.ax = ax_temp[config.axindex]
             else:
                 self.ax = ax_temp
+        elif axes_shape == (2, 1):
+            # Side-by-side comparison: 2 rows, 1 column
+            self.ax = ax_temp[config.axindex]
         else:
             self.ax = ax_temp[0]
 

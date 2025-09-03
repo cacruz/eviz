@@ -260,7 +260,15 @@ class MatplotlibBasePlotter(BasePlotter):
                 fmt = pu.OOMFormatter(prec=self.ax_opts["clevs_prec"], math_text=True)
 
             if not fig.use_cartopy:
-                cbar = fig.colorbar(cfilled)
+                cbar = fig.colorbar(
+                    cfilled,
+                    ax=ax,
+                    orientation="vertical" if config.compare or config.compare_diff else "horizontal",
+                    pad=pu.cbar_pad(fig.subplots),
+                    fraction=pu.cbar_fraction(fig.subplots),
+                    format=fmt,
+                    shrink=pu.cbar_shrink(fig.subplots),
+                )
             else:
                 cbar = fig.colorbar(
                     cfilled,
