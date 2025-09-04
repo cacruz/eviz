@@ -1,7 +1,7 @@
 # Available options:
 # Note: in all cases where contour levels are specified, enter [] to let eviz compute levels
 fieldname:
-    # The following unit conversion "factor", and the correspondint "units", is applied 
+    # The following unit conversion "factor", and the corresponding "units", is applied 
     # as is. Thus, the field values are multiplied by "unitconversion" and the output
     # values are applied, as attributes, the specified units. However, if "unitconversion" is
     # not specified but units are, the units are used as "destinations" units and the field

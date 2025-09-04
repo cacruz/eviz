@@ -16,6 +16,7 @@ from eviz.lib.models.factory import DataSourceFactory
 from eviz.models.esm.crest import Crest
 from eviz.models.esm.grib import Grib
 from eviz.models.esm.geos import Geos
+from eviz.models.esm.giss import Giss
 from eviz.models.esm.lis import Lis
 from eviz.models.esm.wrf import Wrf
 from eviz.models.obs.inventory.airnow import Airnow
@@ -84,6 +85,17 @@ class GeosFactory(BaseSourceFactory):
     """
     def create_root_instance(self, config_manager: ConfigManager):
         return Geos(config_manager)
+
+
+@dataclass
+class GissFactory(BaseSourceFactory):
+    """
+    Factory for creating Giss model instances for GISS ModelE data processing.
+    
+    Handles GISS ModelE NetCDF files with unique dimension structure (im, jm, lm, ntimemax).
+    """
+    def create_root_instance(self, config_manager: ConfigManager):
+        return Giss(config_manager)
 
 
 @dataclass

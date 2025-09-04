@@ -261,7 +261,12 @@ class DataProcessor:
             self.logger.debug(f"Skipping all dataset processing for model {model_name}")
             return dataset
 
-        dataset = self._standardize_coordinates(dataset, model_name)
+        # Apply GISS-specific post-processing which includes coordinate standardization
+        if model_name == 'giss':
+            dataset = self._apply_giss_post_processing(dataset)
+            # Skip regular coordinate standardization since GISS post-processing handles it
+        else:
+            dataset = self._standardize_coordinates(dataset, model_name)
         dataset = self._normalize_longitude(dataset)
         dataset = self._handle_missing_values(dataset)
         dataset = self._apply_unit_conversions(dataset)
@@ -803,3 +808,100 @@ class DataProcessor:
         except Exception as e:
             self.logger.error(f"Error computing difference: {e}")
             return xr.zeros_like(d1)
+    
+    def _apply_giss_post_processing(self, dataset: xr.Dataset) -> xr.Dataset:
+        """Apply GISS ModelE-specific post-processing to add coordinate arrays.
+        
+        GISS ModelE files have a unique structure with dimensions (im, jm, lm, ntimemax)
+        but no coordinate arrays. This method creates synthetic coordinate arrays and renames
+        dimensions to standard names in one step.
+        
+        Args:
+            dataset: Raw GISS dataset
+            
+        Returns:
+            Dataset with synthetic coordinate arrays added and dimensions renamed
+        """
+        self.logger.info("Applying GISS ModelE post-processing to add coordinate arrays")
+        
+        # Create synthetic coordinate arrays and rename dimensions simultaneously
+        coords_to_add = {}
+        rename_dict = {}
+        
+        # Longitude coordinate (im -> lon)
+        if 'im' in dataset.dims:
+            im_size = dataset.dims['im']
+            # Standard global longitude grid: 0 to 360-dx
+            lon_values = np.linspace(0, 360 - 360/im_size, im_size)
+            coords_to_add['lon'] = ('im', lon_values)
+            rename_dict['im'] = 'lon'
+            self.logger.debug(f"Created longitude coordinate: {im_size} points, range {lon_values.min():.1f} to {lon_values.max():.1f}")
+        
+        # Latitude coordinate (jm -> lat)  
+        if 'jm' in dataset.dims:
+            jm_size = dataset.dims['jm']
+            # Standard global latitude grid: -90 to 90
+            lat_values = np.linspace(-90 + 90/jm_size, 90 - 90/jm_size, jm_size)
+            coords_to_add['lat'] = ('jm', lat_values)
+            rename_dict['jm'] = 'lat'
+            self.logger.debug(f"Created latitude coordinate: {jm_size} points, range {lat_values.min():.1f} to {lat_values.max():.1f}")
+        
+        # Vertical coordinate (lm -> lev)
+        if 'lm' in dataset.dims:
+            lm_size = dataset.dims['lm']
+            # Use level indices as pressure levels (could be improved with actual values)
+            lev_values = np.arange(1, lm_size + 1)
+            coords_to_add['lev'] = ('lm', lev_values)
+            rename_dict['lm'] = 'lev'
+            self.logger.debug(f"Created level coordinate: {lm_size} levels")
+        
+        # Time coordinate - create a simple singleton time coordinate for GISS data
+        # Most GISS variables represent single time slices, not time series
+        if 'ntimemax' in dataset.dims:
+            # Just rename the dimension, don't worry about the coordinate array for now
+            rename_dict['ntimemax'] = 'time' 
+            self.logger.debug("Will rename ntimemax dimension to time")
+        
+        # Add the coordinate arrays first
+        if coords_to_add:
+            dataset = dataset.assign_coords(coords_to_add)
+            self.logger.info(f"Added {len(coords_to_add)} coordinate arrays: {list(coords_to_add.keys())}")
+        
+        # Then rename dimensions
+        if rename_dict:
+            dataset = dataset.rename(rename_dict)
+            self.logger.info(f"Renamed dimensions: {rename_dict}")
+        
+        return dataset
+    
+    def _add_singleton_time_dimension(self, dataset: xr.Dataset) -> xr.Dataset:
+        """Add singleton time dimension to variables that should have it but don't.
+        
+        For GISS data, some variables like 't' are 3D (lev, lat, lon) but represent
+        a single time slice. For plotting purposes, we need to add a time dimension.
+        
+        Args:
+            dataset: Dataset to process
+            
+        Returns:
+            Dataset with time dimensions added where appropriate
+        """
+        variables_to_process = []
+        
+        for var_name, var in dataset.data_vars.items():
+            # Check if variable has spatial dimensions but no time dimension
+            has_spatial = any(dim in var.dims for dim in ['lev', 'lat', 'lon'])
+            has_time = 'time' in var.dims
+            
+            if has_spatial and not has_time:
+                # This is likely a 3D spatial variable that represents a time slice
+                variables_to_process.append(var_name)
+        
+        if variables_to_process:
+            self.logger.debug(f"Adding singleton time dimension to variables: {variables_to_process}")
+            for var_name in variables_to_process:
+                # Add a singleton time dimension
+                dataset[var_name] = dataset[var_name].expand_dims({'time': 1})
+                self.logger.debug(f"Added singleton time dimension to variable {var_name}")
+        
+        return dataset

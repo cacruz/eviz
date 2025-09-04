@@ -22,6 +22,7 @@ class OutputConfig:
         """Initialize output configuration."""
         outputs = self.app_data.outputs
 
+        self.output_dir = outputs.get("output_dir", self.output_dir)
         self.filename_id = outputs.get("filename_id", "")
         self.add_logo = outputs.get("add_logo", False)
         self.print_to_file = outputs.get("print_to_file", False)

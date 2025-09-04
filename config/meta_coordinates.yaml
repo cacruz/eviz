@@ -8,6 +8,7 @@
 # x-coordinate name: model
 xc:
     gridded: lon,longitude,im,Longitude,x,longitude_dim
+    giss: im,lon,longitude
     crest: lon,longitude,im
     airnow: Longitude
     omi: Longitude,longitude,lon
@@ -21,6 +22,7 @@ xc:
 # y-coordinate name: model
 yc:
     gridded: lat,latitude,jm,Latitude,y,latitude_dim
+    giss: jm,lat,latitude
     crest: lat,latitude,jm
     airnow: Latitude
     omi: Latitude,latitude,lat
@@ -34,6 +36,7 @@ yc:
 # z-coordinate name: model
 zc:
     gridded: lev,level,levels,plev,lm,eta_dim,z,eta_dim
+    giss: lm,lev,level
     airnow: NA
     omi: NA
     wrf:
@@ -45,6 +48,7 @@ zc:
 # time-coordinate name: model
 tc:
     gridded: time,Time,rec_dim,ntimemax,t,rec_dim
+    giss: ntimemax,time,Time
     crest: time,datetime,Time
     airnow: time
     omi: Time

@@ -45,13 +45,6 @@ inputs:
 #     to_plot:
 #        z: xy
 
-# TODO: Fix ordering of dimensions such as specified in this file
-   - name: 1JUL1981.rsfE04F102_2010_QUOCA_PSV_NINTa4.nc
-     location: ${HOME}/data/eviz/giss
-     to_plot:
-#        p: xy
-        t: yz
-
 outputs:
     output_dir: ${HOME}/scratch/eviz/output/gridded
     print_to_file: yes

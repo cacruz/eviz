@@ -26,6 +26,7 @@ from eviz.models.source_factory import (AirnowFactory,
                                         GriddedSourceFactory,
                                         ObsSourceFactory,
                                         GeosFactory,
+                                        GissFactory,
                                         )
 from eviz.lib.config.paths_config import PathsConfig
 from eviz.lib.utils import load_style
@@ -114,6 +115,7 @@ def get_factory_from_user_input(inputs) -> list:
     - 'test': DataSourceFactory (for unit tests)
     - 'gridded': DataSourceFactory (for generic NetCDF data)
     - 'geos': DataSourceFactory (for MERRA data)
+    - 'giss': GissFactory (for GISS ModelE NetCDF data)
     - 'ccm', 'cf': DataSourceFactory (for special streams)
     - 'crest' : CrestFactory (for CREST data)
     - 'lis': LisFactory (for Land Information System data)
@@ -130,6 +132,7 @@ def get_factory_from_user_input(inputs) -> list:
         "test": GriddedSourceFactory(),       # for unit tests
         "gridded": GriddedSourceFactory(),    # default for all gridded data such as NetCDF
         "geos": GeosFactory(),                # special alias for GEOS datasets such as MERRA
+        "giss": GissFactory(),                # GISS ModelE NetCDF with unique dimension structure
         "ccm": GriddedSourceFactory(),        # special alias for GEOS datasets CCM
         "cf": GriddedSourceFactory(),         # and CF
         "crest": CrestFactory(),              # and CREST
