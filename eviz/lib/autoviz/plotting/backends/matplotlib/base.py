@@ -30,10 +30,86 @@ class MatplotlibBasePlotter(BasePlotter):
     def plot(self, config, data_to_plot):
         pass
 
+    def _coarsen_for_plotting(self, x, y, data2d, max_size=2000):
+        """Coarsen high-resolution data for faster plotting.
+        
+        Args:
+            x: X coordinate array
+            y: Y coordinate array  
+            data2d: 2D data array
+            max_size: Maximum dimension size (default 2000)
+            
+        Returns:
+            Tuple of (coarsened_x, coarsened_y, coarsened_data2d)
+        """
+        # Check if coarsening is needed
+        ny, nx = data2d.shape
+        if nx <= max_size and ny <= max_size:
+            return x, y, data2d
+            
+        # Calculate coarsening factors
+        x_factor = max(1, nx // max_size)
+        y_factor = max(1, ny // max_size)
+        
+        self.logger.info(f"Coarsening data from {nx}×{ny} by factors {x_factor}×{y_factor} for faster plotting")
+        
+        # Coarsen data using block averaging to preserve features
+        if hasattr(data2d, 'values'):
+            data_values = data2d.values
+        else:
+            data_values = data2d
+            
+        # Use block averaging for better quality than simple subsampling
+        ny_coarse = ny // y_factor
+        nx_coarse = nx // x_factor
+        
+        # Reshape and average
+        data_reshaped = data_values[:ny_coarse*y_factor, :nx_coarse*x_factor].reshape(
+            ny_coarse, y_factor, nx_coarse, x_factor
+        )
+        data_coarse = np.nanmean(data_reshaped, axis=(1, 3))
+        
+        # Coarsen coordinate arrays to match data dimensions
+        if hasattr(x, 'values'):
+            x_values = x.values
+        else:
+            x_values = x
+            
+        if hasattr(y, 'values'):
+            y_values = y.values
+        else:
+            y_values = y
+        
+        # Take coordinates that align with coarsened data centers
+        x_coarse = x_values[:nx_coarse*x_factor:x_factor]
+        y_coarse = y_values[:ny_coarse*y_factor:y_factor]
+        
+        # Ensure coordinate arrays match data dimensions
+        if len(x_coarse) != nx_coarse:
+            x_coarse = x_coarse[:nx_coarse]
+        if len(y_coarse) != ny_coarse:
+            y_coarse = y_coarse[:ny_coarse]
+        
+        # Preserve xarray DataArray attributes if input was xarray
+        if hasattr(data2d, 'attrs'):
+            import xarray as xr
+            data_coarse = xr.DataArray(
+                data_coarse,
+                dims=['y', 'x'],
+                coords={'y': y_coarse, 'x': x_coarse},
+                attrs=data2d.attrs,
+                name=data2d.name
+            )
+        
+        return x_coarse, y_coarse, data_coarse
+
     def filled_contours(
         self, config, field_name, ax, x, y, data2d, transform=None, vmin=None, vmax=None
     ):
         """Plot filled contours."""
+        # Coarsen data for faster plotting if needed
+        x, y, data2d = self._coarsen_for_plotting(x, y, data2d)
+        
         # Check if data is all NaN
         if np.isnan(data2d).all():
             self.logger.warning(
