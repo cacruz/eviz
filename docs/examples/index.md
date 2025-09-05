@@ -6,7 +6,7 @@ This section provides hands-on examples of using EViz to create various types of
 
 Before running these examples, ensure you have:
 - EViz installed and configured
-- The `EVIZ_CONFIG_PATH` environment variable set
+- The `EVIZ_CONFIG_PATH` environment variable set. For  these examples set `EVIZ_CONFIG_PATH=config/examples`.
 - Sample data files in the expected locations
 
 ## Example Categories
@@ -26,4 +26,4 @@ For a complete list of command options:
 python autoviz.py --help
 ```
 
-For configuration file templates and data samples, see the `config/` directory in your EViz installation.
+For configuration file templates used in this section, see the `config/examples/` directory in your EViz installation.
