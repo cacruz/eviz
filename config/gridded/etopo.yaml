@@ -1,0 +1,12 @@
+inputs:
+# TODO: Need to speed up drawing
+   - name: ETOPO1_SGT.nc
+     location: ${HOME}/data/eviz/ocean
+     to_plot:
+        z: xy
+
+outputs:
+    output_dir: ${HOME}/scratch/eviz/output/etopo
+    print_to_file: yes
+    print_format: jpg
+

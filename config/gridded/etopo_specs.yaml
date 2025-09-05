@@ -1,0 +1,12 @@
+z:
+    name: Ocean Topography
+    # Performance optimization options
+    coarse_max_size: 1500          # More aggressive coarsening (1500x1500 instead of default 2000x2000)
+    plotting_method: pcolormesh     # Use pcolormesh instead of contourf for faster rendering
+    units: m
+    xyplot:
+        line_contours: no
+        # extent: conus                    # Commented out to test full global dataset
+        fill_value: -2147483648
+        levels:
+            0: []
