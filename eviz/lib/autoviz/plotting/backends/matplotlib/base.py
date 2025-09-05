@@ -30,18 +30,21 @@ class MatplotlibBasePlotter(BasePlotter):
     def plot(self, config, data_to_plot):
         pass
 
-    def _coarsen_for_plotting(self, x, y, data2d, max_size=2000):
+    def _coarsen_for_plotting(self, x, y, data2d, max_size=None):
         """Coarsen high-resolution data for faster plotting.
         
         Args:
             x: X coordinate array
             y: Y coordinate array  
             data2d: 2D data array
-            max_size: Maximum dimension size (default 2000)
+            max_size: Maximum dimension size (uses coarse_max_size from ax_opts or 2000 default)
             
         Returns:
             Tuple of (coarsened_x, coarsened_y, coarsened_data2d)
         """
+        # Get max_size from ax_opts if not provided
+        if max_size is None:
+            max_size = getattr(self.ax_opts, 'coarse_max_size', None) or self.ax_opts.get('coarse_max_size', 2000)
         # Check if coarsening is needed
         ny, nx = data2d.shape
         if nx <= max_size and ny <= max_size:
@@ -159,31 +162,51 @@ class MatplotlibBasePlotter(BasePlotter):
         else:
             cmap_str = self.ax_opts["use_cmap"]
 
+        # Get plotting method from ax_opts (default: contourf)
+        plotting_method = self.ax_opts.get('plotting_method', 'contourf')
+        
         try:
-            if np.all(np.diff(self.ax_opts["clevs"]) > 0):
-                cfilled = ax.contourf(
+            if plotting_method == 'pcolormesh':
+                # Use pcolormesh for faster plotting of large datasets
+                cfilled = ax.pcolormesh(
                     x,
                     y,
                     data2d,
-                    levels=self.ax_opts["clevs"],
                     cmap=cmap_str,
-                    extend=self.ax_opts["extend_value"],
                     norm=colors.Normalize(vmin=vmin, vmax=vmax),
                     transform=transform,
+                    shading='auto'
                 )
-
-                # Set under/over colors if specified
+                self.logger.debug(f"Using pcolormesh plotting method for faster rendering")
+            else:
+                # Use contourf (default)
+                if np.all(np.diff(self.ax_opts["clevs"]) > 0):
+                    cfilled = ax.contourf(
+                        x,
+                        y,
+                        data2d,
+                        levels=self.ax_opts["clevs"],
+                        cmap=cmap_str,
+                        extend=self.ax_opts["extend_value"],
+                        norm=colors.Normalize(vmin=vmin, vmax=vmax),
+                        transform=transform,
+                    )
+                else:
+                    raise ValueError("Contour levels must be increasing")
+            
+            # Set under/over colors if specified (works for both methods)
+            if hasattr(cfilled, 'cmap'):
                 if self.ax_opts["cmap_set_under"]:
                     cfilled.cmap.set_under(self.ax_opts["cmap_set_under"])
                 if self.ax_opts["cmap_set_over"]:
                     cfilled.cmap.set_over(self.ax_opts["cmap_set_over"])
 
-                ax.set_aspect("auto")
-                return cfilled
-            else:
-                raise ValueError("Contour levels must be increasing")
+            ax.set_aspect("auto")
+            return cfilled
+            
         except ValueError as e:
-            self.logger.error(f"Error: {e}")
+            self.logger.error(f"Error with {plotting_method}: {e}")
+            # Fallback to basic contourf
             try:
                 cfilled = ax.contourf(x, y, data2d, extend="both", transform=transform)
             except Exception:
