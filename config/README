@@ -1,4 +1,5 @@
-This directory contains several directories for all the data source types 
+This directory contains YAML-file configurations used by Eviz as well as 
+several one subdirectory, examples/, for all the data source types 
 that EViz supports and for which a variety of config files are provided.
 
 Note the config files specify the location of the data as well

@@ -1,0 +1,7 @@
+air:
+  custom_title: Annual Mean of Air Temperature
+  xtplot:
+    times: all
+    add_grid: yes
+    mean_type: rolling 
+    window_size: 12

@@ -1,0 +1,6 @@
+air:
+  xyplot:
+#    tave: yes
+    line_contours: 'no'
+    levels:
+      0: []

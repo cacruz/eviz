@@ -1,0 +1,18 @@
+inputs:
+- name: /Users/ccruz/data/eviz/gridded/bench_stO3.ANN.nc4
+  exp_id: Bench
+  to_plot:
+      stO3: xy
+- name: /Users/ccruz/data/eviz/gridded/RefD2_stO3.ANN.nc4
+  exp_id: RefD2ann
+  to_plot:
+      stO3: xy
+outputs:
+  output_dir: /Users/ccruz/scratch/eviz/output/gridded_xy
+  print_to_file: true
+
+for_inputs:
+    shared_cbar: true
+    compare:
+      ids: Bench,RefD2ann
+      cmap: coolwarm

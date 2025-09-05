@@ -1,0 +1,8 @@
+T2:
+    xyplot:
+        line_contours: false
+        cmap: coolwarm
+        time_lev: all
+        levels:
+            0: []
+

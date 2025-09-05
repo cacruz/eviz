@@ -1,0 +1,6 @@
+O3:
+T:
+  yzplot:
+    profile_dim: yc
+    zrange: [1000, 0.1]
+    zscale: log

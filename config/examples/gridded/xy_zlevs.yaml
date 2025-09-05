@@ -1,0 +1,7 @@
+inputs:
+- name: /Users/ccruz/data/eviz/gridded/MERRA2_O3.20250601.nc4
+  to_plot:
+    O3: xy
+outputs:
+  output_dir: /Users/ccruz/scratch/eviz/output/gridded_xy
+  print_to_file: true

@@ -1,0 +1,17 @@
+inputs:
+- name: /Users/ccruz/data/eviz/gridded/bench_aoa.ANN.nc4
+  exp_id: Bench
+  to_plot:
+      aoa: yz
+- name: /Users/ccruz/data/eviz/gridded/RefD2_aoa.ANN.nc4
+  exp_id: RefD2ann
+  to_plot:
+      aoa: yz
+outputs:
+  output_dir: /Users/ccruz/scratch/eviz/output/gridded_yz
+  print_to_file: true
+
+for_inputs:
+    compare_diff:
+      ids: Bench,RefD2ann
+      cmap: coolwarm

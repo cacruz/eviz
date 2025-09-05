@@ -1,0 +1,10 @@
+O3:
+  yzplot:
+    line_contours: no
+    zrange: [1000, 0.1]
+    zscale: log
+T:
+  yzplot:
+    line_contours: no
+    zrange: [1000, 0.1]
+    zscale: log

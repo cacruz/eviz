@@ -1,0 +1,4 @@
+air:
+  units: C
+  xtplot:
+    times: all

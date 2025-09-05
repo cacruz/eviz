@@ -1,0 +1,11 @@
+inputs:
+- name: /Users/ccruz/data/eviz/gridded/RefD2_stO3.ANN.nc4
+  to_plot:
+    stO3: xy
+outputs:
+  output_dir: /Users/ccruz/scratch/eviz/output/gridded_xy
+  print_to_file: true
+  filename_id: zsum
+for_inputs:
+  airmass_file_name: ${HOME}/data/eviz/ccm/RefD2.tavg24_3d_dac_Np.AIRMASS.ANN.nc4
+  airmass_field_name: AIRMASS

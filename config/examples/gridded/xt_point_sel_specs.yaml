@@ -1,0 +1,9 @@
+air:
+  xtplot:
+    times: all
+    add_grid: yes
+    mean_type: point_sel
+    point_sel: [74, 40.7]   # NYC
+#    mean_type: area_sel
+#    area_sel: [-120, -70, 24, 50.5]
+    custom_title: Average temperate over CONUS
