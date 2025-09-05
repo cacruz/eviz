@@ -41,7 +41,7 @@ def test_initialize_with_outputs():
         "make_gif": True,
         "gif_fps": 20,
         "dpi": 150,
-        "output_dir": "/tmp/plots",
+        "output_dir": "./output_plots",
         "visualization": {
             "backend": "plotly",
             "colormap": "viridis",
