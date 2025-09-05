@@ -11,6 +11,7 @@ class OutputConfig:
     print_to_file: bool = False
     print_format: str = "png"
     filename_id: str = ""
+    filename: str = ""
     add_logo: bool = False
     make_pdf: bool = False
     print_basic_stats: bool = False
@@ -24,6 +25,7 @@ class OutputConfig:
 
         self.output_dir = outputs.get("output_dir", self.output_dir)
         self.filename_id = outputs.get("filename_id", "")
+        self.filename = outputs.get("filename", "")
         self.add_logo = outputs.get("add_logo", False)
         self.print_to_file = outputs.get("print_to_file", False)
         self.print_format = outputs.get("print_format", "png")
@@ -90,6 +92,7 @@ class OutputConfig:
             "print_to_file": self.print_to_file,
             "print_format": self.print_format,
             "filename_id": self.filename_id,
+            "filename": self.filename,
             "add_logo": self.add_logo,
             "make_pdf": self.make_pdf,
             "print_basic_stats": self.print_basic_stats,

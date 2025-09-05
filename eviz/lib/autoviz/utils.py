@@ -268,6 +268,11 @@ def print_map(config: "ConfigManager",
     def build_filename(config: "ConfigManager", plot_type: str, findex: int,
                        level: Optional[int] = None) -> str:
         """Construct the output filename based on config and plot type."""
+        
+        # If custom filename is specified, use it instead of default construction
+        if config.filename:
+            return config.filename
+            
         map_params = config.map_params
         field_name = config.current_field_name or map_params[findex]['field']
         exp_id = map_params[findex].get('exp_id', None)

@@ -27,6 +27,8 @@ def test_initialize_defaults():
     assert config.dpi == 300
     assert config.fig_style == "default"
     assert config.backend == "matplotlib"
+    assert config.filename_id == ""
+    assert config.filename == ""
 
 
 def test_initialize_with_outputs():
@@ -42,6 +44,8 @@ def test_initialize_with_outputs():
         "gif_fps": 20,
         "dpi": 150,
         "output_dir": "./output_plots",
+        "filename_id": "test_id",
+        "filename": "custom_filename",
         "visualization": {
             "backend": "plotly",
             "colormap": "viridis",
@@ -67,6 +71,8 @@ def test_initialize_with_outputs():
     assert config.backend == "plotly"
     assert config.colormap == "viridis"
     assert config.fig_style == "fancy"
+    assert config.filename_id == "test_id"
+    assert config.filename == "custom_filename"
 
 
 def test_set_output_dir_creates_dir():
@@ -145,3 +151,27 @@ def test_init_visualization_branch():
     assert config.dpi == 300
     assert config.gif_fps == 10
     assert config.mpl_style == "seaborn"
+
+
+def test_filename_configuration():
+    """Test that filename and filename_id are properly configured."""
+    # Test with both filename and filename_id specified
+    outputs = {
+        "filename_id": "my_id",
+        "filename": "my_custom_name"
+    }
+    config = OutputConfig(app_data=make_app_data(outputs))
+    config.initialize()
+    
+    assert config.filename_id == "my_id"
+    assert config.filename == "my_custom_name"
+    
+    # Test with only filename specified
+    outputs_filename_only = {
+        "filename": "another_custom_name"
+    }
+    config2 = OutputConfig(app_data=make_app_data(outputs_filename_only))
+    config2.initialize()
+    
+    assert config2.filename_id == ""
+    assert config2.filename == "another_custom_name"

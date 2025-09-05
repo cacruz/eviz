@@ -104,22 +104,6 @@ for_inputs:
     airmass_field_name: AIRMASS
     # airmass_season: 'ANN' (season is inferred from dataset datetime or obtained from here)
 
-system_opts:
-    # Parallelize map generation with a multiprocessing pool
-    use_mp_pool: no
-    # Archive plots to be accessible via a web browser (used by streamlit app)
-    archive_web_results: no
-
-# This is a GEOS-specific feature under development
-history:
-    use_history: no
-    history_dir: /Users/ccruz/scratch/eviz/sample_data/geos_history
-    history_collection: tavg24_3d_dat_Np
-    history_year: 2010
-    history_month: 1
-    history_season: ANN
-    history_to_plot:
-
 # Output options
 outputs:
     # print maps to an image file (default is no)
@@ -127,6 +111,11 @@ outputs:
     # if print_to_file is yes, then dump plots here:
     output_dir: /Users/ccruz/scratch/eviz/output/ccm  # default is ./output_plots
     print_format: png
+    # The following is added to a filename to distinguish plots
+    filename_id: SOMEID
+    # The following is a custom filename (overrides filename_id)
+    filename: SOMENAME  # no extension as it uses either png (default) or the specified print_format
+
     make_pdf: no
     # Use make_git to create GIF for one field only! If multiple fields are specified, default is used
     make_gif: yes  # default is no
@@ -148,3 +137,18 @@ outputs:
         # frames per second for GIF animations (default is 10)
         gif_fps: 3
 
+system_opts:
+    # Parallelize map generation with a multiprocessing pool
+    use_mp_pool: no
+    # Archive plots to be accessible via a web browser (used by streamlit app)
+    archive_web_results: no
+
+# This is a GEOS-specific feature under development
+history:
+    use_history: no
+    history_dir: /Users/ccruz/scratch/eviz/sample_data/geos_history
+    history_collection: tavg24_3d_dat_Np
+    history_year: 2010
+    history_month: 1
+    history_season: ANN
+    history_to_plot:

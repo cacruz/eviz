@@ -722,6 +722,11 @@ class ConfigManager:
         return self.output_config.filename_id
 
     @property
+    def filename(self):
+        """Access to the custom filename."""
+        return self.output_config.filename
+
+    @property
     def add_logo(self):
         """Flag indicating if a logo should be added to plots."""
         return self.output_config.add_logo

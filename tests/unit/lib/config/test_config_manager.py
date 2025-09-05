@@ -728,3 +728,47 @@ class TestWRFDimensionDetection:
         
         zc_dim = wrf_config_manager.get_model_dim_name_for_data('zc', data_array)
         assert zc_dim == 'bottom_top'  # First match in the list
+
+
+class TestConfigManagerProperties:
+    """Test ConfigManager properties."""
+    
+    @pytest.fixture
+    def mock_output_config(self):
+        """Create a mock OutputConfig for testing."""
+        mock_config = MagicMock(spec=OutputConfig)
+        mock_config.filename_id = ""
+        mock_config.filename = ""
+        return mock_config
+    
+    @pytest.fixture  
+    def config_manager(self, mock_output_config):
+        """Create a ConfigManager for property testing."""
+        mock_input_config = MagicMock()
+        mock_system_config = MagicMock()
+        mock_history_config = MagicMock()
+        mock_config = MagicMock()
+        
+        return ConfigManager(
+            input_config=mock_input_config,
+            output_config=mock_output_config,
+            system_config=mock_system_config,
+            history_config=mock_history_config,
+            config=mock_config
+        )
+
+    def test_filename_properties(self, config_manager):
+        """Test filename and filename_id properties."""
+        # Test filename_id property
+        config_manager.output_config.filename_id = "test_id"
+        assert config_manager.filename_id == "test_id"
+        
+        # Test filename property
+        config_manager.output_config.filename = "custom_name"
+        assert config_manager.filename == "custom_name"
+        
+        # Test empty values
+        config_manager.output_config.filename_id = ""
+        config_manager.output_config.filename = ""
+        assert config_manager.filename_id == ""
+        assert config_manager.filename == ""
