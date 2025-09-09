@@ -322,19 +322,14 @@ class MetadataExtractor:
         if 'long_name' in var.attrs:
             temp_dict['name'] = var.attrs['long_name']
 
-        # Determine plot types using constants
-        n_non_time_dims = len([dim for dim in var.dims if dim != self.tc])
-        if self.zc and self.zc in self.dataset.coords and len(self.dataset.coords[self.zc]) == 1:
-            n_non_time_dims -= 1
-
-        # Add plot configurations
-        if has_multiple_time_levels(self.dataset, var_name, self.tc):
+        # Add plot configurations based on actual variable capabilities
+        if self._can_plot_xt(var_name):
             temp_dict['xtplot'] = {
                 "time_lev": "all",
                 "grid": "yes",
             }
 
-        if n_non_time_dims >= MIN_SPATIAL_DIMS:
+        if self._can_plot_xy(var_name):
             default_lev = (
                 float(self.dataset.coords[self.zc][DEFAULT_LEVEL_INDEX].values) 
                 if self.zc and self.zc in self.dataset.coords 
@@ -344,13 +339,67 @@ class MetadataExtractor:
             if self.tc and self.tc in self.dataset.coords and self.dataset[self.tc].ndim > 1:
                 temp_dict['xyplot']['time_lev'] = 1
 
-        if (n_non_time_dims >= MIN_3D_DIMS and 
-            all("soil_layers" not in dim for dim in var.dims)):
+        if self._can_plot_yz(var_name):
             temp_dict['yzplot'] = dict(contours=[])
             if self.tc and self.tc in self.dataset.coords and self.dataset[self.tc].ndim > 1:
                 temp_dict['yzplot']['time_lev'] = 1
 
         return temp_dict
+        
+    def _can_plot_xt(self, var_name: str) -> bool:
+        """Check if variable supports XT (time series) plotting.
+        
+        Args:
+            var_name: Variable name to check
+            
+        Returns:
+            True if variable has multiple time levels
+        """
+        return has_multiple_time_levels(self.dataset, var_name, self.tc)
+        
+    def _can_plot_xy(self, var_name: str) -> bool:
+        """Check if variable supports XY (spatial) plotting.
+        
+        Args:
+            var_name: Variable name to check
+            
+        Returns:
+            True if variable has required spatial coordinates
+        """
+        return is_plottable(self.dataset, var_name, self.space_coords, self.zc, self.tc)
+        
+    def _can_plot_yz(self, var_name: str) -> bool:
+        """Check if variable supports YZ (vertical cross-section) plotting.
+        
+        Args:
+            var_name: Variable name to check
+            
+        Returns:
+            True if variable has vertical coordinate and spatial coordinates
+        """
+        if not self.zc:
+            return False
+            
+        var = self.dataset[var_name]
+        var_dims = set(var.dims)
+        
+        # Must have vertical coordinate in the variable's dimensions
+        if self.zc not in var_dims:
+            return False
+            
+        # Must have at least one spatial coordinate (typically yc for YZ plots)
+        if not self.space_coords.intersection(var_dims):
+            return False
+            
+        # Skip soil layer variables as they're not suitable for YZ plotting
+        if any("soil_layers" in dim for dim in var.dims):
+            return False
+            
+        # Must have sufficient dimensions (at least spatial + vertical)
+        min_dims_for_yz = 2  # At least Y + Z
+        actual_dims = len(var_dims - {self.tc})  # Exclude time dimension
+        
+        return actual_dims >= min_dims_for_yz
 
     def _generate_app_dict(self) -> Dict:
         """Generate the application dictionary for YAML output."""
@@ -361,7 +410,7 @@ class MetadataExtractor:
             }],
             "outputs": {
                 "print_to_file": "yes",
-                "output_dir": None,
+                "output_dir": "./output_plots",
                 "print_format": "png",
                 "print_basic_stats": True,
                 "make_pdf": False
@@ -378,17 +427,27 @@ class MetadataExtractor:
         return app_dict
 
     def _get_plot_types(self) -> Dict[str, str]:
-        """Get plot types for each plottable variable."""
+        """Get plot types for each plottable variable.
+        
+        Only includes plot types that are actually supported by each variable's dimensions.
+        
+        Returns:
+            Dictionary mapping variable names to comma-separated plot types
+        """
         plot_types = {}
         for var_name in self.get_plottable_vars():
             types = []
-            if has_multiple_time_levels(self.dataset, var_name, self.tc):
+            
+            # Check each plot type individually
+            if self._can_plot_xt(var_name):
                 types.append("xt")
-            if is_plottable(self.dataset, var_name, self.space_coords, self.zc, self.tc):
+            if self._can_plot_xy(var_name):
                 types.append("xy")
-                if self.zc and "soil_layers" not in var_name:
-                    types.append("yz")
+            if self._can_plot_yz(var_name):
+                types.append("yz")
+                
             plot_types[var_name] = ",".join(types)
+            logger.debug(f"Variable {var_name} supports plot types: {plot_types[var_name]}")
         return plot_types
 
     def _add_comparison_config(self, app_dict: Dict) -> None:
