@@ -99,6 +99,8 @@ To use the web interface, from the EViz project root directory run:
 
 This command will launch a web-based interface to run EViz and display the static plots on your local host.
 
+For additional information please look at the streamlit documentation (https://streamlit.io/).
+
 Supported Data Sources
 ----------------------
 
@@ -117,18 +119,3 @@ EViz supports various data formats and access methods:
 
 **Data Source Detection:**
 EViz identifies data sources by file extension. If a file has no extension, EViz assumes it's a NetCDF4 file.
-
-Basic Usage Example
--------------------
-
-Once installation is complete, you can create your first visualization:
-
-.. code-block::
-
-    # Basic command-line usage
-    python autoviz.py -s gridded -c config/
-    
-    # Process a specific file with variables
-    python autoviz.py --file data.nc --vars temp,precip
-
-For additional information please look at the streamlit documentation (https://streamlit.io/).
