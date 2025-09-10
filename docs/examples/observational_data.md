@@ -19,7 +19,7 @@ python autoviz.py -s obs $EVIZ_CONFIG_PATH/obs/airnow.yaml
 - Note data is in CSV format
 
 **Expected output:**
-![AirNow Stations](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9/airnow_stations_map.png)
+![AirNow Stations](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/airnow_stations_map.png)
 
 *Example showing PM2.5 measurements at monitoring station over CONUS*
 
