@@ -1,10 +1,8 @@
 inputs:
-- name: /Users/ccruz/data/eviz/gridded/MERRA2_O3.20250601.nc4
-  to_plot:
-    O3: yz
 - name: /Users/ccruz/data/eviz/gridded/MERRA2_T.20250601.nc4
   to_plot:
     T: yz
 outputs:
   output_dir: /Users/ccruz/scratch/eviz/output/gridded_yz
   print_to_file: true
+  filename: temperature_zonal_mean

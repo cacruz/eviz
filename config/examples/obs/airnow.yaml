@@ -9,6 +9,7 @@ inputs:
 #    plot_backend: hvplot
 
 outputs:
-    output_dir: ${HOME}/scratch/eviz/output/airnow
+    output_dir: ${HOME}/scratch/eviz/output/obs
     print_to_file: yes
+    filename: airnow_stations_map
  

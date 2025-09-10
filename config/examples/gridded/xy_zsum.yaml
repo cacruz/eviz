@@ -5,7 +5,7 @@ inputs:
 outputs:
   output_dir: /Users/ccruz/scratch/eviz/output/gridded_xy
   print_to_file: true
-  filename_id: zsum
+  filename: xy_plot_vertical_sum
 for_inputs:
   airmass_file_name: ${HOME}/data/eviz/ccm/RefD2.tavg24_3d_dac_Np.AIRMASS.ANN.nc4
   airmass_field_name: AIRMASS

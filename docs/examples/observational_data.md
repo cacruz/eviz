@@ -1,6 +1,7 @@
 # Observational Data Examples
 
 This section shows how to visualize various observational datasets using EViz.
+These sources are identifified by using the `-s obs` option.
 
 ## Air Quality Data
 
@@ -8,18 +9,19 @@ This section shows how to visualize various observational datasets using EViz.
 Visualize EPA AirNow air quality monitoring data:
 
 ```bash
-python autoviz.py -s airnow config/airnow/airnow.yaml
+python autoviz.py -s obs $EVIZ_CONFIG_PATH/obs/airnow.yaml
 ```
 
 **What this does:**
 - Plots ground-based air quality measurements
 - Creates station maps with color-coded measurements
 - Useful for air quality assessment and validation
+- Note data is in CSV format
 
 **Expected output:**
-![AirNow Stations](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v1.0/airnow_stations_map.png)
+![AirNow Stations](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9/airnow_stations_map.png)
 
-*Example showing PM2.5 measurements at monitoring stations*
+*Example showing PM2.5 measurements at monitoring station over CONUS*
 
 **Data characteristics:**
 - Point measurements at monitoring stations
@@ -32,7 +34,7 @@ python autoviz.py -s airnow config/airnow/airnow.yaml
 Process Ozone Monitoring Instrument data:
 
 ```bash
-python autoviz.py -s omi config/omi/omi.yaml
+python autoviz.py -s obs $EVIZ_CONFIG_PATH/obs/omi.yaml
 ```
 
 **What this does:**
@@ -44,25 +46,6 @@ python autoviz.py -s omi config/omi/omi.yaml
 - Global coverage with daily revisit
 - Column measurements (e.g., tropospheric NO2, SO2)
 - Pixel-based spatial structure
-
-## Gridded Reanalysis/Forecast Data
-
-### GRIB Format Data
-Process meteorological GRIB files:
-
-```bash
-python autoviz.py -s grib config/grib/grib.yaml
-```
-
-**What this does:**
-- Handles weather/climate model output in GRIB format
-- Supports various meteorological variables
-- Common for operational weather data
-
-**Data characteristics:**
-- Regular lat/lon grids
-- Multiple pressure levels
-- Standard meteorological variables
 
 ## Configuration Notes
 

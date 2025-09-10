@@ -5,4 +5,4 @@ inputs:
 outputs:
   output_dir: /Users/ccruz/scratch/eviz/output/gridded_xy
   print_to_file: true
-  filename_id: robinson
+  filename: xy_plot_robinson_projection

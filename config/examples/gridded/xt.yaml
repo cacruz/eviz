@@ -5,3 +5,4 @@ inputs:
 outputs:
   output_dir: /Users/ccruz/scratch/eviz/output/gridded_xt
   print_to_file: true
+  filename: temperature_timeseries_basic

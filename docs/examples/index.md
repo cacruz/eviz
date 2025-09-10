@@ -6,8 +6,8 @@ This section provides hands-on examples of using EViz to create various types of
 
 Before running these examples, ensure you have:
 - EViz installed and configured
-- The `EVIZ_CONFIG_PATH` environment variable set. For  these examples set `EVIZ_CONFIG_PATH=config/examples`.
-- Sample data files in the expected locations
+- The `EVIZ_CONFIG_PATH` environment variable set. For  these examples set `EVIZ_CONFIG_PATH=config/examples`
+- Sample data files in the expected locations, i.e. as specified in the YAML files
 
 ## Example Categories
 

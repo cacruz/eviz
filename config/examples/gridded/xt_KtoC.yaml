@@ -5,4 +5,5 @@ inputs:
 outputs:
   output_dir: /Users/ccruz/scratch/eviz/output/gridded_xt
   print_to_file: true
-  filename_id: inC
+  filename: temperature_timeseries_at_nyc_inC
+

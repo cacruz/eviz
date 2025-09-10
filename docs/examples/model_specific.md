@@ -1,34 +1,7 @@
 # Model-Specific Examples
 
-This section demonstrates visualization of output from specific Earth System Models supported by EViz.
-
-## CREST Model
-
-### Basic CREST Visualization
-Visualize CREST (Coupled Routing and Excess Storage) model output:
-
-```bash
-python autoviz.py -s crest $EVIZ_CONFIG_PATH/crest/crest_corr.yaml
-```
-
-**What this does:**
-- Processes CREST hydrological model output
-- Creates spatial maps of hydrological variables
-- Supports correlation analysis between variables
-
-**CREST model characteristics:**
-- Distributed hydrological modeling system
-- Outputs include soil moisture, runoff, streamflow
-- High spatial resolution for watershed studies
-
-### Alternative CREST Command
-Alternative syntax for CREST data:
-
-```bash
-python autoviz.py -s config/crest/crest_corr.yaml
-```
-
-**Note:** This demonstrates EViz's flexible command syntax for model specification.
+This section demonstrates visualization of output from specific data sources supported by EViz.
+These sources are identifified by using specially-named options, e.g. `lis`, `wrf`, and `crest`, for example.
 
 ## LIS Model
 
@@ -36,7 +9,7 @@ python autoviz.py -s config/crest/crest_corr.yaml
 Process LIS (Land Information System) model output:
 
 ```bash
-python autoviz.py -s lis -f config/lis/lis.yaml
+python autoviz.py -s lis -f $EVIZ_CONFIG_PATH/lis/lis.yaml
 ```
 
 **What this does:**
@@ -46,8 +19,8 @@ python autoviz.py -s lis -f config/lis/lis.yaml
 
 **LIS model characteristics:**
 - NASA's high-resolution land surface modeling framework
-- Variables: soil moisture, evapotranspiration, snow depth
-- Global to regional scale applications
+- Variables: soil moisture, evapotranspiration, snow depth, etc
+- Regional scale applications
 
 ## WRF Model
 
@@ -55,7 +28,7 @@ python autoviz.py -s lis -f config/lis/lis.yaml
 Visualize WRF model output:
 
 ```bash
-python autoviz.py -s wrf -f config/wrf/wrf.yaml
+python autoviz.py -s wrf -f $EVIZ_CONFIG_PATH/wrf/wrf.yaml
 ```
 
 **What this does:**
@@ -63,16 +36,38 @@ python autoviz.py -s wrf -f config/wrf/wrf.yaml
 - Creates meteorological visualizations
 - Handles complex WRF coordinate systems and projections
 
-**Expected output:**
-![WRF Precipitation](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v1.0/wrf_precipitation_map.png)
-
-*Example showing WRF-simulated precipitation with terrain*
-
 **WRF model characteristics:**
 - High-resolution numerical weather prediction
 - Atmospheric chemistry and physics
 - Nested domain capabilities
 - Variables: temperature, precipitation, wind, chemical species
+
+## Gridded Reanalysis/Forecast Data
+
+### GRIB Format Data
+Process meteorological GRIB files:
+
+```bash
+python autoviz.py -s grib $EVIZ_CONFIG_PATH/grib/grib.yaml
+```
+
+**What this does:**
+- Processes ERA5 output in GRIB format
+- Common for operational weather data
+
+**Data characteristics:**
+- Regular lat/lon grids
+- Multiple pressure levels
+- Standard meteorological variables
+
+## CREST Framework
+
+### Basic CREST Visualization
+Visualize CREST (Coupled Reusable Earth System Tensor) framework output:
+
+```bash
+python autoviz.py -s crest $EVIZ_CONFIG_PATH/crest/crest.yaml
+```
 
 ## Model-Specific Features
 
