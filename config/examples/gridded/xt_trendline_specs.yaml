@@ -1,0 +1,6 @@
+air:
+  xtplot:
+    times: all
+    add_grid: yes
+    add_trend: yes
+#    trend_polyfit: 1

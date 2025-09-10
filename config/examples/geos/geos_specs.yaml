@@ -1,0 +1,52 @@
+O3:
+    unitconversion: 1000000000.0
+    units: ppb
+    yzplot:
+        cmap: coolwarm
+        zrange: [1000, 1]
+        contours: []
+        diffcontours: []
+    xyplot:
+        cmap: coolwarm
+        levels:
+            100: []
+T:
+    xyplot:
+        tave: yes
+        levels:
+            500: []
+    yzplot:
+        tave: yes
+        zrange: [1000, 0.1]
+        zscale: log
+        contours: []
+U:
+    xyplot:
+        time_lev: 1
+        levels:
+            500: []
+    yzplot:
+        time_lev: 1
+        zrange: [1000, 0.1]
+        zscale: log
+        contours: []
+V:
+    xyplot:
+        time_lev: 1
+        levels:
+            500: []
+    yzplot:
+        time_lev: 1
+        zrange: [1000, 0.1]
+        zscale: log
+        contours: []
+
+SLP:
+    unitconversion: 0.01
+    units: mb
+    xyplot:
+        levels:
+            0: []
+    xtplot:
+        times: all
+

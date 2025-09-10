@@ -9,20 +9,27 @@ from dataclasses import dataclass, field
 from eviz.lib.config.config import Config
 from eviz.lib.config.config_manager import ConfigManager
 from eviz.lib.config.configuration_adapter import ConfigurationAdapter
+# New architecture imports
+from eviz.lib.models.factory import DataSourceFactory
+
+# Model-specific factories remain in legacy location
 from eviz.models.source_factory import (AirnowFactory, 
                                         CrestFactory, 
                                         GhgFactory, 
                                         GribFactory, 
-                                        GriddedSourceFactory,
                                         WrfFactory,
                                         LisFactory,
-                                        ObsSourceFactory,
                                         MopittFactory,
                                         LandsatFactory,
                                         OmiFactory,
                                         FluxnetFactory,
+                                        GriddedSourceFactory,
+                                        ObsSourceFactory,
+                                        GeosFactory,
+                                        GissFactory,
                                         )
 from eviz.lib.config.paths_config import PathsConfig
+from eviz.lib.utils import load_style
 
 # Suppress matplotlib debug messages
 logging.getLogger('matplotlib').setLevel(logging.WARNING)
@@ -105,38 +112,40 @@ def get_factory_from_user_input(inputs) -> list:
     the EVIZ_CONFIG_PATH directory structure.
     
     Supported sources include:
-    - 'test': GriddedSourceFactory (for unit tests)
-    - 'gridded': GriddedSourceFactory (for generic NetCDF data)
-    - 'geos': GriddedSourceFactory (for MERRA data)
-    - 'ccm', 'cf': GriddedSourceFactory (for special streams)
-    - 'crest' : GriddedSourceFactory (temporary)
+    - 'test': DataSourceFactory (for unit tests)
+    - 'gridded': DataSourceFactory (for generic NetCDF data)
+    - 'geos': DataSourceFactory (for MERRA data)
+    - 'giss': GissFactory (for GISS ModelE NetCDF data)
+    - 'ccm', 'cf': DataSourceFactory (for special streams)
+    - 'crest' : CrestFactory (for CREST data)
     - 'lis': LisFactory (for Land Information System data)
     - 'wrf': WrfFactory (for Weather Research and Forecasting model data)
     - 'grib': GribFactory (for GRIB data)
-    - 'airnow': ObsSourceFactory (for AirNow CSV data)
-    - 'ghg': ObsSourceFactory (for GHG inventories, e.g. NOAA GML)
+    - 'airnow': AirnowFactory (for AirNow CSV data)
+    - 'ghg': GhgFactory (for GHG inventories, e.g. NOAA GML)
     - 'fluxnet': FluxnetFactory (for FluxNet CSV data)
     - 'omi': OmiFactory (for OMI HDF5 data)
     - 'mopitt': MopittFactory (for MOPITT HDF5 data)
     - 'landsat': LandsatFactory (for Landsat HDF4 data)
     """
     mappings = {
-        "test": GriddedSourceFactory(),    # for unit tests
-        "gridded": GriddedSourceFactory(), # default for all gridded data such as NetCDF
-        "geos": GriddedSourceFactory(),    # special alias for GEOS datasets such as MERRA
-        "ccm": GriddedSourceFactory(),     # special alias for GEOS datasets CCM
-        "cf": GriddedSourceFactory(),      # and CF
-        "crest": CrestFactory(),           # and CREST
-        "obs": ObsSourceFactory(),         # for all observation data such
-        "lis": LisFactory(),               # LIS and WRF are gridded but require special
-        "wrf": WrfFactory(),               # "treatment" due to the "regional" nature of the data
-        "grib": GribFactory(),             #  Grib data sources like ERA5, GFS, etc.
-        "airnow": AirnowFactory(),         # CSV
-        "ghg": GhgFactory(),               # CSV
-        "fluxnet": FluxnetFactory(),       # CSV
-        "omi": OmiFactory(),               # HDF5
-        "mopitt": MopittFactory(),         # HDF5
-        "landsat": LandsatFactory(),       # HDF4
+        "test": GriddedSourceFactory(),       # for unit tests
+        "gridded": GriddedSourceFactory(),    # default for all gridded data such as NetCDF
+        "geos": GeosFactory(),                # special alias for GEOS datasets such as MERRA
+        "giss": GissFactory(),                # GISS ModelE NetCDF with unique dimension structure
+        "ccm": GriddedSourceFactory(),        # special alias for GEOS datasets CCM
+        "cf": GriddedSourceFactory(),         # and CF
+        "crest": CrestFactory(),              # and CREST
+        "obs": ObsSourceFactory(),            # for all observation data such
+        "lis": LisFactory(),                  # LIS and WRF are gridded but require special
+        "wrf": WrfFactory(),                  # "treatment" due to the "regional" nature of the data
+        "grib": GribFactory(),                #  Grib data sources like ERA5, GFS, etc.
+        "airnow": AirnowFactory(),            # CSV
+        "ghg": GhgFactory(),                  # CSV
+        "fluxnet": FluxnetFactory(),          # CSV
+        "omi": OmiFactory(),                  # HDF5
+        "mopitt": MopittFactory(),            # HDF5
+        "landsat": LandsatFactory(),          # HDF4
         # Add other mappings for other subclasses
         # Need MODIS, CEDS, EDGAR
     }
@@ -204,7 +213,7 @@ class Autoviz:
         Raises:
             ValueError: If no factories are found for the specified sources.
         """
-        self.logger.info("Autoviz initialization")
+        self.logger.debug("Autoviz initialization")
         # Add this workaround to simplify working within a Jupyter notebook, that is, to avoid
         # having to pass a Namespace() object, we create args with the appropriate defaults
         if not self.args:
@@ -224,13 +233,10 @@ class Autoviz:
             raise ValueError(f"No factories found for sources: {self.source_names}")
         self._config_manager = create_config(
             self.args)  # Use ConfigManager instead of Config
-        # TODO: enable processing of S3 buckets
 
     def run(self):
-        """
-        Execute the visualization process.
-        """
         _start_time = time.time()
+        self.logger.info("Execute the visualization process")
         self._config_manager.input_config.start_time = _start_time
 
         self._check_input_files()
@@ -242,8 +248,11 @@ class Autoviz:
             self._config_manager.input_config._enable_integration = True
 
         try:
-            self.logger.info("Processing configuration using adapter")
             self.config_adapter.process_configuration()
+
+            # Load custom MPL style used for figures
+            self.logger.debug(f"Loading style: {self._config_manager.fig_style}")
+            load_style(self._config_manager.fig_style)  
 
             all_data_sources = {}
             try:
@@ -279,7 +288,7 @@ class Autoviz:
                 model = factory.create_root_instance(self._config_manager)
 
                 if hasattr(model, 'set_map_params') and self._config_manager.map_params:
-                    self.logger.info(
+                    self.logger.debug(
                         f"Setting map_params with {len(self._config_manager.map_params)} entries")
                     model.set_map_params(self._config_manager.map_params)
                 else:

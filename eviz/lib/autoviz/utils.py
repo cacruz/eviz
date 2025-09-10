@@ -267,7 +267,19 @@ def print_map(config: "ConfigManager",
 
     def build_filename(config: "ConfigManager", plot_type: str, findex: int,
                        level: Optional[int] = None) -> str:
-        """Construct the output filename based on config and plot type."""
+        """Construct the output filename based on config and plot type.
+        
+        Handles various filename formats:
+        - Basic filename: 'myplot' -> 'myplot' (extension added later)
+        - With extension: 'myplot.png' -> 'myplot.png' (extension preserved)
+        - With tilde: '~/myplot' -> '/home/user/myplot' (path expanded)
+        - Combination: '~/myplot.jpg' -> '/home/user/myplot.jpg'
+        """
+        
+        # If custom filename is specified, process it
+        if config.filename:
+            return _process_custom_filename(config.filename)
+            
         map_params = config.map_params
         field_name = config.current_field_name or map_params[findex]['field']
         exp_id = map_params[findex].get('exp_id', None)
@@ -282,7 +294,10 @@ def print_map(config: "ConfigManager",
             else:
                 exp_id_suf = f"_{findex}_{time_level}."
         # else: exp_id_suf remains "."
-
+        # ...but if a filename_id is given, use it
+        if config.filename_id:
+            exp_id_suf = f"_{config.filename_id}."
+            
         # Add plot type to filename to make it unique for each field and plot type
         if 'xy' in plot_type:
             fname = f"{field_name}_xy{levstr}{exp_id_suf}"  # Added _xy to ensure uniqueness
@@ -292,23 +307,84 @@ def print_map(config: "ConfigManager",
             fname = f"{field_name}_{plot_type}{exp_id_suf}"
 
         return fname
+        
+    def _process_custom_filename(custom_filename: str) -> str:
+        """Process custom filename handling path expansion and extension logic.
+        
+        Args:
+            custom_filename: User-provided filename (may include path, extension)
+            
+        Returns:
+            Processed filename ready for use
+        """
+        # Expand user directory (~)
+        expanded_filename = os.path.expanduser(custom_filename)
+        
+        # Return the expanded filename as-is for further processing
+        return expanded_filename
+        
+    def _add_extension_if_needed(filename: str, default_extension: str) -> str:
+        """Add file extension if not already present.
+        
+        Args:
+            filename: Filename that may or may not have an extension
+            default_extension: Extension to add if none present (e.g., 'png')
+            
+        Returns:
+            Filename with proper extension
+        """
+        # Check if filename already has an extension
+        if '.' in os.path.basename(filename):
+            # Get the extension part
+            ext = os.path.splitext(filename)[1][1:]  # Remove the dot
+            
+            # List of common image/document formats to validate against
+            valid_extensions = {
+                'png', 'jpg', 'jpeg', 'pdf', 'svg', 'eps', 'ps', 
+                'tiff', 'tif', 'webp', 'raw', 'rgba', 'pgf',
+                'html', 'gif'
+            }
+            
+            if ext.lower() in valid_extensions:
+                return filename  # Extension is valid, return as-is
+            else:
+                # Invalid or unknown extension, append the default
+                logger.warning(f"Unknown extension '.{ext}' in filename '{filename}'. "
+                             f"Appending default extension '.{default_extension}'")
+                return f"{filename}.{default_extension}"
+        else:
+            # No extension, add the default
+            return f"{filename}.{default_extension}"
 
     # Get the backend from config
-    backend = getattr(config, 'plot_backend', 'matplotlib')
+    backend = getattr(config, 'output_backend', 'matplotlib')
     
     output_dir = resolve_output_dir(config)
     fname = build_filename(config, plot_type, findex, level)
     
     # Determine file extension based on backend
     if backend == 'altair':
-        file_ext = 'html'
+        default_ext = 'html'
     elif backend == 'hvplot':
-        file_ext = 'html'
+        default_ext = 'html'
     else:  # matplotlib or other image-based backends
-        file_ext = config.print_format
+        default_ext = config.print_format
     
-    map_filename = f"{fname}{file_ext}"
-    filename = os.path.join(output_dir, map_filename)
+    # Handle filename and extension properly
+    if config.filename:
+        # For custom filenames, add extension only if needed
+        map_filename = _add_extension_if_needed(fname, default_ext)
+        # Extract just the filename part if it includes a full path
+        if os.path.dirname(map_filename):
+            # User provided a full path, use it as the complete filename
+            filename = map_filename
+        else:
+            # User provided just a filename, put it in the output directory
+            filename = os.path.join(output_dir, map_filename)
+    else:
+        # For auto-generated filenames, always add the extension
+        map_filename = f"{fname}.{default_ext}"
+        filename = os.path.join(output_dir, map_filename)
     logger.debug(f"Saving plot to: {filename}")
 
     if config.print_to_file:

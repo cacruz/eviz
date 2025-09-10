@@ -3,6 +3,7 @@ import matplotlib as mpl
 import pandas as pd
 import logging
 from sklearn.metrics import mean_squared_error
+import eviz.lib.autoviz.utils as pu
 from .base import MatplotlibBasePlotter
 
 
@@ -24,7 +25,12 @@ class MatplotlibXTPlotter(MatplotlibBasePlotter):
         Returns:
             The created figure
         """
-        data2d, _, _, field_name, plot_type, findex, fig = data_to_plot
+        # Handle both 7-element and 9-element tuples (with global min/max for overlay consistency)
+        if len(data_to_plot) == 9:
+            data2d, _, _, field_name, plot_type, findex, fig, global_vmin, global_vmax = data_to_plot
+        else:
+            data2d, _, _, field_name, plot_type, findex, fig = data_to_plot
+            global_vmin, global_vmax = None, None
         
         if data2d is None:
             return fig
@@ -34,9 +40,8 @@ class MatplotlibXTPlotter(MatplotlibBasePlotter):
                                     field_name, 
                                     data2d, 
                                     findex)
-        self.fig = fig
-        
-        ax_opts = config.ax_opts
+        self.fig = fig        
+        self.ax_opts = config.ax_opts
         
         if not config.compare and not config.compare_diff and not config.overlay:
             fig.set_axes()
@@ -45,14 +50,14 @@ class MatplotlibXTPlotter(MatplotlibBasePlotter):
         axes_shape = fig.subplots
         
         if axes_shape == (3, 1):
-            if ax_opts['is_diff_field']:
+            if self.ax_opts['is_diff_field']:
                 self.ax = ax_temp[2]
             else:
                 self.ax = ax_temp[config.axindex]
         elif axes_shape == (2, 2):
-            if ax_opts['is_diff_field']:
+            if self.ax_opts['is_diff_field']:
                 self.ax = ax_temp[2]
-                if config.ax_opts['add_extra_field_type']:
+                if self.ax_opts['add_extra_field_type']:
                     self.ax = ax_temp[3]
             else:
                 self.ax = ax_temp[config.axindex]
@@ -67,16 +72,16 @@ class MatplotlibXTPlotter(MatplotlibBasePlotter):
         if data2d is None:
             return fig
         
-        ax_opts = fig.update_ax_opts(field_name, self.ax, 'xt', level=0)
-        fig.plot_text(field_name, self.ax, 'xt', data=data2d)
+        self.ax_opts = fig.update_ax_opts(field_name, self.ax, 'xt', level=0)
+        self.plot_text(config, field_name, 'xt', data=data2d)
         
-        self._plot_xt_data(config, self.ax, ax_opts, fig, data2d, field_name, findex)
+        self._plot_xt_data(config, fig, data2d, field_name, findex, global_vmin, global_vmax)
         
         # Handle overlay mode
         if config.overlay:
             # Add legend if this is the last dataset or if forced
             all_plotted = getattr(config, 'current_dataset_index', 0) == getattr(config, 'total_datasets', 1) - 1
-            if all_plotted or ax_opts.get('force_legend', False):
+            if all_plotted or self.ax_opts.get('force_legend', False):
                 legend = self.ax.legend(loc='best', fontsize=self._legend_font_size(fig.subplots))
                 frame = legend.get_frame()
                 frame.set_alpha(0.7)
@@ -93,16 +98,18 @@ class MatplotlibXTPlotter(MatplotlibBasePlotter):
             fig.suptitle_eviz(title_text, 
                             fontweight='bold', fontstyle='italic',
                             fontsize=self._image_font_size(fig.subplots))
-            
-            if config.add_logo:
-                self._add_logo_ax(fig, desired_width_ratio=0.05)
+
+        if config.add_logo:
+            pu.add_logo_ax(fig, desired_width_ratio=0.05)
         
         self.plot_object = fig
         
         return fig
     
-    def _plot_xt_data(self, config, ax, ax_opts, fig, data2d, field_name, findex):
-        """Helper method that plots the time series (xt) data."""        
+    def _plot_xt_data(self, config, fig, data2d, field_name, findex, global_vmin=None, global_vmax=None):
+        """Helper method that plots the time series (xt) data."""     
+        ax = self.ax   
+        ax_opts = self.ax_opts
         with mpl.rc_context(rc=ax_opts.get('rc_params', {})):
             dmin = data2d.min(skipna=True).values
             dmax = data2d.max(skipna=True).values
@@ -236,13 +243,23 @@ class MatplotlibXTPlotter(MatplotlibBasePlotter):
             
             # Set y-axis limits
             try:
-                davg = 0.5 * (abs(dmin - dmax))
-                ax.set_ylim([dmin - davg, dmax + davg])
+                # Use global min/max for overlay plots if available, otherwise use local values
+                if global_vmin is not None and global_vmax is not None and config.overlay:
+                    plot_dmin, plot_dmax = global_vmin, global_vmax
+                    self.logger.debug(f"Using global y-axis range for overlay: [{plot_dmin:.6f}, {plot_dmax:.6f}]")
+                else:
+                    plot_dmin, plot_dmax = dmin, dmax
+                    
+                davg = 0.5 * (abs(plot_dmin - plot_dmax))
+                ax.set_ylim([plot_dmin - davg, plot_dmax + davg])
             except Exception as e:
                 self.logger.warning(f"Error setting y limits: {e}")
             
             # Set y-axis label (units)
             ax.set_ylabel(self.units)
+            
+            # Set x-axis label
+            ax.set_xlabel('Time')
             
             # Add grid if specified
             if ax_opts['add_grid']:

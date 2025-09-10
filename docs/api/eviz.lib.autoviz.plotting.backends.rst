@@ -1,13 +1,14 @@
-eviz.lib.autoviz.plotting.backends package
-==========================================
+eviz.lib.autoviz.plotting.backends namespace
+============================================
+
+.. py:module:: eviz.lib.autoviz.plotting.backends
 
 Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
 
    eviz.lib.autoviz.plotting.backends.altair
    eviz.lib.autoviz.plotting.backends.hvplot
    eviz.lib.autoviz.plotting.backends.matplotlib
-

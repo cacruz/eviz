@@ -1,0 +1,20 @@
+TSK:
+    xyplot:
+        cmap: coolwarm
+        time_lev: 4
+        levels:
+            0:
+T2:
+    xyplot:
+        cmap: coolwarm
+        time_lev: 8
+        levels:
+            0:
+
+Q2:
+    xyplot:
+        cmap: coolwarm
+        time_lev: 4
+        levels:
+            0:
+

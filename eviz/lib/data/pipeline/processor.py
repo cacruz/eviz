@@ -256,12 +256,131 @@ class DataProcessor:
         if dataset is None:
             return None
 
-        dataset = self._standardize_coordinates(dataset, model_name)
+        # Skip all processing for WRF and LIS models to avoid coordinate issues
+        if model_name in ['wrf', 'lis']:
+            self.logger.debug(f"Skipping all dataset processing for model {model_name}")
+            return dataset
+
+        # Apply GISS-specific post-processing which includes coordinate standardization
+        if model_name == 'giss':
+            dataset = self._apply_giss_post_processing(dataset)
+            # Skip regular coordinate standardization since GISS post-processing handles it
+        else:
+            dataset = self._standardize_coordinates(dataset, model_name)
+        dataset = self._normalize_longitude(dataset)
         dataset = self._handle_missing_values(dataset)
         dataset = self._apply_unit_conversions(dataset)
 
         return dataset
 
+    def _normalize_longitude(self, data, target='-180_180', lon_name=None):
+        """
+        Normalize longitude coordinates in an xarray Dataset or DataArray.
+
+        Parameters:
+            data: xr.Dataset or xr.DataArray
+            target: str, either '-180_180' or '0_360'
+            lon_name: str, name of longitude dimension (default None, auto-detect)
+
+        Returns:
+            xr.Dataset or xr.DataArray with normalized longitudes
+        """
+        # Auto-detect longitude coordinate if not specified
+        if lon_name is None:
+            lon_name = self._find_longitude_coordinate(data)
+            if lon_name is None:
+                self.logger.debug("No longitude coordinate found for normalization")
+                return data
+        
+        # Check if it's in coordinates or data variables (WRF has XLONG/XLAT as data vars)
+        if lon_name not in data.coords and lon_name not in data.data_vars:
+            raise ValueError(f"Longitude coordinate '{lon_name}' not found.")
+        
+        # Skip normalization for multi-dimensional coordinate arrays (like WRF)
+        if lon_name in data.data_vars:
+            lon_data = data[lon_name]
+            if len(lon_data.dims) > 1:
+                self.logger.debug(f"Skipping longitude normalization for multi-dimensional coordinate {lon_name}")
+                return data
+
+        lon = data[lon_name]
+        lon_vals = lon.values
+
+        # Determine current convention
+        is_0360 = np.all((lon_vals >= 0) & (lon_vals <= 360))
+        is_m180_180 = np.any(lon_vals < 0)
+
+        # No change needed
+        if (target == '0_360' and is_0360) or (target == '-180_180' and is_m180_180):
+            return data
+
+        # Apply normalization
+        if target == '-180_180':
+            lon_new = ((lon_vals + 180) % 360) - 180
+        elif target == '0_360':
+            lon_new = lon_vals % 360
+        else:
+            raise ValueError("target must be '-180_180' or '0_360'")
+
+        # Assign and sort longitudes
+        data = data.assign_coords({lon_name: lon_new})
+        data = data.sortby(lon_name)
+
+        return data
+
+    def _find_longitude_coordinate(self, data):
+        """
+        Find longitude coordinate variable in the dataset.
+        
+        Args:
+            data: xr.Dataset or xr.DataArray
+            
+        Returns:
+            str or None: Name of longitude coordinate, or None if not found
+        """
+        # List of common longitude names (same as in ConfigManager)
+        lon_names = ['lon', 'longitude', 'x', 'XLONG', 'LONGITUDE', 'Longitude']
+        
+        # Check coordinates first
+        for coord_name in data.coords:
+            coord_lower = coord_name.lower()
+            if any(ln.lower() in coord_lower for ln in lon_names):
+                return coord_name
+        
+        # If not found in coordinates, check data variables
+        if hasattr(data, 'data_vars'):
+            for var_name in data.data_vars:
+                var_lower = var_name.lower()
+                if any(ln.lower() in var_lower for ln in lon_names):
+                    return var_name
+        
+        return None
+
+    def _is_wrf_like_dataset(self, dataset: xr.Dataset) -> bool:
+        """
+        Detect if a dataset is WRF-like (has WRF-style coordinates).
+        
+        Args:
+            dataset: xarray Dataset to check
+            
+        Returns:
+            bool: True if dataset appears to be WRF-like
+        """
+        # Check for WRF-specific indicators
+        wrf_indicators = [
+            # WRF-specific dimensions
+            'south_north' in dataset.dims,
+            'west_east' in dataset.dims,
+            # WRF-specific coordinate variables
+            'XLONG' in dataset.data_vars or 'XLONG' in dataset.coords,
+            'XLAT' in dataset.data_vars or 'XLAT' in dataset.coords,
+            # WRF-specific global attributes
+            hasattr(dataset, 'attrs') and any(attr.startswith('WRF') for attr in dataset.attrs.keys()),
+            hasattr(dataset, 'attrs') and 'TITLE' in dataset.attrs and 'WRF' in str(dataset.attrs.get('TITLE', '')),
+        ]
+        
+        # If at least 2 indicators are present, assume it's WRF-like
+        return sum(wrf_indicators) >= 2
 
     def _extract_metadata(self, dataset: xr.Dataset, data_source: DataSource) -> None:
         """Extract metadata from the dataset and store it in the data source.
@@ -316,8 +435,14 @@ class DataProcessor:
         """
         self.logger.debug(f"Standardizing coordinates for model name {model_name}")
 
+        # Skip renaming for WRF and LIS models
         if model_name in ['wrf', 'lis']:
-            # Skip renaming for these special models
+            self.logger.debug(f"Skipping coordinate standardization for model {model_name}")
+            return dataset
+        
+        # Auto-detect WRF-like files and skip standardization
+        if self._is_wrf_like_dataset(dataset):
+            self.logger.debug("Detected WRF-like dataset, skipping coordinate standardization")
             return dataset
 
         available_dims = list(dataset.dims)
@@ -519,7 +644,6 @@ class DataProcessor:
             Regridded version of d2 that matches d1's grid.
         """
         if dims is None:
-
             common_dims = set(d1.dims).intersection(set(d2.dims))
             if len(common_dims) >= 2:
                 dims = list(common_dims)[:2]
@@ -532,9 +656,8 @@ class DataProcessor:
         self.logger.debug(f"d1 shape: {d1.shape}, dims: {d1.dims}")
         self.logger.debug(f"d2 shape: {d2.shape}, dims: {d2.dims}")
         
-        if len(d1.dims) != len(d2.dims):
-            self.logger.debug("Arrays have different number of dimensions")
-            
+        if len(d1.dims) != len(d2.dims):            
+
             if len(d1.dims) < len(d2.dims):
                 self.logger.debug(f"d1 has fewer dimensions ({len(d1.dims)}) than d2 ({len(d2.dims)})")
                 
@@ -556,11 +679,7 @@ class DataProcessor:
                         d1 = d1.isel({dim: 0})
                 
                 d1 = d1.squeeze()
-        
-        self.logger.debug("After dimension adjustment:")
-        self.logger.debug(f"d1 shape: {d1.shape}, dims: {d1.dims}")
-        self.logger.debug(f"d2 shape: {d2.shape}, dims: {d2.dims}")
-        
+                
         # Compute resolution for each dimension to determine which grid to use as target
         def mean_resolution(da, dim):
             coords = da.coords[dim].values
@@ -585,7 +704,6 @@ class DataProcessor:
             
         except Exception as e:
             self.logger.error(f"Error during regridding: {e}")
-            self.logger.warning("Returning dummy array with zeros")
             return xr.zeros_like(d1)
 
     def _regrid(self,
@@ -664,10 +782,6 @@ class DataProcessor:
         Returns:
             DataArray containing the computed difference
         """
-        self.logger.debug(f"Computing difference using method: {method}")
-        self.logger.debug(f"d1 shape: {d1.shape}, dims: {d1.dims}")
-        self.logger.debug(f"d2 shape: {d2.shape}, dims: {d2.dims}")
-        
         if d1.shape != d2.shape:
             self.logger.warning(f"Shape mismatch in compute_difference: d1 {d1.shape} vs d2 {d2.shape}")
             
@@ -694,3 +808,100 @@ class DataProcessor:
         except Exception as e:
             self.logger.error(f"Error computing difference: {e}")
             return xr.zeros_like(d1)
+    
+    def _apply_giss_post_processing(self, dataset: xr.Dataset) -> xr.Dataset:
+        """Apply GISS ModelE-specific post-processing to add coordinate arrays.
+        
+        GISS ModelE files have a unique structure with dimensions (im, jm, lm, ntimemax)
+        but no coordinate arrays. This method creates synthetic coordinate arrays and renames
+        dimensions to standard names in one step.
+        
+        Args:
+            dataset: Raw GISS dataset
+            
+        Returns:
+            Dataset with synthetic coordinate arrays added and dimensions renamed
+        """
+        self.logger.info("Applying GISS ModelE post-processing to add coordinate arrays")
+        
+        # Create synthetic coordinate arrays and rename dimensions simultaneously
+        coords_to_add = {}
+        rename_dict = {}
+        
+        # Longitude coordinate (im -> lon)
+        if 'im' in dataset.dims:
+            im_size = dataset.dims['im']
+            # Standard global longitude grid: 0 to 360-dx
+            lon_values = np.linspace(0, 360 - 360/im_size, im_size)
+            coords_to_add['lon'] = ('im', lon_values)
+            rename_dict['im'] = 'lon'
+            self.logger.debug(f"Created longitude coordinate: {im_size} points, range {lon_values.min():.1f} to {lon_values.max():.1f}")
+        
+        # Latitude coordinate (jm -> lat)  
+        if 'jm' in dataset.dims:
+            jm_size = dataset.dims['jm']
+            # Standard global latitude grid: -90 to 90
+            lat_values = np.linspace(-90 + 90/jm_size, 90 - 90/jm_size, jm_size)
+            coords_to_add['lat'] = ('jm', lat_values)
+            rename_dict['jm'] = 'lat'
+            self.logger.debug(f"Created latitude coordinate: {jm_size} points, range {lat_values.min():.1f} to {lat_values.max():.1f}")
+        
+        # Vertical coordinate (lm -> lev)
+        if 'lm' in dataset.dims:
+            lm_size = dataset.dims['lm']
+            # Use level indices as pressure levels (could be improved with actual values)
+            lev_values = np.arange(1, lm_size + 1)
+            coords_to_add['lev'] = ('lm', lev_values)
+            rename_dict['lm'] = 'lev'
+            self.logger.debug(f"Created level coordinate: {lm_size} levels")
+        
+        # Time coordinate - create a simple singleton time coordinate for GISS data
+        # Most GISS variables represent single time slices, not time series
+        if 'ntimemax' in dataset.dims:
+            # Just rename the dimension, don't worry about the coordinate array for now
+            rename_dict['ntimemax'] = 'time' 
+            self.logger.debug("Will rename ntimemax dimension to time")
+        
+        # Add the coordinate arrays first
+        if coords_to_add:
+            dataset = dataset.assign_coords(coords_to_add)
+            self.logger.info(f"Added {len(coords_to_add)} coordinate arrays: {list(coords_to_add.keys())}")
+        
+        # Then rename dimensions
+        if rename_dict:
+            dataset = dataset.rename(rename_dict)
+            self.logger.info(f"Renamed dimensions: {rename_dict}")
+        
+        return dataset
+    
+    def _add_singleton_time_dimension(self, dataset: xr.Dataset) -> xr.Dataset:
+        """Add singleton time dimension to variables that should have it but don't.
+        
+        For GISS data, some variables like 't' are 3D (lev, lat, lon) but represent
+        a single time slice. For plotting purposes, we need to add a time dimension.
+        
+        Args:
+            dataset: Dataset to process
+            
+        Returns:
+            Dataset with time dimensions added where appropriate
+        """
+        variables_to_process = []
+        
+        for var_name, var in dataset.data_vars.items():
+            # Check if variable has spatial dimensions but no time dimension
+            has_spatial = any(dim in var.dims for dim in ['lev', 'lat', 'lon'])
+            has_time = 'time' in var.dims
+            
+            if has_spatial and not has_time:
+                # This is likely a 3D spatial variable that represents a time slice
+                variables_to_process.append(var_name)
+        
+        if variables_to_process:
+            self.logger.debug(f"Adding singleton time dimension to variables: {variables_to_process}")
+            for var_name in variables_to_process:
+                # Add a singleton time dimension
+                dataset[var_name] = dataset[var_name].expand_dims({'time': 1})
+                self.logger.debug(f"Added singleton time dimension to variable {var_name}")
+        
+        return dataset

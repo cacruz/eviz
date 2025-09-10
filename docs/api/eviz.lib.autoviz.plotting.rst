@@ -1,30 +1,18 @@
 eviz.lib.autoviz.plotting package
 =================================
 
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 5
-
-   eviz.lib.autoviz.plotting.backends
+.. automodule:: eviz.lib.autoviz.plotting
+   :members:
+   :show-inheritance:
+   :undoc-members:
 
 Submodules
 ----------
 
-eviz.lib.autoviz.plotting.base module
--------------------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: eviz.lib.autoviz.plotting.base
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-eviz.lib.autoviz.plotting.factory module
-----------------------------------------
-
-.. automodule:: eviz.lib.autoviz.plotting.factory
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
+   eviz.lib.autoviz.plotting.backends
+   eviz.lib.autoviz.plotting.base
+   eviz.lib.autoviz.plotting.factory
+   eviz.lib.autoviz.plotting.plot_manager

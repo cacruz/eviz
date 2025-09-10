@@ -25,8 +25,8 @@ class TestFigure:
         
         # Mock input_config
         self.mock_config_manager.input_config = MagicMock()
-        self.mock_config_manager.input_config._cmap = 'viridis'
-        self.mock_config_manager.input_config._comp_panels = (3, 1)
+        self.mock_config_manager.input_config.cmap = 'viridis'
+        self.mock_config_manager.input_config.comp_panels = (3, 1)
         
         # Mock spec_data with a sample field
         self.mock_config_manager.spec_data = {
@@ -258,28 +258,6 @@ class TestFigure:
         
     @patch('eviz.lib.autoviz.figure.Figure._init_frame')
     @patch('eviz.lib.autoviz.figure.Figure.set_axes')
-    def test_plot_text(self, mock_set_axes, mock_init_frame):
-        """Test adding text to plots."""
-        fig = Figure(self.mock_config_manager, 'xy')
-        
-        # Create a mock axis
-        mock_ax = MagicMock()
-        mock_ax.transAxes = "transAxes"  # Mock the transAxes attribute
-        
-        # Mock the _plot_text method to avoid actual text plotting
-        with patch.object(Figure, '_plot_text') as mock_plot_text:
-            fig.plot_text('temperature', mock_ax, 'xy', level=1000)
-            
-            # Verify _plot_text was called with correct arguments
-            mock_plot_text.assert_called_once()
-            args = mock_plot_text.call_args[0]
-            assert args[0] == 'temperature'
-            assert args[1] == mock_ax
-            assert args[2] == 'xy'
-            assert args[3] == 1000
-        
-    @patch('eviz.lib.autoviz.figure.Figure._init_frame')
-    @patch('eviz.lib.autoviz.figure.Figure.set_axes')
     @patch('eviz.lib.autoviz.utils.get_subplot_geometry')
     def test_set_ax_opts_diff_field(self, mock_get_subplot_geometry, mock_set_axes, mock_init_frame):
         """Test setting axis options for difference fields."""
@@ -342,7 +320,7 @@ class TestFigure:
         }
         
         # Test default projection (PlateCarree)
-        projection = fig.get_projection()
+        projection = fig._get_projection()
         assert isinstance(projection, ccrs.PlateCarree)
         
         # Test each projection individually with try/except to handle potential issues
@@ -356,7 +334,7 @@ class TestFigure:
         
         for proj_name, proj_class in projections_to_test.items():
             try:
-                projection = fig.get_projection(proj_name)
+                projection = fig._get_projection(proj_name)
                 assert isinstance(projection, proj_class)
                 print(f"Successfully tested {proj_name} projection")
             except Exception as e:
@@ -441,35 +419,6 @@ class TestFigure:
             assert 'clevs' in result
             assert result['clevs'] == [-10, -5, 0, 5, 10]
             assert result['line_contours'] is False
-
-    @patch('eviz.lib.autoviz.figure.Figure._init_frame')
-    @patch('eviz.lib.autoviz.figure.Figure.set_axes')
-    def test_plot_text(self, mock_set_axes, mock_init_frame):
-        """Test plotting text on axes."""
-        fig = Figure(self.mock_config_manager, 'xy')
-        
-        # Mock an axis
-        mock_ax = MagicMock()
-        mock_ax.text = MagicMock()
-        mock_ax.set_title = MagicMock()
-        mock_ax.transAxes = "transAxes"
-        
-        # Set up config for testing
-        self.mock_config_manager.print_basic_stats = False
-        self.mock_config_manager.real_time = "2023-01-01"
-        self.mock_config_manager.use_history = False
-        
-        # Test plotting text for xy plot
-        with patch.object(Figure, '_plot_text') as mock_plot_text:
-            fig.plot_text('temperature', mock_ax, 'xy', level=1000)
-            
-            # Verify _plot_text was called with correct arguments
-            mock_plot_text.assert_called_once()
-            args = mock_plot_text.call_args[0]
-            assert args[0] == 'temperature'
-            assert args[1] == mock_ax
-            assert args[2] == 'xy'
-            assert args[3] == 1000
 
     @patch('eviz.lib.autoviz.figure.Figure._init_frame')
     @patch('eviz.lib.autoviz.figure.Figure.set_axes')
@@ -559,8 +508,8 @@ class DummyConfig:
 
 @pytest.mark.parametrize("compare,compare_diff,extra_diff_plot,expected_shape", [
     (False, False, False, (1, 1)),
-    (True, False, False, (1, 2)),
-    (True, False, True, (1, 2)),  
+    (True, False, False, (2, 1)),
+    (True, False, True, (2, 1)),  
     (False, True, False, (3, 1)),
     (False, True, True, (3, 1)), 
 ])

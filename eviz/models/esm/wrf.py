@@ -56,6 +56,8 @@ class Wrf(NuWrf):
                              plot_type, file_index, figure):
         """Process coordinates for WRF plots"""
         dim1, dim2 = self.coord_names(self.source_name, data2d, plot_type)
+        self.logger.debug(f"Coordinate names returned: dim1={dim1}, dim2={dim2}")
+        self.logger.debug(f"Data2d coords: {list(data2d.coords.keys()) if hasattr(data2d, 'coords') else 'No coords'}")
         if 'xt' in plot_type or 'tx' in plot_type:
             return data2d, None, None, field_name, plot_type, file_index, figure
         elif 'yz' in plot_type:
@@ -79,6 +81,9 @@ class Wrf(NuWrf):
 
     def _get_wrf_coord(self, name, data):
         try:
+            self.logger.debug(f"Attempting to get coordinate '{name}' from data")
+            self.logger.debug(f"Available in data: {list(data.keys()) if hasattr(data, 'keys') else 'Not dict-like'}")
+            self.logger.debug(f"Available in data.coords: {list(data.coords.keys()) if hasattr(data, 'coords') else 'No coords'}")
             return data[name]
         except Exception as e:
             self.logger.error('key error: %s, not found' % str(e))

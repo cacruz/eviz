@@ -1,0 +1,6 @@
+O3:
+  xyplot:
+    line_contours: no
+    tave: yes
+    levels:
+      100: []

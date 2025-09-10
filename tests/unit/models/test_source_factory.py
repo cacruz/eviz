@@ -15,7 +15,7 @@ ABSTRACT_FACTORIES = {
 
 
 @pytest.mark.parametrize("factory_cls,expected_cls_name", [
-    (GriddedSourceFactory, "GriddedSource"),
+    (GriddedSourceFactory, "GriddedDataSource"),  # GriddedSource is an alias to GriddedDataSource
     (GeosFactory, "Geos"),
     (WrfFactory, "Wrf"),
     (LisFactory, "Lis"),

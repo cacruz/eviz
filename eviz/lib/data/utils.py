@@ -28,6 +28,8 @@ def apply_conversion(config, data2d, name):
     For comparison plots, we rely on the "target" units specified in the specs file and the unit
     conversion is provided by the Units conversion module.
     """
+    d_temp = data2d.copy()
+
     # Check if spec_data exists and contains the field name
     if not hasattr(config, 'spec_data') or config.spec_data is None:
         logger.warning(f"No spec_data found in config for {name}")
@@ -65,41 +67,54 @@ def apply_conversion(config, data2d, name):
         msg = f"No units found for {name}. Will use the given 'dataset' units."
         logger.debug(msg)
 
+    data2d.attrs = d_temp.attrs.copy()
     return data2d
 
 
 def apply_mean(config, d, level=None):
     """ Compute various averages over coordinates """
+    d_temp = d.copy()
     if level:
         if level == 'all':
-            data2d = d.mean(dim=config.get_model_dim_name('zc'))
+            data2d = d_temp.mean(dim=config.get_model_dim_name('zc'))
         else:
-            if len(d.dims) == 3:
-                data2d = d.mean(dim=config.get_model_dim_name('tc'))
+            if len(d_temp.dims) == 3:
+                data2d = d_temp.mean(dim=config.get_model_dim_name('tc'))
             else:  # 4D array - we need to select a level
                 lev_to_plot = int(
-                    np.where(d.coords[config.get_model_dim_name('zc')].values == level)[
+                    np.where(d_temp.coords[config.get_model_dim_name('zc')].values == level)[
                         0])
                 logger.debug("Level to plot:" + str(lev_to_plot))
                 # select level
-                data2d = d.isel(lev=lev_to_plot)
+                data2d = d_temp.isel(lev=lev_to_plot)
                 data2d = data2d.mean(dim=config.get_model_dim_name('tc'))
     else:
-        if len(d.dims) == 3:
-            data2d = d.mean(dim=config.get_model_dim_name('tc'))
+        if len(d_temp.dims) == 3:
+            data2d = d_temp.mean(dim=config.get_model_dim_name('tc'))
         else:
-            d = d.mean(dim=config.get_model_dim_name('xc'))
-            data2d = d.mean(dim=config.get_model_dim_name('tc'))
+            d_temp = d_temp.mean(dim=config.get_model_dim_name('xc'))
+            data2d = d_temp.mean(dim=config.get_model_dim_name('tc'))
 
-    data2d.attrs = d.attrs.copy()  # retain units
-    return data2d.squeeze()
+    data2d.attrs = d.attrs.copy()  # retain attributes
+    return apply_conversion(config, data2d, data2d.name)
 
 
-def apply_zsum(data2d):
+def apply_zsum(config, data3d, name):
     """ Sum over vertical levels (column sum)"""
-    data2d_zsum = data2d.sum(dim='lev')
-    data2d_zsum.attrs = data2d.attrs.copy()
-    return data2d_zsum.squeeze()
+    d_temp = data3d.copy()
+    try:
+        is_chem = hasattr(config, 'species_db') and name in config.species_db
+        if is_chem and 'units' in config.spec_data[name] and 'unitconversion' not in config.spec_data[name]:
+                data2d_zsum = config.units.convert_chem(d_temp, name, config.spec_data[name]['units'])
+                data2d_zsum.attrs = data3d.attrs.copy()
+                return data2d_zsum
+        else:
+            data2d_zsum = d_temp.sum(dim='lev')
+    except:
+        logger.error(f"Could not apply zsum for {name}")
+        return None
+    data2d_zsum.attrs = data3d.attrs.copy()
+    return apply_conversion(config, data2d_zsum, data2d_zsum.name)
 
 
 def grid_cell_areas(lon1d, lat1d, radius=constants.R_EARTH_M):
@@ -442,3 +457,47 @@ def is_full_year(start_date, end_date):
             and start_date.astype(datetime).month == 1
             and start_date.astype(datetime).day == 1
     )
+
+
+def subset_region(data: xr.DataArray, extent: list) -> xr.DataArray:
+    lon_min, lon_max, lat_min, lat_max = extent
+    
+    # Find latitude coordinate name (support both standard and WRF naming)
+    lat_coord_name = None
+    lon_coord_name = None
+    
+    for coord_name in data.coords:
+        if coord_name.lower() in ['lat', 'latitude']:
+            lat_coord_name = coord_name
+        elif coord_name.lower() in ['lon', 'longitude']:
+            lon_coord_name = coord_name
+        elif 'xlat' in coord_name.lower():
+            lat_coord_name = coord_name
+        elif 'xlong' in coord_name.lower():
+            lon_coord_name = coord_name
+    
+    if not lat_coord_name or not lon_coord_name:
+        # If we can't find standard coordinate names, return data unchanged
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Could not find lat/lon coordinates in {list(data.coords.keys())}, skipping region subset")
+        return data
+    
+    lat_coord = data.coords[lat_coord_name]
+    
+    # Handle 2D coordinates (like WRF) vs 1D coordinates
+    if lat_coord.ndim > 1:
+        # For 2D coordinates, we can't easily do coordinate-based slicing
+        # For now, return the data unchanged
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Skipping region subset for 2D coordinates ({lat_coord_name}, {lon_coord_name})")
+        return data
+    else:
+        # For 1D coordinates, proceed with normal slicing
+        if lat_coord[0] > lat_coord[-1]:
+            lat_slice = slice(lat_max, lat_min)
+        else:
+            lat_slice = slice(lat_min, lat_max)
+        
+        return data.sel({lon_coord_name: slice(lon_min, lon_max), lat_coord_name: lat_slice})

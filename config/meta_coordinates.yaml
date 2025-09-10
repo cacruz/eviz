@@ -7,12 +7,8 @@
 
 # x-coordinate name: model
 xc:
-    geos: lon
-    ccm: lon
-    cf: lon
-    gmi: longitude_dim
-    grib: lon,longitude,im
-    gridded: lon,longitude,im
+    gridded: lon,longitude,im,Longitude,x,longitude_dim
+    giss: im,lon,longitude
     crest: lon,longitude,im
     airnow: Longitude
     omi: Longitude,longitude,lon
@@ -22,20 +18,11 @@ xc:
     lis:
         dim: east_west
         coords: lon
-    test:
-        dim: lon
-        coords: lon
-    spacetime: lon
-    timeseries: time
 
 # y-coordinate name: model
 yc:
-    geos: lat
-    ccm: lat
-    cf: lat
-    gmi: latitude_dim
-    grib: lat,latitude,jm
-    gridded: lat,latitude,jm
+    gridded: lat,latitude,jm,Latitude,y,latitude_dim
+    giss: jm,lat,latitude
     crest: lat,latitude,jm
     airnow: Latitude
     omi: Latitude,latitude,lat
@@ -45,21 +32,11 @@ yc:
     lis:
         dim: north_south
         coords: lat
-    test:
-        dim: lat
-        coords: lat
-    spacetime: lat
-    timeseries: location
 
 # z-coordinate name: model
 zc:
-    geos: lev
-    ccm: lev
-    cf: lev
-    gmi: eta_dim
-    grib: lev,level,levels,plev,lm,eta_dim
-    gridded: lev,level,levels,plev,lm,eta_dim
-    crest: lev,level,levels,plev,lm,eta_dim
+    gridded: lev,level,levels,plev,lm,eta_dim,z,eta_dim
+    giss: lm,lev,level
     airnow: NA
     omi: NA
     wrf:
@@ -67,17 +44,11 @@ zc:
         coords: VERT
     lis:
         dim: RelSMC_profiles,SoilTemp_profiles,SoilMoist_profiles,SmLiqFrac_profiles
-    test: lev
-    spacetime: lev
 
 # time-coordinate name: model
 tc:
-    geos: time
-    ccm: time
-    cf: time
-    gmi: rec_dim
-    grib: time,Time
-    gridded: time,rec_dim,ntimemax
+    gridded: time,Time,rec_dim,ntimemax,t,rec_dim
+    giss: ntimemax,time,Time
     crest: time,datetime,Time
     airnow: time
     omi: Time
@@ -87,8 +58,6 @@ tc:
     lis:
         dim: time
         coords: time
-    test: time
-    spacetime: time
 
 # chemical species name
 spec:

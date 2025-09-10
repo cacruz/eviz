@@ -32,6 +32,12 @@ inputs:
         aoa: yz
      ignore: Var_,PS
 
+# The following example shows a file witout an extension. We can specify using what 'reader' to 
+# use to read the file. We know WRF output is NetCDF4 so we use 'netcdf':
+inputs:
+   - name         : /Users/ccruz/scratch/eviz/wrf/wrf_output/wrfout_d01_2019-07-01_00:00:00
+     reader       : netcdf   # other options are grib, hdf5, zarr, and csv (see source_factory.py)
+
 # Entries here are applied to the inputs above
 for_inputs:
     # If compare is specified then side-by-side comparison plots will be created between files
@@ -53,7 +59,7 @@ for_inputs:
       # Use different colormap for comparison plots
       # These are matplotlib colormaps: https://matplotlib.org/stable/users/explain/colors/colormaps.html
       cmap: coolwarm
-    overlay:   # to overlay line plots (only works with xt and yc profiles) or box plots
+    overlay:   # to overlay 'line' plots (only works with xt and yc profiles) or 'box' plots
       ids: BenchmarkFc180,RefD1  # IDs associated with input exp_id values in inputs section.
       # If we are using box plots, we can specify colors for each box. 
       # If nothin specified, cycle through MPL color table
@@ -63,10 +69,13 @@ for_inputs:
 
     # This option is here because we need to specify the fields to be used in the correlation plots
     # Note: this is to be moved to SPECS file in a future release
-    pearsonplot:
+    correlation:
         space_corr: no
         time_corr: yes
-        fields: sm_obs,soil_moisture
+        # Note that correlation can be done by specifying two field names, as follows:
+        fields: sm_obs,soil_moisture  # and assumes that bith fields are in the same file
+            # Otherwise, if fields are in different files, use the file exp_ids as follows:
+        ids: BenchmarkFc180,RefD1
         
     # The following options, trop_height and sphum_field, are GEOS-specific, i.e. "--source geos" or
     # "-s geos" or its sub-classes (currently only ccm, cf). Therefore, options will be ignored if
@@ -95,6 +104,39 @@ for_inputs:
     airmass_field_name: AIRMASS
     # airmass_season: 'ANN' (season is inferred from dataset datetime or obtained from here)
 
+# Output options
+outputs:
+    # print maps to an image file (default is no)
+    print_to_file: yes
+    # if print_to_file is yes, then dump plots here:
+    output_dir: /Users/ccruz/scratch/eviz/output/ccm  # default is ./output_plots
+    print_format: png
+    # The following is added to a filename to distinguish plots
+    filename_id: SOMEID
+    # The following is a custom filename (overrides filename_id)
+    filename: SOMENAME  # no extension as it uses either png (default) or the specified print_format
+
+    make_pdf: no
+    # Use make_git to create GIF for one field only! If multiple fields are specified, default is used
+    make_gif: yes  # default is no
+    # Compute and print basic stats (mean, std) on plot
+    print_basic_stats: yes
+    mpl_style: classic
+    # Some mpl_style options are: ggplot, fivethirtyeight, Solarize_Light2, dark_background, seaborn-v0_8
+    # This last one has additional sub-options: seaborn-v0_8-<option> where <option> is
+    # colorblind, dark, deep, muted, notebook, pastel, poster, talk, ticks, white, whitegrid
+
+    # Other visualization options
+    visualization:
+        # Specify a style sheet for plots (default is default)
+        style: default  #  Options: publication, transparent, darkmode
+        # Specify a backend for plots (default is matplotlib)
+        backend: matplotlib  # Options: hvplot, altair (not fully supported)
+        # DPI for image files (default is 300)
+        dpi: 600
+        # frames per second for GIF animations (default is 10)
+        gif_fps: 3
+
 system_opts:
     # Parallelize map generation with a multiprocessing pool
     use_mp_pool: no
@@ -110,23 +152,3 @@ history:
     history_month: 1
     history_season: ANN
     history_to_plot:
-
-# Output options
-outputs:
-    # print maps to an image file (default is no)
-    print_to_file: yes
-    # if print_to_file is yes, then dump plots here:
-    output_dir: /Users/ccruz/scratch/eviz/output/ccm  # default is ./output_plots
-    print_format: png
-    make_pdf: no
-    # Use make_git to create GIF for one field only! If multiple fields are specified, default is used
-    make_gif: yes  # default is no
-    # frames per second of GIF animation
-    gif_fps: 1  # default is 1; ignored if make_gif = no
-    # Compute and pint basic stats (mean, std) on plot
-    print_basic_stats: yes
-    mpl_style: classic
-    # Some mpl_style options are: ggplot, fivethirtyeight, Solarize_Light2, dark_background, seaborn-v0_8
-    # This last one has additional sub-options: seaborn-v0_8-<option> where <option> is
-    # colorblind, dark, deep, muted, notebook, pastel, poster, talk, ticks, white, whitegrid
-

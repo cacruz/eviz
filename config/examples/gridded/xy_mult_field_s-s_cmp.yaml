@@ -1,0 +1,21 @@
+inputs:
+  - name: /Users/ccruz/data/eviz/gridded/air.2m.mon.mean.nc
+    exp_id: t2m
+    to_plot:
+        air: xy
+  - name: /Users/ccruz/data/eviz/gridded/slp.mon.mean.nc
+    exp_id: slp
+    to_plot:
+        slp: xy
+  - name: /Users/ccruz/data/eviz/gridded/uwnd.10m.mon.mean.nc
+    exp_id: uwnd
+    to_plot:
+        uwnd: xy
+outputs:
+  output_dir: /Users/ccruz/scratch/eviz/output/gridded_xy
+  print_to_file: true
+
+for_inputs:
+    compare:
+      ids: t2m,slp,uwnd
+      cmap: coolwarm

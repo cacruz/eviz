@@ -1,0 +1,14 @@
+inputs:
+   - name         : wrfout_2Dfields
+     location     : ${HOME}/data/eviz/gridded
+     to_plot:
+       T2: xy
+
+outputs:
+    output_dir: ${HOME}/scratch/eviz/output/gridded_wrf_gif
+    print_to_file: yes
+    make_gif: yes
+    gif_fps: 2
+    mpl_style: fivethirtyeight
+    print_format: png
+

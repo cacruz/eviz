@@ -4,6 +4,47 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+### Deprecated
+### Fixed
+### Removed
+### Known issues:
+
+## [0.9.1] - 2025-9-10
+
+### Added
+- Refactored config modules:
+  - Remove reliance on private attributes
+  - Added visualization subsection to output config. Set "backend"
+    option in this new sub-section. See sample specs.
+- Style sheets for various configurations (under eviz/lib/styles):
+  Options: default (uses matplotlib default settings), publication, darkmode, and 
+  transparent. This is set in visualization subsection ("style" option)  
+- Caching of airmass file used in some unit conversions
+- Updated all config files and removed hardwired paths
+- Added yzplot functionality to hvplot/altair backends
+- Matplotlib plots will use a data-coarsening algorithm for hi-res data
+  - This will significantly speed up the plotting of very hi-resolution data sets.
+- Updated documentation
+  - Significant updates to usage section
+
+### Deprecated
+
+### Fixed
+- Unit conversion between mixing ratio -> DU and DU -> mixing ratio
+- Unit conversion between mixing ratio -> PPB and PPB -> mixing ratio
+- Minor correlation plots issues
+- Simple plots plotting logic
+
+### Removed
+- Removed legacy eviz/lib/autoviz/plotter.py
+
+### Known issues:
+- There are issues in hvplot/altair backends (yzplot)
+- Units module is still not thoroughly tested
+- Tropopause height overlay is not working. A fix is in progress.
+- The GRIB class is not fully tested and may not work as expected.
+- Style sheets need more tweaks
 
 ## [0.9.0] - 2025-6-30
 

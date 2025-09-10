@@ -33,10 +33,6 @@ classifiers = [
 "Repository" = "https://github.com/cacruz/eviz"
 "Documentation" = "https://cacruz.github.io/eviz/"
 
-# We want:
-# https://github.com/astg/eviz
-# https://astg.github.io/visualization/eviz/
-
 dependencies = [
     'xesmf>=0.7.1',
     'matplotlib >=3.8.2',
