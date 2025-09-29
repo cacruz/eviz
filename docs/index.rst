@@ -19,9 +19,9 @@ Key Features
 Quick Links
 -----------
 
-* :doc:` Getting Started <usage/quickstart>` - Installation instructions and basic usage examples
-* :doc:` Usage Guide <usage/autoviz.use>` - Detailed usage examples and supported models  
-* :doc:` API Reference <api/eviz.api>` - Complete API documentation
+* :doc:`Getting Started <usage/quickstart>` - Installation instructions and basic usage examples
+* :doc:`Usage Guide <usage/autoviz.use>` - Detailed usage examples and supported models  
+* :doc:`API Reference <api/eviz.api>` - Complete API documentation
 
 Contents
 --------
