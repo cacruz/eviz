@@ -95,8 +95,9 @@ class TestMatplotlibCSVBarPlotter:
         plotter.ax_opts = {}
 
         plot_options = {'orientation': 'vertical', 'color': 'steelblue'}
+        plot_params = {}  # No categorical params for this test
 
-        plotter._plot_bar_data(mock_config, sample_dataframe, 'values', plot_options)
+        plotter._plot_bar_data(mock_config, sample_dataframe, 'values', plot_options, plot_params)
 
         # Check that bars were created
         assert len(plotter.ax.patches) > 0
@@ -109,8 +110,9 @@ class TestMatplotlibCSVBarPlotter:
         plotter.ax_opts = {}
 
         plot_options = {'orientation': 'horizontal', 'color': 'coral'}
+        plot_params = {}  # No categorical params for this test
 
-        plotter._plot_bar_data(mock_config, sample_dataframe, 'values', plot_options)
+        plotter._plot_bar_data(mock_config, sample_dataframe, 'values', plot_options, plot_params)
 
         # Check that bars were created
         assert len(plotter.ax.patches) > 0
@@ -123,8 +125,9 @@ class TestMatplotlibCSVBarPlotter:
         plotter.ax_opts = {}
 
         plot_options = {'show_values': True, 'value_format': '%.1f'}
+        plot_params = {}  # No categorical params for this test
 
-        plotter._plot_bar_data(mock_config, sample_dataframe, 'values', plot_options)
+        plotter._plot_bar_data(mock_config, sample_dataframe, 'values', plot_options, plot_params)
 
         # Check that text labels were added
         assert len(plotter.ax.texts) > 0
@@ -171,8 +174,9 @@ class TestMatplotlibCSVPiePlotter:
         plotter.ax_opts = {}
 
         plot_options = {'autopct': '%1.1f%%', 'startangle': 90}
+        plot_params = {}  # No categorical params for this test
 
-        plotter._plot_pie_data(mock_config, sample_dataframe, 'values', plot_options)
+        plotter._plot_pie_data(mock_config, sample_dataframe, 'values', plot_options, plot_params)
 
         # Check that pie chart was created (patches will be wedges)
         assert len(plotter.ax.patches) > 0
@@ -189,8 +193,9 @@ class TestMatplotlibCSVPiePlotter:
             'autopct': '%1.1f%%',
             'shadow': True
         }
+        plot_params = {}  # No categorical params for this test
 
-        plotter._plot_pie_data(mock_config, sample_dataframe, 'values', plot_options)
+        plotter._plot_pie_data(mock_config, sample_dataframe, 'values', plot_options, plot_params)
 
         assert len(plotter.ax.patches) > 0
         plt.close('all')
@@ -202,8 +207,9 @@ class TestMatplotlibCSVPiePlotter:
         plotter.ax_opts = {}
 
         plot_options = {'legend': True, 'legend_loc': 'upper right'}
+        plot_params = {}  # No categorical params for this test
 
-        plotter._plot_pie_data(mock_config, sample_dataframe, 'values', plot_options)
+        plotter._plot_pie_data(mock_config, sample_dataframe, 'values', plot_options, plot_params)
 
         # Check that legend was added
         assert plotter.ax.get_legend() is not None
@@ -221,8 +227,9 @@ class TestMatplotlibCSVPiePlotter:
         })
 
         plot_options = {}
+        plot_params = {}  # No categorical params for this test
 
-        plotter._plot_pie_data(mock_config, df_with_negative, 'values', plot_options)
+        plotter._plot_pie_data(mock_config, df_with_negative, 'values', plot_options, plot_params)
 
         # Should only have 2 wedges (positive values)
         assert len(plotter.ax.patches) == 2
@@ -269,8 +276,9 @@ class TestMatplotlibCSVHistPlotter:
         plotter.ax_opts = {}
 
         plot_options = {'bins': 5, 'color': 'steelblue'}
+        plot_params = {}  # No categorical params for this test
 
-        plotter._plot_hist_data(mock_config, sample_dataframe, 'values', plot_options)
+        plotter._plot_hist_data(mock_config, sample_dataframe, 'values', plot_options, plot_params)
 
         # Check that histogram bars were created
         assert len(plotter.ax.patches) > 0
@@ -283,8 +291,9 @@ class TestMatplotlibCSVHistPlotter:
         plotter.ax_opts = {}
 
         plot_options = {'bins': 5, 'density': True}
+        plot_params = {}  # No categorical params for this test
 
-        plotter._plot_hist_data(mock_config, sample_dataframe, 'values', plot_options)
+        plotter._plot_hist_data(mock_config, sample_dataframe, 'values', plot_options, plot_params)
 
         assert len(plotter.ax.patches) > 0
         plt.close('all')
@@ -301,8 +310,9 @@ class TestMatplotlibCSVHistPlotter:
             'show_median': True,
             'show_std': True
         }
+        plot_params = {}  # No categorical params for this test
 
-        plotter._plot_hist_data(mock_config, sample_dataframe, 'values', plot_options)
+        plotter._plot_hist_data(mock_config, sample_dataframe, 'values', plot_options, plot_params)
 
         # Check that statistical lines were added (as vertical lines)
         assert len(plotter.ax.lines) > 0
@@ -317,8 +327,9 @@ class TestMatplotlibCSVHistPlotter:
         plotter.ax_opts = {}
 
         plot_options = {'bins': 5, 'show_stats': True}
+        plot_params = {}  # No categorical params for this test
 
-        plotter._plot_hist_data(mock_config, sample_dataframe, 'values', plot_options)
+        plotter._plot_hist_data(mock_config, sample_dataframe, 'values', plot_options, plot_params)
 
         # Check that text annotation was added
         assert len(plotter.ax.texts) > 0
@@ -331,8 +342,9 @@ class TestMatplotlibCSVHistPlotter:
         plotter.ax_opts = {}
 
         plot_options = {'bins': 5, 'cumulative': True}
+        plot_params = {}  # No categorical params for this test
 
-        plotter._plot_hist_data(mock_config, sample_dataframe, 'values', plot_options)
+        plotter._plot_hist_data(mock_config, sample_dataframe, 'values', plot_options, plot_params)
 
         assert len(plotter.ax.patches) > 0
         plt.close('all')
@@ -344,8 +356,9 @@ class TestMatplotlibCSVHistPlotter:
         plotter.ax_opts = {}
 
         plot_options = {'bins': 5, 'orientation': 'horizontal'}
+        plot_params = {}  # No categorical params for this test
 
-        plotter._plot_hist_data(mock_config, sample_dataframe, 'values', plot_options)
+        plotter._plot_hist_data(mock_config, sample_dataframe, 'values', plot_options, plot_params)
 
         assert len(plotter.ax.patches) > 0
         plt.close('all')
@@ -358,8 +371,9 @@ class TestMatplotlibCSVHistPlotter:
             plotter.ax_opts = {}
 
             plot_options = {'bins': 5, 'histtype': histtype}
+            plot_params = {}  # No categorical params for this test
 
-            plotter._plot_hist_data(mock_config, sample_dataframe, 'values', plot_options)
+            plotter._plot_hist_data(mock_config, sample_dataframe, 'values', plot_options, plot_params)
 
             if histtype == 'bar':
                 assert len(plotter.ax.patches) > 0

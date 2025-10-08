@@ -13,10 +13,11 @@ from eviz.lib.config.configuration_adapter import ConfigurationAdapter
 from eviz.lib.models.factory import DataSourceFactory
 
 # Model-specific factories remain in legacy location
-from eviz.models.source_factory import (AirnowFactory, 
-                                        CrestFactory, 
-                                        GhgFactory, 
-                                        GribFactory, 
+from eviz.models.source_factory import (AirnowFactory,
+                                        CategoricalFactory,
+                                        CrestFactory,
+                                        GhgFactory,
+                                        GribFactory,
                                         WrfFactory,
                                         LisFactory,
                                         MopittFactory,
@@ -131,6 +132,7 @@ def get_factory_from_user_input(inputs) -> list:
     mappings = {
         "test": GriddedSourceFactory(),       # for unit tests
         "gridded": GriddedSourceFactory(),    # default for all gridded data such as NetCDF
+        "categorical": CategoricalFactory(),  # for categorical/tabular CSV data
         "geos": GeosFactory(),                # special alias for GEOS datasets such as MERRA
         "giss": GissFactory(),                # GISS ModelE NetCDF with unique dimension structure
         "ccm": GriddedSourceFactory(),        # special alias for GEOS datasets CCM

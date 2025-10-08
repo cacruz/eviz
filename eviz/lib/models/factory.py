@@ -12,6 +12,7 @@ from eviz.lib.config.config_manager import ConfigManager
 from eviz.lib.models.base import GenericDataSource
 from eviz.lib.models.gridded import GriddedDataSource
 from eviz.lib.models.observational import ObservationalDataSource
+from eviz.lib.models.categorical import CategoricalDataSource
 
 
 class DataSourceFactory:
@@ -103,6 +104,7 @@ class DataSourceFactory:
 
 # Register standard data sources
 DataSourceFactory.register('gridded', GriddedDataSource)
+DataSourceFactory.register('categorical', CategoricalDataSource)
 DataSourceFactory.register('obs', ObservationalDataSource)
 DataSourceFactory.register('satellite', ObservationalDataSource)
 DataSourceFactory.register('inventory', ObservationalDataSource)

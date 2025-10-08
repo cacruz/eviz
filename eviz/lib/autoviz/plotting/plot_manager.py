@@ -206,13 +206,8 @@ class PlotManager:
                 self._process_corr_plot(data_array, field_name, file_index, plot_type, figure)
             else:
                 self.logger.warning(f"_process_corr_plot not implemented for {self.__class__.__name__}")
-        elif plot_type == 'box':
-            if hasattr(self, '_process_box_plot'):
-                self._process_box_plot(data_array, field_name, file_index, plot_type, figure)
-            else:
-                self.logger.warning(f"_process_box_plot not implemented for {self.__class__.__name__}")
-        elif plot_type in ['bar', 'pie', 'hist']:
-            # CSV plot types - use pandas DataFrames directly
+        elif plot_type in ['bar', 'pie', 'hist', 'scatter', 'box']:
+            # CSV/categorical plot types - use pandas DataFrames directly
             if hasattr(self, '_process_csv_plot'):
                 self._process_csv_plot(data_array, field_name, file_index, plot_type, figure)
             else:
@@ -696,23 +691,39 @@ class PlotManager:
             if hasattr(data_source, 'dataset') and data_source.dataset is not None:
                 self.config_manager.set_domain_info(data_source.dataset, filename)
 
-            if hasattr(data_source, 'dataset') and data_source.dataset is not None:
-                field_data = data_source.dataset.get(field_name)
+            # Check if this is categorical data
+            data_type = params.get('data_type', 'gridded')
+
+            if data_type == 'categorical':
+                # For categorical data, field_name is actually the plot_type
+                # and the dataset contains all the data columns
+                plot_types = params.get('to_plot', [field_name])
+                if isinstance(plot_types, str):
+                    plot_types = [pt.strip() for pt in plot_types.split(',')]
+
+                for plot_type in plot_types:
+                    self.logger.info(f"Plotting {plot_type} plot for categorical data")
+                    # Pass the entire dataset as data_array for categorical plots
+                    self.process_plot(data_source.dataset, field_name, idx, plot_type)
             else:
-                field_data = None
+                # For gridded data, field_name is an actual field in the dataset
+                if hasattr(data_source, 'dataset') and data_source.dataset is not None:
+                    field_data = data_source.dataset.get(field_name)
+                else:
+                    field_data = None
 
-            if field_data is None:
-                self.logger.warning(
-                    f"Field {field_name} not found in data source for {filename}")
-                continue
+                if field_data is None:
+                    self.logger.warning(
+                        f"Field {field_name} not found in data source for {filename}")
+                    continue
 
-            field_data_array = data_source.dataset[field_name]
-            plot_types = params.get('to_plot', ['xy'])
-            if isinstance(plot_types, str):
-                plot_types = [pt.strip() for pt in plot_types.split(',')]
-            for plot_type in plot_types:
-                self.logger.info(f"Plotting {field_name}, {plot_type} plot")
-                self.process_plot(field_data_array, field_name, idx, plot_type)
+                field_data_array = data_source.dataset[field_name]
+                plot_types = params.get('to_plot', ['xy'])
+                if isinstance(plot_types, str):
+                    plot_types = [pt.strip() for pt in plot_types.split(',')]
+                for plot_type in plot_types:
+                    self.logger.info(f"Plotting {field_name}, {plot_type} plot")
+                    self.process_plot(field_data_array, field_name, idx, plot_type)
 
         if self.config_manager.make_gif:
             pu.create_gif(self.config_manager)
@@ -1555,11 +1566,11 @@ class PlotManager:
                         plot_result)
 
     def _process_csv_plot(self, data_array, field_name, file_index, plot_type, figure):
-        """Process CSV plots (bar, pie, hist) using pandas DataFrames."""
+        """Process CSV/categorical plots (bar, pie, hist, scatter, box) using pandas DataFrames."""
         import pandas as pd
         import matplotlib.pyplot as plt
 
-        self.logger.info(f"Processing CSV {plot_type} plot for {field_name}")
+        self.logger.info(f"Processing CSV/categorical {plot_type} plot for {field_name}")
 
         # Get the dataset from the data source
         filename = self.config_manager.map_params[file_index].get('filename')
@@ -1575,23 +1586,42 @@ class PlotManager:
         df = dataset.to_dataframe().reset_index()
         self.logger.debug(f"Converted to DataFrame with shape {df.shape}, columns: {list(df.columns)}")
 
+        # Get plot parameters from map_params (for categorical data: x, y, labels, values, etc.)
+        plot_params = self.config_manager.map_params[file_index].get('plot_params', {})
+        self.logger.debug(f"Plot parameters: {plot_params}")
+
         # Get plot options from spec_data (e.g., barplot, pieplot, histplot)
         plot_opts = {}
-        plot_spec_key = f"{plot_type}plot"  # e.g., 'bar' -> 'barplot'
 
-        if (self.config_manager.spec_data and
-            field_name in self.config_manager.spec_data and
-            plot_spec_key in self.config_manager.spec_data[field_name]):
-            plot_opts = self.config_manager.spec_data[field_name][plot_spec_key]
-            self.logger.debug(f"Using spec options for {field_name}.{plot_spec_key}: {plot_opts}")
+        # For categorical data, field_name is the plot_type, so check spec_data[plot_type]
+        # For CSV data (backward compat), field_name is the actual field, check spec_data[field_name]
+        data_type = self.config_manager.map_params[file_index].get('data_type', 'gridded')
 
-        # Create the plotter with matplotlib backend (CSV plots use matplotlib)
+        if data_type == 'categorical':
+            # For categorical: spec_data[plot_type][plot_type + 'plot']
+            plot_spec_key = f"{plot_type}plot"
+            if (self.config_manager.spec_data and
+                plot_type in self.config_manager.spec_data and
+                plot_spec_key in self.config_manager.spec_data[plot_type]):
+                plot_opts = self.config_manager.spec_data[plot_type][plot_spec_key]
+                self.logger.debug(f"Using categorical spec options for {plot_type}.{plot_spec_key}: {plot_opts}")
+        else:
+            # For CSV: spec_data[field_name][plot_type + 'plot'] (backward compat)
+            plot_spec_key = f"{plot_type}plot"
+            if (self.config_manager.spec_data and
+                field_name in self.config_manager.spec_data and
+                plot_spec_key in self.config_manager.spec_data[field_name]):
+                plot_opts = self.config_manager.spec_data[field_name][plot_spec_key]
+                self.logger.debug(f"Using CSV spec options for {field_name}.{plot_spec_key}: {plot_opts}")
+
+        # Create the plotter with matplotlib backend (CSV/categorical plots use matplotlib)
         plotter = self.create_plotter(field_name, plot_type, backend='matplotlib')
         if plotter is None:
             return
 
         # Prepare data tuple for the plotter
-        data_to_plot = (df, field_name, plot_type, file_index, figure, plot_opts)
+        # Include plot_params for categorical data (x, y, labels, values, color, bins, agg, etc.)
+        data_to_plot = (df, field_name, plot_type, file_index, figure, plot_opts, plot_params)
 
         # Create the plot
         try:

@@ -9,6 +9,8 @@ from .backends.matplotlib.box_plot import MatplotlibBoxPlotter
 from .backends.matplotlib.csv_bar import MatplotlibCSVBarPlotter
 from .backends.matplotlib.csv_pie import MatplotlibCSVPiePlotter
 from .backends.matplotlib.csv_hist import MatplotlibCSVHistPlotter
+from .backends.matplotlib.csv_scatter import MatplotlibCSVScatterPlotter
+from .backends.matplotlib.csv_box import MatplotlibCSVBoxPlotter
 from .backends.hvplot.xy_plot import HvplotXYPlotter
 from .backends.hvplot.yz_plot import HvplotYZPlotter
 from .backends.hvplot.xt_plot import HvplotXTPlotter
@@ -49,11 +51,14 @@ class PlotterFactory:
             ("tx", "matplotlib"): MatplotlibTXPlotter,
             ("polar", "matplotlib"): MatplotlibPolarPlotter,
             ("corr", "matplotlib"): MatplotlibMetricPlotter,
-            ("box", "matplotlib"): MatplotlibBoxPlotter,
-            # CSV plot types
+            # CSV/Categorical plot types (box is here to prioritize categorical over gridded)
             ("bar", "matplotlib"): MatplotlibCSVBarPlotter,
             ("pie", "matplotlib"): MatplotlibCSVPiePlotter,
             ("hist", "matplotlib"): MatplotlibCSVHistPlotter,
+            ("scatter", "matplotlib"): MatplotlibCSVScatterPlotter,
+            ("box", "matplotlib"): MatplotlibCSVBoxPlotter,
+            # Gridded box plot available via 'boxplot' key if needed
+            ("boxplot", "matplotlib"): MatplotlibBoxPlotter,
 
             ("xy", "hvplot"): HvplotXYPlotter,
             ("xt", "hvplot"): HvplotXTPlotter,

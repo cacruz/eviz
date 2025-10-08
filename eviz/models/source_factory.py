@@ -59,6 +59,18 @@ class GriddedSourceFactory(BaseSourceFactory):
 
 
 @dataclass
+class CategoricalFactory(BaseSourceFactory):
+    """
+    Factory for creating CategoricalDataSource model instances.
+
+    Used for categorical/tabular data from CSV files and similar sources.
+    """
+    def create_root_instance(self, config_manager: ConfigManager):
+        from eviz.lib.models.factory import DataSourceFactory
+        return DataSourceFactory.create('categorical', config_manager)
+
+
+@dataclass
 class ObsSourceFactory(BaseSourceFactory):
     """
     Factory for creating ObsSource model instances.

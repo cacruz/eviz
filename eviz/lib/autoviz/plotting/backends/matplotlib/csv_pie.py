@@ -20,19 +20,23 @@ class MatplotlibCSVPiePlotter(MatplotlibBasePlotter):
 
         Args:
             config: Configuration manager
-            data_to_plot: Tuple containing (data, field_name, plot_type, findex, fig, plot_options)
+            data_to_plot: Tuple containing (data, field_name, plot_type, findex, fig, plot_options, plot_params)
                 - data: pandas DataFrame or Series with the data to plot
                 - field_name: Name of the field/column being plotted
                 - plot_type: 'pie'
                 - findex: File index
                 - fig: Figure object
                 - plot_options: Dict of plot-specific options (colors, explode, etc.)
+                - plot_params: Dict of plot parameters (labels, values for categorical data)
 
         Returns:
             The created/updated figure
         """
-        # Unpack data_to_plot
-        if len(data_to_plot) == 6:
+        # Unpack data_to_plot with backward compatibility
+        plot_params = {}
+        if len(data_to_plot) >= 7:
+            data, field_name, plot_type, findex, fig, plot_options, plot_params = data_to_plot[:7]
+        elif len(data_to_plot) == 6:
             data, field_name, plot_type, findex, fig, plot_options = data_to_plot
         else:
             # Fallback for older format
@@ -58,11 +62,11 @@ class MatplotlibCSVPiePlotter(MatplotlibBasePlotter):
             self.ax = ax_temp
 
         # Create the pie chart
-        self._plot_pie_data(config, data, field_name, plot_options)
+        self._plot_pie_data(config, data, field_name, plot_options, plot_params)
 
         return fig
 
-    def _plot_pie_data(self, config, data, field_name, plot_options):
+    def _plot_pie_data(self, config, data, field_name, plot_options, plot_params):
         """Create the actual pie chart.
 
         Args:
@@ -70,11 +74,30 @@ class MatplotlibCSVPiePlotter(MatplotlibBasePlotter):
             data: pandas DataFrame or Series
             field_name: Name of the field being plotted
             plot_options: Dictionary of plotting options
+            plot_params: Dictionary of plot parameters (labels, values for categorical data)
         """
         ax = self.ax
 
         with mpl.rc_context(rc=self.ax_opts.get('rc_params', {})):
-            if isinstance(data, pd.Series):
+            # Handle categorical data with plot_params (labels, values)
+            if plot_params and 'labels' in plot_params and 'values' in plot_params:
+                labels_col = plot_params['labels']
+                values_col = plot_params['values']
+
+                if isinstance(data, pd.DataFrame):
+                    if labels_col not in data.columns or values_col not in data.columns:
+                        self.logger.error(f"Columns {labels_col} or {values_col} not found in DataFrame")
+                        return
+
+                    # Group by labels column and sum values
+                    grouped = data.groupby(labels_col)[values_col].sum()
+                    labels = grouped.index.astype(str).values
+                    values = grouped.values
+                else:
+                    self.logger.error("plot_params with 'labels' and 'values' requires DataFrame")
+                    return
+
+            elif isinstance(data, pd.Series):
                 # Simple series - use index as labels
                 labels = data.index.astype(str)
                 values = data.values

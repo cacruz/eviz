@@ -20,19 +20,23 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
 
         Args:
             config: Configuration manager
-            data_to_plot: Tuple containing (data, field_name, plot_type, findex, fig, plot_options)
+            data_to_plot: Tuple containing (data, field_name, plot_type, findex, fig, plot_options, plot_params)
                 - data: pandas DataFrame or Series with the data to plot
                 - field_name: Name of the field/column being plotted
                 - plot_type: 'bar'
                 - findex: File index
                 - fig: Figure object
                 - plot_options: Dict of plot-specific options (color, width, etc.)
+                - plot_params: Dict of plot parameters (x, y, agg, etc.)
 
         Returns:
             The created/updated figure
         """
-        # Unpack data_to_plot
-        if len(data_to_plot) == 6:
+        # Unpack data_to_plot with backward compatibility
+        plot_params = {}
+        if len(data_to_plot) >= 7:
+            data, field_name, plot_type, findex, fig, plot_options, plot_params = data_to_plot[:7]
+        elif len(data_to_plot) == 6:
             data, field_name, plot_type, findex, fig, plot_options = data_to_plot
         else:
             # Fallback for older format
@@ -58,11 +62,11 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
             self.ax = ax_temp
 
         # Create the bar chart
-        self._plot_bar_data(config, data, field_name, plot_options)
+        self._plot_bar_data(config, data, field_name, plot_options, plot_params)
 
         return fig
 
-    def _plot_bar_data(self, config, data, field_name, plot_options):
+    def _plot_bar_data(self, config, data, field_name, plot_options, plot_params):
         """Create the actual bar chart.
 
         Args:
@@ -70,6 +74,7 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
             data: pandas DataFrame or Series
             field_name: Name of the field being plotted
             plot_options: Dictionary of plotting options
+            plot_params: Dictionary of plot parameters (x, y, agg for categorical data)
         """
         ax = self.ax
 
@@ -82,10 +87,40 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
         orientation = plot_options.get('orientation', 'vertical')  # 'vertical' or 'horizontal'
 
         with mpl.rc_context(rc=self.ax_opts.get('rc_params', {})):
-            if isinstance(data, pd.Series):
+            # Handle categorical data with plot_params (x, y, agg)
+            if plot_params and 'x' in plot_params and 'y' in plot_params:
+                x_col = plot_params['x']
+                y_col = plot_params['y']
+                agg_func = plot_params.get('agg', 'mean')
+
+                if x_col not in data.columns or y_col not in data.columns:
+                    self.logger.error(f"Columns {x_col} or {y_col} not found in DataFrame")
+                    return
+
+                # Aggregate data by x column
+                if agg_func == 'mean':
+                    agg_data = data.groupby(x_col)[y_col].mean()
+                elif agg_func == 'sum':
+                    agg_data = data.groupby(x_col)[y_col].sum()
+                elif agg_func == 'count':
+                    agg_data = data.groupby(x_col)[y_col].count()
+                elif agg_func == 'median':
+                    agg_data = data.groupby(x_col)[y_col].median()
+                else:
+                    self.logger.warning(f"Unknown aggregation '{agg_func}', using mean")
+                    agg_data = data.groupby(x_col)[y_col].mean()
+
+                x_labels = agg_data.index
+                y_values = agg_data.values
+                ylabel = f"{agg_func.title()} of {y_col}"
+                xlabel = x_col
+
+            elif isinstance(data, pd.Series):
                 # Simple series - use index as x-axis labels
                 x_labels = data.index
                 y_values = data.values
+                ylabel = field_name
+                xlabel = 'Index'
             elif isinstance(data, pd.DataFrame):
                 # DataFrame - check if field_name is a column
                 if field_name in data.columns:
@@ -95,8 +130,11 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
                         # Use first column that's not the field being plotted
                         x_col = [col for col in data.columns if col != field_name][0]
                         x_labels = data[x_col].values
+                        xlabel = x_col
                     else:
                         x_labels = data.index
+                        xlabel = 'Index'
+                    ylabel = field_name
                 else:
                     self.logger.error(f"Field {field_name} not found in DataFrame columns")
                     return
@@ -120,7 +158,8 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
                 )
                 ax.set_yticks(x_pos)
                 ax.set_yticklabels(x_labels, rotation=0)
-                ax.set_xlabel(field_name)
+                ax.set_xlabel(ylabel)
+                ax.set_ylabel(xlabel)
             else:  # vertical (default)
                 bars = ax.bar(
                     x_pos,
@@ -133,7 +172,8 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
                 )
                 ax.set_xticks(x_pos)
                 ax.set_xticklabels(x_labels, rotation=plot_options.get('rotation', 45), ha='right')
-                ax.set_ylabel(field_name)
+                ax.set_xlabel(xlabel)
+                ax.set_ylabel(ylabel)
 
             # Add value labels on bars if requested
             if plot_options.get('show_values', False):

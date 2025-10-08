@@ -20,19 +20,23 @@ class MatplotlibCSVHistPlotter(MatplotlibBasePlotter):
 
         Args:
             config: Configuration manager
-            data_to_plot: Tuple containing (data, field_name, plot_type, findex, fig, plot_options)
+            data_to_plot: Tuple containing (data, field_name, plot_type, findex, fig, plot_options, plot_params)
                 - data: pandas DataFrame or Series with the data to plot
                 - field_name: Name of the field/column being plotted
                 - plot_type: 'hist'
                 - findex: File index
                 - fig: Figure object
                 - plot_options: Dict of plot-specific options (bins, color, etc.)
+                - plot_params: Dict of plot parameters (x, bins for categorical data)
 
         Returns:
             The created/updated figure
         """
-        # Unpack data_to_plot
-        if len(data_to_plot) == 6:
+        # Unpack data_to_plot with backward compatibility
+        plot_params = {}
+        if len(data_to_plot) >= 7:
+            data, field_name, plot_type, findex, fig, plot_options, plot_params = data_to_plot[:7]
+        elif len(data_to_plot) == 6:
             data, field_name, plot_type, findex, fig, plot_options = data_to_plot
         else:
             # Fallback for older format
@@ -58,11 +62,11 @@ class MatplotlibCSVHistPlotter(MatplotlibBasePlotter):
             self.ax = ax_temp
 
         # Create the histogram
-        self._plot_hist_data(config, data, field_name, plot_options)
+        self._plot_hist_data(config, data, field_name, plot_options, plot_params)
 
         return fig
 
-    def _plot_hist_data(self, config, data, field_name, plot_options):
+    def _plot_hist_data(self, config, data, field_name, plot_options, plot_params):
         """Create the actual histogram.
 
         Args:
@@ -70,16 +74,30 @@ class MatplotlibCSVHistPlotter(MatplotlibBasePlotter):
             data: pandas DataFrame or Series
             field_name: Name of the field being plotted
             plot_options: Dictionary of plotting options
+            plot_params: Dictionary of plot parameters (x for categorical data)
         """
         ax = self.ax
 
         with mpl.rc_context(rc=self.ax_opts.get('rc_params', {})):
-            # Extract data values
-            if isinstance(data, pd.Series):
+            # Handle categorical data with plot_params
+            if plot_params and 'x' in plot_params:
+                # For categorical data, use the 'x' parameter as the column name
+                x_col = plot_params['x']
+                if isinstance(data, pd.DataFrame) and x_col in data.columns:
+                    values = data[x_col].values
+                    xlabel = x_col
+                else:
+                    self.logger.error(f"Column {x_col} not found in DataFrame")
+                    return
+            elif isinstance(data, pd.Series):
+                # Simple series - use values directly
                 values = data.values
+                xlabel = field_name
             elif isinstance(data, pd.DataFrame):
+                # DataFrame - check if field_name is a column
                 if field_name in data.columns:
                     values = data[field_name].values
+                    xlabel = field_name
                 else:
                     self.logger.error(f"Field {field_name} not found in DataFrame columns")
                     return
@@ -154,21 +172,20 @@ class MatplotlibCSVHistPlotter(MatplotlibBasePlotter):
 
             # Set labels
             if orientation == 'vertical':
-                ax.set_xlabel(field_name, fontsize=10)
+                ax.set_xlabel(xlabel, fontsize=10)
                 ylabel = 'Density' if density else 'Frequency'
                 if cumulative:
                     ylabel = f'Cumulative {ylabel}'
                 ax.set_ylabel(ylabel, fontsize=10)
             else:
-                ylabel = field_name
-                ax.set_ylabel(ylabel, fontsize=10)
-                xlabel = 'Density' if density else 'Frequency'
+                ax.set_ylabel(xlabel, fontsize=10)
+                xlabel_freq = 'Density' if density else 'Frequency'
                 if cumulative:
-                    xlabel = f'Cumulative {xlabel}'
-                ax.set_xlabel(xlabel, fontsize=10)
+                    xlabel_freq = f'Cumulative {xlabel_freq}'
+                ax.set_xlabel(xlabel_freq, fontsize=10)
 
             # Set title
-            title = plot_options.get('title', f'{field_name} - Histogram')
+            title = plot_options.get('title', f'{xlabel} - Histogram')
             ax.set_title(title, fontsize=plot_options.get('title_fontsize', 12))
 
             # Add grid if requested
