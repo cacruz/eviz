@@ -10,7 +10,7 @@ from .base import MatplotlibBasePlotter
 
 
 class MatplotlibMetricPlotter(MatplotlibBasePlotter):
-    """Matplotlib implementation for metric visualization (e.g., correlation maps)."""
+    """Matplotlib implementation for correlation maps."""
     def __init__(self):
         super().__init__()
         self.plot_object = None
@@ -31,7 +31,7 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
             # Two datasets to correlate
             data1, data2 = data_to_plot[0]
             
-            # Store original data for R² calculation
+            # Store original data for R^2 calculation
             self._original_data = (data1, data2)
             
             self.logger.debug("Computing correlation between two datasets")
@@ -163,12 +163,12 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
                     ax_opts['colorbar_label'] = f'{method_name} Correlation'
                 self.set_colorbar(config, cfilled, fig, ax, findex, field_name, data2d)
             
-            # Calculate and display R² value
+            # Calculate and display R^2 value
             if hasattr(self, '_original_data') and len(self._original_data) == 2:
                 data1, data2 = self._original_data
                 r_squared = self._calculate_r_squared(data1, data2)
             else:
-                # Estimate R² from correlation values if original data is not available
+                # Estimate R^2 from correlation values if original data is not available
                 r_squared = self._estimate_r_squared_from_correlation(data2d)
         
             if not np.isnan(r_squared):
@@ -246,17 +246,13 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
                             ts1_norm = (ts1[mask] - np.mean(ts1[mask])) / (np.std(ts1[mask]) or 1)
                             ts2_norm = (ts2[mask] - np.mean(ts2[mask])) / (np.std(ts2[mask]) or 1)
                             
-                            # Calculate cross-correlation
                             cross_corr = correlate(ts1_norm, ts2_norm, mode='valid') / len(ts1_norm)
-                            
-                            # Use the maximum absolute correlation value
                             corr_data[i, j] = np.max(np.abs(cross_corr))
                     except Exception as e:
                         self.logger.debug(f"Error computing {corr_method} correlation at point "
                                         f"({i},{j}): {e}")
                         corr_data[i, j] = np.nan
             
-            # Set appropriate attributes based on correlation method
             method_name = {
                 'pearson': 'Pearson',
                 'spearman': 'Spearman',
@@ -299,16 +295,12 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
                     flat1_norm = (flat1[mask] - np.mean(flat1[mask])) / (np.std(flat1[mask]) or 1)
                     flat2_norm = (flat2[mask] - np.mean(flat2[mask])) / (np.std(flat2[mask]) or 1)
                     
-                    # Calculate cross-correlation
                     cross_corr = correlate(flat1_norm, flat2_norm, mode='valid') / len(flat1_norm)
-                    
-                    # Use the maximum absolute correlation value
                     r = np.max(np.abs(cross_corr))
                 
-                # Fill the entire map with this value
+                # Fill the entire map with r value
                 corr_data.values.fill(r)
                 
-                # Set appropriate attributes based on correlation method
                 method_name = {
                     'pearson': 'Pearson',
                     'spearman': 'Spearman',
@@ -331,7 +323,7 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
 
     def _calculate_r_squared(self, data1, data2):
         """
-        Calculate the coefficient of determination (R²) between two datasets.
+        Calculate the coefficient of determination (R^2) between two datasets.
         
         Args:
             data1 (xarray.DataArray): First dataset
@@ -340,7 +332,6 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
         Returns:
             float: The R² value
         """
-        # Flatten the arrays and remove NaN values
         flat1 = data1.values.flatten()
         flat2 = data2.values.flatten()
         
@@ -352,7 +343,6 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
         x = flat1[mask]
         y = flat2[mask]
         
-        # Calculate R² directly
         correlation_matrix = np.corrcoef(x, y)
         if correlation_matrix.size >= 4:  # At least a 2x2 matrix
             correlation_xy = correlation_matrix[0, 1]
@@ -364,21 +354,20 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
 
     def _estimate_r_squared_from_correlation(self, corr_data):
         """
-        Estimate R² from correlation values.
+        Estimate R^2 from correlation values.
         
         Args:
             corr_data (xarray.DataArray): Correlation data
             
         Returns:
-            float: Estimated R² value
+            float: Estimated R^2 value
         """
-        # Flatten the correlation values and remove NaNs
         corr_values = corr_data.values.flatten()
         corr_values = corr_values[~np.isnan(corr_values)]
         
         if len(corr_values) == 0:
             return np.nan
         
-        # For spatial correlation maps, we want the mean R²
+        # For spatial correlation maps, we want the mean R^2
         r_squared_values = corr_values ** 2
         return np.mean(r_squared_values)
