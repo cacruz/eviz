@@ -136,7 +136,6 @@ class MatplotlibCSVScatterPlotter(MatplotlibBasePlotter):
                     ax.legend(title=color_col, loc=plot_options.get('legend_loc', 'best'))
                 else:
                     # Single color scatter plot
-                    print('single color')
                     color = plot_options.get('color', 'steelblue')
                     ax.scatter(
                         x_values,
