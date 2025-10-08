@@ -18,6 +18,11 @@ class YAMLParser:
     _ds_index: int = 0
     _specs_yaml_exists: bool = True
 
+    # Supported plot types for different data formats
+    GRIDDED_PLOT_TYPES = ['xy', 'xt', 'yz', 'zt', 'polar']
+    CSV_PLOT_TYPES = ['bar', 'pie', 'hist', 'scatter', 'line']
+    ALL_PLOT_TYPES = GRIDDED_PLOT_TYPES + CSV_PLOT_TYPES
+
     def parse(self):
         """Parse YAML files and populate app_data and spec_data."""
         concat = self._concatenate_yaml()
@@ -139,11 +144,23 @@ class YAMLParser:
                     
                     # Handle different formats for field_values
                     to_plot_values = []
+                    plot_options = {}
+
                     if isinstance(field_values, str):
-                        to_plot_values = field_values.split(',')
-                    elif isinstance(field_values, dict) and 'plot_type' in field_values:
-                        # Handle CCM format where field_values is a dict with plot_type
-                        to_plot_values = [field_values['plot_type']]
+                        # Handle comma-separated plot types (e.g., "bar,pie,hist")
+                        to_plot_values = [pt.strip() for pt in field_values.split(',')]
+                    elif isinstance(field_values, dict):
+                        if 'plot_type' in field_values:
+                            # Handle CCM format where field_values is a dict with plot_type
+                            to_plot_values = [field_values['plot_type']]
+                        else:
+                            # Handle dict with plot types as keys and options as values
+                            # e.g., {'bar': {'color': 'blue'}, 'pie': {}}
+                            to_plot_values = list(field_values.keys())
+                            plot_options = field_values
+                    elif isinstance(field_values, list):
+                        # Handle list of plot types
+                        to_plot_values = field_values
                     else:
                         # Default to xy if format is unknown
                         to_plot_values = ['xy']
@@ -160,6 +177,7 @@ class YAMLParser:
                         'exp_id': exp_id,
                         'exp_name': exp_name,
                         'to_plot': to_plot_values,
+                        'plot_options': plot_options,
                         'compare': is_in_compare,
                         'compare_diff': is_in_compare_diff,
                         'compare_with': compare_with,

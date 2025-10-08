@@ -32,7 +32,20 @@ inputs:
         aoa: yz
      ignore: Var_,PS
 
-# The following example shows a file witout an extension. We can specify using what 'reader' to 
+# This demonstrates the new CSV plotting functionality which are dealt with using Pandas adat frames
+inputs:
+- name: sample_metrics.csv   # this file contains some metrics
+  location: ${HOME}/data/crest   # Note how one can specify a path location - ${HOME} is an environment variable
+  to_plot:
+    # Simple format: comma-separated plot types
+    metric_name: bar,pie,hist
+
+    # You can also specify different plot types for different fields
+    revenue: bar,line
+    users: hist
+    conversions: pie
+
+# The following example shows a file without an extension. In that case, we can specify using what 'reader' to
 # use to read the file. We know WRF output is NetCDF4 so we use 'netcdf':
 inputs:
    - name         : /Users/ccruz/scratch/eviz/wrf/wrf_output/wrfout_d01_2019-07-01_00:00:00

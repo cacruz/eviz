@@ -6,6 +6,9 @@ from .backends.matplotlib.polar_plot import MatplotlibPolarPlotter
 from .backends.matplotlib.scatter_plot import MatplotlibScatterPlotter
 from .backends.matplotlib.metric_plot import MatplotlibMetricPlotter
 from .backends.matplotlib.box_plot import MatplotlibBoxPlotter
+from .backends.matplotlib.csv_bar import MatplotlibCSVBarPlotter
+from .backends.matplotlib.csv_pie import MatplotlibCSVPiePlotter
+from .backends.matplotlib.csv_hist import MatplotlibCSVHistPlotter
 from .backends.hvplot.xy_plot import HvplotXYPlotter
 from .backends.hvplot.yz_plot import HvplotYZPlotter
 from .backends.hvplot.xt_plot import HvplotXTPlotter
@@ -47,6 +50,10 @@ class PlotterFactory:
             ("polar", "matplotlib"): MatplotlibPolarPlotter,
             ("corr", "matplotlib"): MatplotlibMetricPlotter,
             ("box", "matplotlib"): MatplotlibBoxPlotter,
+            # CSV plot types
+            ("bar", "matplotlib"): MatplotlibCSVBarPlotter,
+            ("pie", "matplotlib"): MatplotlibCSVPiePlotter,
+            ("hist", "matplotlib"): MatplotlibCSVHistPlotter,
 
             ("xy", "hvplot"): HvplotXYPlotter,
             ("xt", "hvplot"): HvplotXTPlotter,

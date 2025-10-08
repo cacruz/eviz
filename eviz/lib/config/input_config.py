@@ -470,3 +470,73 @@ class InputConfig:
     @property
     def sphum_conv_file_list(self):
         return self._sphum_conv_file_list
+
+    def get_plot_types_for_field(self, file_entry: Dict[str, Any], field_name: str) -> List[str]:
+        """
+        Get the list of plot types for a specific field.
+
+        Args:
+            file_entry (Dict[str, Any]): The file entry from file_list
+            field_name (str): The name of the field
+
+        Returns:
+            List[str]: List of plot types (e.g., ['bar', 'pie', 'hist'])
+        """
+        if 'to_plot' not in file_entry:
+            return []
+
+        to_plot = file_entry['to_plot']
+        if not isinstance(to_plot, dict):
+            return []
+
+        if field_name not in to_plot:
+            return []
+
+        field_values = to_plot[field_name]
+
+        # Handle different formats
+        if isinstance(field_values, str):
+            return [pt.strip() for pt in field_values.split(',')]
+        elif isinstance(field_values, list):
+            return field_values
+        elif isinstance(field_values, dict):
+            # If it's a dict, the keys are plot types
+            return list(field_values.keys())
+
+        return []
+
+    def get_plot_options_for_field(self, file_entry: Dict[str, Any], field_name: str, plot_type: str = None) -> Dict[str, Any]:
+        """
+        Get plotting options for a specific field and plot type.
+
+        Args:
+            file_entry (Dict[str, Any]): The file entry from file_list
+            field_name (str): The name of the field
+            plot_type (str, optional): The specific plot type to get options for
+
+        Returns:
+            Dict[str, Any]: Dictionary of plotting options
+        """
+        if 'to_plot' not in file_entry:
+            return {}
+
+        to_plot = file_entry['to_plot']
+        if not isinstance(to_plot, dict) or field_name not in to_plot:
+            return {}
+
+        field_values = to_plot[field_name]
+
+        # If field_values is a dict with plot types as keys
+        if isinstance(field_values, dict):
+            if plot_type:
+                # Return options for the specific plot type
+                if plot_type in field_values:
+                    return field_values[plot_type] if isinstance(field_values[plot_type], dict) else {}
+                else:
+                    # Plot type not found
+                    return {}
+            else:
+                # Return the entire dict when no specific plot_type requested
+                return field_values
+
+        return {}
