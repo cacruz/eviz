@@ -13,7 +13,6 @@ from eviz.lib.models.base import GenericDataSource
 from eviz.lib.models.gridded import GriddedDataSource
 from eviz.lib.models.observational import ObservationalDataSource
 from eviz.lib.models.categorical import CategoricalDataSource
-from eviz.models.esm.crest import Crest  # temporary
 
 
 class DataSourceFactory:
@@ -115,4 +114,5 @@ DataSourceFactory.register('wrf', GriddedDataSource)
 DataSourceFactory.register('lis', GriddedDataSource)
 DataSourceFactory.register('geos', GriddedDataSource)
 DataSourceFactory.register('nuwrf', GriddedDataSource)
+from eviz.models.esm.crest import Crest
 DataSourceFactory.register('crest', Crest)

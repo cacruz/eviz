@@ -49,15 +49,32 @@ class MatplotlibCSVScatterPlotter(MatplotlibBasePlotter):
         self.fig = fig
         self.ax_opts = config.ax_opts if hasattr(config, 'ax_opts') else {}
 
+        # Set up axes - for categorical scatter plots, use regular axes (no map projection)
         if not config.compare and not config.compare_diff:
             if fig.get_axes() is None or len(fig.get_axes()) == 0:
-                fig.set_axes()
+                # Temporarily disable projection for categorical plots
+                original_ax_opts = config.ax_opts.copy() if hasattr(config, 'ax_opts') else {}
+                if hasattr(config, 'ax_opts'):
+                    config.ax_opts['projection'] = None
 
-        ax_temp = fig.get_axes()
-        if isinstance(ax_temp, list) and len(ax_temp) > 0:
-            self.ax = ax_temp[0]
+                # Create axes on the EViz figure without projection
+                self.ax = fig.figure.add_subplot(111)
+
+                # Restore original ax_opts
+                if hasattr(config, 'ax_opts'):
+                    config.ax_opts = original_ax_opts
+            else:
+                ax_temp = fig.get_axes()
+                if isinstance(ax_temp, list) and len(ax_temp) > 0:
+                    self.ax = ax_temp[0]
+                else:
+                    self.ax = ax_temp
         else:
-            self.ax = ax_temp
+            ax_temp = fig.get_axes()
+            if isinstance(ax_temp, list) and len(ax_temp) > 0:
+                self.ax = ax_temp[0]
+            else:
+                self.ax = ax_temp
 
         self._plot_scatter_data(config, data, field_name, plot_options, plot_params)
 
@@ -119,6 +136,7 @@ class MatplotlibCSVScatterPlotter(MatplotlibBasePlotter):
                     ax.legend(title=color_col, loc=plot_options.get('legend_loc', 'best'))
                 else:
                     # Single color scatter plot
+                    print('single color')
                     color = plot_options.get('color', 'steelblue')
                     ax.scatter(
                         x_values,
