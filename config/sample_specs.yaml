@@ -188,4 +188,45 @@ fieldname:
     # Default behavior (no config needed)
     standard_field:
         # Uses coarse_max_size: 2000, plotting_method: contourf
-    
+
+# Specifications for categorical data plots are slightly different than for gridded data
+# Below are examples for each available categorical plot type. Note the plot attributes
+# are the same that matplotlib allows for each plot type and only some are shown below.
+
+# Histogram options
+hist:
+  histplot:
+    color: steelblue
+    edgecolor: black
+    alpha: 0.7
+    density: false
+    show_stats: true
+
+# Bar chart options
+bar:
+  barplot:
+    color: coral
+    orientation: vertical
+    width: 0.8
+    show_values: true
+
+# Pie chart options
+pie:
+  pieplot:
+    explode: [0.1, 0, 0, 0, 0]
+    autopct: '%1.1f%%'
+    startangle: 90
+    shadow: false
+
+# Scatter plot options
+scatter:
+  scatterplot:
+    alpha: 0.6
+    s: 50
+    cmap: viridis
+
+# Box plot options
+box:
+  boxplot:
+    color: lightblue
+    showmeans: true

@@ -1,54 +1,56 @@
 inputs:
    # File name, can be local or absolute file path
-   - name         : bench_10-17-6_gmi_free_c180_72lev.tavg24_3d_dat_Np.monthly.clim.JJA.nc4
-     # Optional location
-     location     : /Users/ccruz/scratch/eviz/sample_data/ccm/Benchmark_F_c180/tavg24_3d_dat_Np
-     # The following string will be used in the plot title
-     exp_name    : BenchmarkF
-     # If given, the following string will be used for comparisons
-     exp_id    : BenchmarkFc180
-     # If provided, will be used in the plot title (replaces exp_name)
-     description : GMI free-running simulation, with GOCART aerosols and TR passive tracers
-     # Optional: specify data source format. Note this is auto-detected based on file extension
-     format       : netcdf
-     # Specify list of fields to plot
-     to_plot       :
-        # Specify field (as it appears in file metadata) and plot type
-        # Possible plot types are xy (lat-lon), yz (zonal mean), xt (time series), tx (hovmoller)
-        co_25: yz
-        aoa: yz
-     # String (or prefix) specifying what variables to ignore
-     ignore: Var_,PS
-   # Another dataset - must be aligned with the first one
-   - name         : RefD1.tavg24_3d_dat_Np.monthly.clim.ANN.nc4
-     location     : /Users/ccruz/scratch/eviz/sample_data/ccm/RefD1/tavg24_3d_dat_Np
-     # The following string will be used in the plot title
-     exp_name    : RefD1
-     # If given, the following string will be used for comparisons
-     exp_id    : RefD1
-     description : test2
-     to_plot       :
-        co_25: yz
-        aoa: yz
-     ignore: Var_,PS
+  - name: <path/to/data/filename>        # Required: path to dataset (NetCDF, CSV, etc.)
+    # Optional location when only filename is specified above
+    location: <path/to/data>
+    data_type: <gridded|categorical|timeseries|point>  # Optional (default: gridded)
+    # The following string will be used in the plot title
+    exp_name    : BenchmarkF
+    # If given, the following string will be used for comparisons
+    exp_id    : BenchmarkFc180
+    # If provided, will be used in the plot title (replaces exp_name)
+    description : GMI free-running simulation, with GOCART aerosols and TR passive tracers
+    # Optional: specify data source format. Note this is auto-detected based on file extension
+    format       : netcdf
+    # String (or prefix) specifying what variables to ignore
+    ignore: Var_,PS
 
-# This demonstrates the new CSV plotting functionality which are dealt with using Pandas adat frames
-inputs:
-- name: sample_metrics.csv   # this file contains some metrics
-  location: ${HOME}/data/crest   # Note how one can specify a path location - ${HOME} is an environment variable
-  to_plot:
-    # Simple format: comma-separated plot types
-    metric_name: bar,pie,hist
+    # ---- Gridded data example ----
+    # For NetCDF, GRIB, or other Earth-system model outputs
+    to_plot:
+      # Specify variable_name (as it appears in file metadata)
+      <variable_name>: [xy, yz, xt, scat, box, corr]
 
-    # You can also specify different plot types for different fields
-    revenue: bar,line
-    users: hist
-    conversions: pie
+    # example
+    to_plot:
+        temperature: xy,yz
+
+    # ---- Categorical data example ----
+    # For CSV or similarly-formatted tabular data (e.g., config/examples/csv/cars.csv)
+    to_plot:
+      hist:
+        x: <column_name>
+        bins: <int>                   # optional
+      bar:
+        x: <categorical_column>
+        y: <numeric_column>
+        agg: <mean|sum|count|median>  # optional
+      pie:
+        labels: <categorical_column>
+        values: <numeric_column>
+      scatter:
+        x: <column_name>
+        y: <column_name>
+        color: <column_name>          # optional
+      box:
+        y: <column_name>
+        by: <categorical_column>      # optional
+
 
 # The following example shows a file without an extension. In that case, we can specify using what 'reader' to
 # use to read the file. We know WRF output is NetCDF4 so we use 'netcdf':
 inputs:
-   - name         : /Users/ccruz/scratch/eviz/wrf/wrf_output/wrfout_d01_2019-07-01_00:00:00
+   - name         : /path/to/wrf_output/wrfout_d01_2019-07-01_00:00:00
      reader       : netcdf   # other options are grib, hdf5, zarr, and csv (see source_factory.py)
 
 # Entries here are applied to the inputs above
@@ -120,14 +122,14 @@ for_inputs:
 # Output options
 outputs:
     # print maps to an image file (default is no)
-    print_to_file: yes
+    print_to_file: <true|false> or <yes|no>
     # if print_to_file is yes, then dump plots here:
-    output_dir: /Users/ccruz/scratch/eviz/output/ccm  # default is ./output_plots
+    output_dir: </path/to/output>  # default is ./output_plots
     print_format: png
     # The following is added to a filename to distinguish plots
     filename_id: SOMEID
     # The following is a custom filename (overrides filename_id)
-    filename: SOMENAME  # no extension as it uses either png (default) or the specified print_format
+    filename: <output_basename>  # no extension as it uses either png (default) or the specified print_format
 
     make_pdf: no
     # Use make_git to create GIF for one field only! If multiple fields are specified, default is used
