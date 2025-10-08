@@ -165,4 +165,14 @@ class MatplotlibCSVScatterPlotter(MatplotlibBasePlotter):
             if 'ylim' in plot_options:
                 ax.set_ylim(plot_options['ylim'])
 
+            # Hide spines if requested
+            if plot_options.get('hide_top_spine', False):
+                ax.spines['top'].set_visible(False)
+            if plot_options.get('hide_right_spine', False):
+                ax.spines['right'].set_visible(False)
+            if plot_options.get('hide_bottom_spine', False):
+                ax.spines['bottom'].set_visible(False)
+            if plot_options.get('hide_left_spine', False):
+                ax.spines['left'].set_visible(False)
+
             self.logger.info(f"Created scatter plot for {field_name} with {len(x_values)} points")
