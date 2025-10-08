@@ -1,7 +1,6 @@
 """Bar chart plotter for CSV data using Matplotlib."""
 
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import logging
@@ -50,7 +49,6 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
         self.fig = fig
         self.ax_opts = config.ax_opts if hasattr(config, 'ax_opts') else {}
 
-        # Set up axes
         if not config.compare and not config.compare_diff:
             if fig.get_axes() is None or len(fig.get_axes()) == 0:
                 fig.set_axes()
@@ -61,7 +59,6 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
         else:
             self.ax = ax_temp
 
-        # Create the bar chart
         self._plot_bar_data(config, data, field_name, plot_options, plot_params)
 
         return fig
@@ -142,10 +139,8 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
                 self.logger.error(f"Unsupported data type: {type(data)}")
                 return
 
-            # Create x positions
             x_pos = np.arange(len(x_labels))
 
-            # Create bar chart
             if orientation == 'horizontal':
                 bars = ax.barh(
                     x_pos,
@@ -191,16 +186,13 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
                     ax.text(label_x, label_y, label_format % value,
                            ha=ha, va=va, fontsize=8)
 
-            # Set title
             title = plot_options.get('title', f'{field_name} - Bar Chart')
             ax.set_title(title, fontsize=plot_options.get('title_fontsize', 12))
 
-            # Add grid if requested
             if plot_options.get('grid', True):
                 ax.grid(axis='y' if orientation == 'vertical' else 'x',
                        alpha=0.3, linestyle='--')
 
-            # Set y-limits if specified
             if 'ylim' in plot_options:
                 if orientation == 'vertical':
                     ax.set_ylim(plot_options['ylim'])

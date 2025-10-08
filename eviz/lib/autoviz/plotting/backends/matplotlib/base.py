@@ -1,15 +1,12 @@
 import numpy as np
 import cartopy.crs as ccrs
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 from matplotlib import colors
 import logging
 from matplotlib.ticker import FixedLocator
 from matplotlib.ticker import FuncFormatter, FormatStrFormatter
-from eviz.lib.autoviz.utils import FlexibleOOMFormatter, OOMFormatter
 from eviz.lib.autoviz.plotting.base import BasePlotter
 import eviz.lib.autoviz.utils as pu
-from eviz.lib.autoviz.utils import bar_font_size, contour_tick_font_size
 
 
 DEFAULT_CONTOUR_LABELSIZE = 12

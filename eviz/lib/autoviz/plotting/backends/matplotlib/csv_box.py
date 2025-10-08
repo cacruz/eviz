@@ -2,7 +2,6 @@
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import logging
 from .base import MatplotlibBasePlotter
@@ -61,7 +60,6 @@ class MatplotlibCSVBoxPlotter(MatplotlibBasePlotter):
         else:
             self.ax = ax_temp
 
-        # Create the box plot
         self._plot_box_data(config, data, field_name, plot_options, plot_params)
 
         return fig
@@ -98,11 +96,10 @@ class MatplotlibCSVBoxPlotter(MatplotlibBasePlotter):
                         self.logger.error(f"Column {by_col} not found in DataFrame")
                         return
 
-                    # Prepare data for box plot
+                    # Prepare data
                     categories = data[by_col].unique()
                     box_data = [data[data[by_col] == cat][y_col].dropna().values for cat in categories]
 
-                    # Create box plot
                     bp = ax.boxplot(
                         box_data,
                         labels=[str(cat) for cat in categories],
@@ -113,7 +110,7 @@ class MatplotlibCSVBoxPlotter(MatplotlibBasePlotter):
                         vert=plot_options.get('vert', True)
                     )
 
-                    # Color the boxes
+                    # Color the boxes (make optional?)
                     box_color = plot_options.get('color', 'lightblue')
                     for patch in bp['boxes']:
                         patch.set_facecolor(box_color)
@@ -146,18 +143,15 @@ class MatplotlibCSVBoxPlotter(MatplotlibBasePlotter):
                 self.logger.error("Box plot requires 'y' parameter in plot_params")
                 return
 
-            # Set labels
             ax.set_xlabel(xlabel, fontsize=plot_options.get('xlabel_fontsize', 10))
             ax.set_ylabel(ylabel, fontsize=plot_options.get('ylabel_fontsize', 10))
 
-            # Set title
             if by_col:
                 title = plot_options.get('title', f'{ylabel} by {xlabel}')
             else:
                 title = plot_options.get('title', f'{ylabel} - Box Plot')
             ax.set_title(title, fontsize=plot_options.get('title_fontsize', 12))
 
-            # Add grid if requested
             if plot_options.get('grid', True):
                 ax.grid(axis='y', alpha=0.3, linestyle='--')
 

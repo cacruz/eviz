@@ -8,7 +8,6 @@ like bar charts, histograms, scatter plots, box plots, and pie charts.
 
 from dataclasses import dataclass
 import logging
-import pandas as pd
 import xarray as xr
 from eviz.lib.models.base import GenericDataSource
 

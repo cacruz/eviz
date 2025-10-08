@@ -2,7 +2,6 @@
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import logging
 from .base import MatplotlibBasePlotter
@@ -50,7 +49,6 @@ class MatplotlibCSVScatterPlotter(MatplotlibBasePlotter):
         self.fig = fig
         self.ax_opts = config.ax_opts if hasattr(config, 'ax_opts') else {}
 
-        # Set up axes
         if not config.compare and not config.compare_diff:
             if fig.get_axes() is None or len(fig.get_axes()) == 0:
                 fig.set_axes()
@@ -61,7 +59,6 @@ class MatplotlibCSVScatterPlotter(MatplotlibBasePlotter):
         else:
             self.ax = ax_temp
 
-        # Create the scatter plot
         self._plot_scatter_data(config, data, field_name, plot_options, plot_params)
 
         return fig
@@ -119,7 +116,6 @@ class MatplotlibCSVScatterPlotter(MatplotlibBasePlotter):
                             linewidths=plot_options.get('linewidths', 0.5),
                             label=str(category)
                         )
-                    # Add legend for categories
                     ax.legend(title=color_col, loc=plot_options.get('legend_loc', 'best'))
                 else:
                     # Single color scatter plot
@@ -137,19 +133,15 @@ class MatplotlibCSVScatterPlotter(MatplotlibBasePlotter):
                 self.logger.error("Scatter plot requires 'x' and 'y' parameters in plot_params")
                 return
 
-            # Set labels
             ax.set_xlabel(xlabel, fontsize=plot_options.get('xlabel_fontsize', 10))
             ax.set_ylabel(ylabel, fontsize=plot_options.get('ylabel_fontsize', 10))
 
-            # Set title
             title = plot_options.get('title', f'{ylabel} vs {xlabel}')
             ax.set_title(title, fontsize=plot_options.get('title_fontsize', 12))
 
-            # Add grid if requested
             if plot_options.get('grid', True):
                 ax.grid(alpha=0.3, linestyle='--')
 
-            # Set axis limits if specified
             if 'xlim' in plot_options:
                 ax.set_xlim(plot_options['xlim'])
             if 'ylim' in plot_options:

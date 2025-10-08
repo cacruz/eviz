@@ -1,7 +1,6 @@
 """Histogram plotter for CSV data using Matplotlib."""
 
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import logging
@@ -61,7 +60,6 @@ class MatplotlibCSVHistPlotter(MatplotlibBasePlotter):
         else:
             self.ax = ax_temp
 
-        # Create the histogram
         self._plot_hist_data(config, data, field_name, plot_options, plot_params)
 
         return fig
@@ -125,7 +123,6 @@ class MatplotlibCSVHistPlotter(MatplotlibBasePlotter):
             orientation = plot_options.get('orientation', 'vertical')
             histtype = plot_options.get('histtype', 'bar')  # 'bar', 'barstacked', 'step', 'stepfilled'
 
-            # Create histogram
             n, bin_edges, patches = ax.hist(
                 values,
                 bins=bins,
@@ -170,7 +167,6 @@ class MatplotlibCSVHistPlotter(MatplotlibBasePlotter):
                               label=f'±1 Std: {std_val:.2f}')
                     ax.axhline(mean_val + std_val, color='orange', linestyle=':', linewidth=1.5)
 
-            # Set labels
             if orientation == 'vertical':
                 ax.set_xlabel(xlabel, fontsize=10)
                 ylabel = 'Density' if density else 'Frequency'
@@ -184,11 +180,9 @@ class MatplotlibCSVHistPlotter(MatplotlibBasePlotter):
                     xlabel_freq = f'Cumulative {xlabel_freq}'
                 ax.set_xlabel(xlabel_freq, fontsize=10)
 
-            # Set title
             title = plot_options.get('title', f'{xlabel} - Histogram')
             ax.set_title(title, fontsize=plot_options.get('title_fontsize', 12))
 
-            # Add grid if requested
             if plot_options.get('grid', True):
                 ax.grid(axis='y' if orientation == 'vertical' else 'x',
                        alpha=0.3, linestyle='--')

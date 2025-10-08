@@ -1,7 +1,6 @@
 """Pie chart plotter for CSV data using Matplotlib."""
 
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import logging
@@ -50,7 +49,6 @@ class MatplotlibCSVPiePlotter(MatplotlibBasePlotter):
         self.fig = fig
         self.ax_opts = config.ax_opts if hasattr(config, 'ax_opts') else {}
 
-        # Set up axes
         if not config.compare and not config.compare_diff:
             if fig.get_axes() is None or len(fig.get_axes()) == 0:
                 fig.set_axes()
@@ -61,7 +59,6 @@ class MatplotlibCSVPiePlotter(MatplotlibBasePlotter):
         else:
             self.ax = ax_temp
 
-        # Create the pie chart
         self._plot_pie_data(config, data, field_name, plot_options, plot_params)
 
         return fig
@@ -148,7 +145,6 @@ class MatplotlibCSVPiePlotter(MatplotlibBasePlotter):
                     )
                     explode = None
 
-            # Create pie chart
             wedges, texts, autotexts = ax.pie(
                 values,
                 labels=labels,
@@ -177,11 +173,9 @@ class MatplotlibCSVPiePlotter(MatplotlibBasePlotter):
             # Equal aspect ratio ensures that pie is drawn as a circle
             ax.axis('equal')
 
-            # Set title
             title = plot_options.get('title', f'{field_name} - Pie Chart')
             ax.set_title(title, fontsize=plot_options.get('title_fontsize', 12))
 
-            # Add legend if requested
             if plot_options.get('legend', False):
                 legend_loc = plot_options.get('legend_loc', 'best')
                 ax.legend(wedges, labels, loc=legend_loc, fontsize=8)
