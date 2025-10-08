@@ -211,6 +211,12 @@ class PlotManager:
                 self._process_box_plot(data_array, field_name, file_index, plot_type, figure)
             else:
                 self.logger.warning(f"_process_box_plot not implemented for {self.__class__.__name__}")
+        elif plot_type in ['bar', 'pie', 'hist']:
+            # CSV plot types - use pandas DataFrames directly
+            if hasattr(self, '_process_csv_plot'):
+                self._process_csv_plot(data_array, field_name, file_index, plot_type, figure)
+            else:
+                self.logger.warning(f"_process_csv_plot not implemented for {self.__class__.__name__}")
         else:
             if hasattr(self, '_process_other_plot'):
                 self._process_other_plot(data_array, field_name, file_index, plot_type, figure)
@@ -584,16 +590,24 @@ class PlotManager:
         for input_entry in self.config_manager.app_data.inputs:
             to_plot = input_entry.get('to_plot', {})
             
-            for field_name, plot_type in to_plot.items():
-                self.logger.info(f"Processing simple plot: {field_name} ({plot_type})")
-                
+            for field_name, plot_type_spec in to_plot.items():
+                # Split comma-separated plot types
+                if isinstance(plot_type_spec, str):
+                    plot_types = [pt.strip() for pt in plot_type_spec.split(',')]
+                elif isinstance(plot_type_spec, list):
+                    plot_types = plot_type_spec
+                else:
+                    plot_types = [str(plot_type_spec)]
+
+                self.logger.info(f"Processing simple plot: {field_name} ({', '.join(plot_types)})")
+
                 # Get the data from data sources
                 data = None
+                dataset = None
                 for i, data_source in enumerate(all_data_sources):
                     self.logger.debug(f"Checking data source {i}: {type(data_source)}")
-                    
+
                     # Check different ways the dataset might be stored
-                    dataset = None
                     if hasattr(data_source, 'dataset') and data_source.dataset is not None:
                         dataset = data_source.dataset
                         self.logger.debug(f"Found dataset via .dataset attribute")
@@ -607,30 +621,32 @@ class PlotManager:
                                 dataset = value
                                 self.logger.debug(f"Found dataset via .{key} attribute")
                                 break
-                    
+
                     if dataset is not None:
                         self.logger.debug(f"Dataset has {len(dataset.data_vars)} data variables")
                         self.logger.debug(f"Available variables: {list(dataset.data_vars.keys())[:10]}...")
-                        
+
                         if field_name in dataset.data_vars:
                             data = dataset[field_name]
                             self.logger.debug(f"Found field '{field_name}' in data source {i}")
                             break
                         elif field_name in dataset.variables:
-                            data = dataset[field_name] 
+                            data = dataset[field_name]
                             self.logger.debug(f"Found field '{field_name}' in variables of data source {i}")
                             break
                     else:
                         self.logger.debug(f"No dataset found in data source {i}")
-                
-                if data is not None:
-                    try:
-                        self.logger.info(f"Creating simple {plot_type} plot for {field_name}")
-                        plotter.plot(self.config_manager, field_name, plot_type, data)
-                    except Exception as e:
-                        self.logger.error(f"Failed to create simple plot for {field_name}: {str(e)}")
-                        import traceback
-                        self.logger.debug(traceback.format_exc())
+
+                if data is not None or dataset is not None:
+                    # Create a plot for each plot type
+                    for plot_type in plot_types:
+                        try:
+                            self.logger.info(f"Creating simple {plot_type} plot for {field_name}")
+                            plotter.plot(self.config_manager, field_name, plot_type, data, dataset)
+                        except Exception as e:
+                            self.logger.error(f"Failed to create simple {plot_type} plot for {field_name}: {str(e)}")
+                            import traceback
+                            self.logger.debug(traceback.format_exc())
                 else:
                     self.logger.warning(f"Field '{field_name}' not found in any data source")
                     # Additional debugging
@@ -1537,6 +1553,58 @@ class PlotManager:
                         plot_type, 
                         self.config_manager.findex, 
                         plot_result)
+
+    def _process_csv_plot(self, data_array, field_name, file_index, plot_type, figure):
+        """Process CSV plots (bar, pie, hist) using pandas DataFrames."""
+        import pandas as pd
+        import matplotlib.pyplot as plt
+
+        self.logger.info(f"Processing CSV {plot_type} plot for {field_name}")
+
+        # Get the dataset from the data source
+        filename = self.config_manager.map_params[file_index].get('filename')
+        data_source = self.config_manager.pipeline.get_data_source(filename)
+
+        if not data_source or not hasattr(data_source, 'dataset'):
+            self.logger.error(f"No dataset found for {filename}")
+            return
+
+        dataset = data_source.dataset
+
+        # Convert xarray Dataset to pandas DataFrame
+        df = dataset.to_dataframe().reset_index()
+        self.logger.debug(f"Converted to DataFrame with shape {df.shape}, columns: {list(df.columns)}")
+
+        # Get plot options from spec_data (e.g., barplot, pieplot, histplot)
+        plot_opts = {}
+        plot_spec_key = f"{plot_type}plot"  # e.g., 'bar' -> 'barplot'
+
+        if (self.config_manager.spec_data and
+            field_name in self.config_manager.spec_data and
+            plot_spec_key in self.config_manager.spec_data[field_name]):
+            plot_opts = self.config_manager.spec_data[field_name][plot_spec_key]
+            self.logger.debug(f"Using spec options for {field_name}.{plot_spec_key}: {plot_opts}")
+
+        # Create the plotter with matplotlib backend (CSV plots use matplotlib)
+        plotter = self.create_plotter(field_name, plot_type, backend='matplotlib')
+        if plotter is None:
+            return
+
+        # Prepare data tuple for the plotter
+        data_to_plot = (df, field_name, plot_type, file_index, figure, plot_opts)
+
+        # Create the plot
+        try:
+            result_fig = plotter.plot(self.config_manager, data_to_plot)
+        except Exception as e:
+            self.logger.error(f"Error creating {plot_type} plot for {field_name}: {e}")
+            import traceback
+            self.logger.debug(traceback.format_exc())
+            return
+
+        # Save the plot using the utility function
+        import eviz.lib.autoviz.utils as pu
+        pu.print_map(self.config_manager, plot_type, file_index, figure)
 
     def _process_box_plots(self, current_field_index, field_name1, field_name2, plot_type, sdat1_dataset, sdat2_dataset):
         """Process side-by-side comparison plots for box plot types."""

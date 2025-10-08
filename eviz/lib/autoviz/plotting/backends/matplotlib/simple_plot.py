@@ -228,14 +228,18 @@ class SimplePlotter:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         
-    def plot(self, config: ConfigManager, field_name: str, plot_type: str, data: xr.DataArray):
+    def plot(self, config: ConfigManager, field_name: str, plot_type: str, data: xr.DataArray, dataset: xr.Dataset = None):
         """Create a simple plot based on plot type."""
         self.logger.info(f"Creating simple {plot_type} plot for {field_name}")
-        
+
+        # Handle CSV plot types (bar, pie, hist)
+        if plot_type in ['bar', 'pie', 'hist']:
+            return self._plot_csv(config, field_name, plot_type, data, dataset)
+
         if data is None:
             self.logger.error(f"No data provided for field {field_name}")
             return
-            
+
         # Get coordinate dimensions
         dims = data.dims
         coords = data.coords
@@ -291,4 +295,64 @@ class SimplePlotter:
         else:
             self.logger.warning(f"Simple plot type '{plot_type}' not supported. Defaulting to XY plot.")
             # Default to xy plot
-            self.plot(config, field_name, 'xy', data)
+            self.plot(config, field_name, 'xy', data, dataset)
+
+    def _plot_csv(self, config: ConfigManager, field_name: str, plot_type: str, data: xr.DataArray, dataset: xr.Dataset):
+        """Create CSV plots (bar, pie, hist) using the PlotterFactory."""
+        import pandas as pd
+        from eviz.lib.autoviz.plotting.factory import PlotterFactory
+        from unittest.mock import MagicMock
+
+        self.logger.info(f"Creating CSV {plot_type} plot for {field_name}")
+
+        # Convert xarray Dataset to pandas DataFrame
+        if dataset is not None:
+            df = dataset.to_dataframe().reset_index()
+            self.logger.debug(f"Converted dataset to DataFrame with shape {df.shape}")
+            self.logger.debug(f"DataFrame columns: {list(df.columns)}")
+        elif data is not None:
+            df = data.to_dataframe().reset_index()
+            self.logger.debug(f"Converted data to DataFrame with shape {df.shape}")
+        else:
+            self.logger.error(f"No data available for {field_name}")
+            return
+
+        # Create plotter using factory
+        try:
+            plotter = PlotterFactory.create_plotter(plot_type, 'matplotlib')
+        except ValueError as e:
+            self.logger.error(f"Cannot create plotter: {e}")
+            return
+
+        # Create figure
+        fig = plt.figure(figsize=(10, 6))
+        ax = fig.add_subplot(111)
+
+        # Mock figure object for compatibility
+        mock_fig = MagicMock()
+        mock_fig.get_axes = MagicMock(return_value=[ax])
+
+        # Get plot options from config if available
+        plot_options = {}
+
+        # Prepare data tuple
+        data_to_plot = (df, field_name, plot_type, 0, mock_fig, plot_options)
+
+        # Create the plot
+        try:
+            plotter.plot(config, data_to_plot)
+        except Exception as e:
+            self.logger.error(f"Error creating {plot_type} plot: {e}")
+            import traceback
+            self.logger.debug(traceback.format_exc())
+            plt.close(fig)
+            return
+
+        # Save the plot
+        if config.output_config.print_to_file:
+            output_path = f"{config.output_config.output_dir}/{field_name}_{plot_type}.{config.output_config.print_format}"
+            fig.savefig(output_path, dpi=config.output_config.dpi, bbox_inches='tight')
+            self.logger.info(f"Saved {plot_type} plot: {output_path}")
+            plt.close(fig)
+        else:
+            plt.show()
