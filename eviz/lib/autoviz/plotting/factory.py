@@ -11,6 +11,7 @@ from .backends.matplotlib.csv_pie import MatplotlibCSVPiePlotter
 from .backends.matplotlib.csv_hist import MatplotlibCSVHistPlotter
 from .backends.matplotlib.csv_scatter import MatplotlibCSVScatterPlotter
 from .backends.matplotlib.csv_box import MatplotlibCSVBoxPlotter
+from .backends.matplotlib.csv_line import MatplotlibCSVLinePlotter
 from .backends.hvplot.xy_plot import HvplotXYPlotter
 from .backends.hvplot.yz_plot import HvplotYZPlotter
 from .backends.hvplot.xt_plot import HvplotXTPlotter
@@ -57,6 +58,7 @@ class PlotterFactory:
             ("hist", "matplotlib"): MatplotlibCSVHistPlotter,
             ("scatter", "matplotlib"): MatplotlibCSVScatterPlotter,
             ("box", "matplotlib"): MatplotlibCSVBoxPlotter,
+            ("line", "matplotlib"): MatplotlibCSVLinePlotter,
             # Gridded box plot available via 'boxplot' key if needed
             ("boxplot", "matplotlib"): MatplotlibBoxPlotter,
 

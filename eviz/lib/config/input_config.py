@@ -172,7 +172,7 @@ class InputConfig:
         format_lower = format_str.lower()
         if format_lower in ['netcdf', 'nc', 'nc4']:
             return 'NetCDF'
-        elif format_lower in ['csv', 'text', 'txt', 'dat']:
+        elif format_lower in ['csv', 'text', 'txt', 'dat', 'json']:
             return 'CSV'
         elif format_lower in ['hdf5', 'h5', 'he5']:
             return 'HDF5'
@@ -209,7 +209,7 @@ class InputConfig:
         file_extension = os.path.splitext(path_lower)[1]
         if file_extension in ['.nc', '.nc4', '']:
             return 'NetCDF'
-        elif file_extension in ['.csv', '.dat']:
+        elif file_extension in ['.csv', '.dat', '.json']:
             return 'CSV'
         elif file_extension in ['.h5', '.he5']:
             return 'HDF5'
@@ -224,7 +224,7 @@ class InputConfig:
         else:
             if any(x in path_lower for x in ['netcdf', 'nc']):
                 return 'NetCDF'
-            elif any(x in path_lower for x in ['csv', 'data', 'txt']):
+            elif any(x in path_lower for x in ['csv', 'data', 'txt', 'json']):
                 return 'CSV'
         return 'NetCDF'
 

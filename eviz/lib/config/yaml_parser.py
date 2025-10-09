@@ -21,11 +21,11 @@ class YAMLParser:
     # Supported plot types for different data formats
     GRIDDED_PLOT_TYPES = ['xy', 'xt', 'yz', 'zt', 'polar']
     CSV_PLOT_TYPES = ['bar', 'pie', 'hist', 'scatter', 'line']
-    CATEGORICAL_PLOT_TYPES = ['bar', 'pie', 'hist', 'scatter', 'box']
+    CATEGORICAL_PLOT_TYPES = ['bar', 'pie', 'hist', 'scatter', 'box', 'line']
     ALL_PLOT_TYPES = GRIDDED_PLOT_TYPES + CSV_PLOT_TYPES + CATEGORICAL_PLOT_TYPES
 
     # Supported data types
-    DATA_TYPES = ['gridded', 'categorical', 'timeseries', 'point']
+    DATA_TYPES = ['gridded', 'categorical', 'observational']
 
     def parse(self):
         """Parse YAML files and populate app_data and spec_data."""

@@ -35,7 +35,7 @@ class DataSourceFactory:
             ['nc', 'nc4', 'netcdf', 'netcdf4', 'opendap', 'dods', 'dap'],
             NetCDFDataSource)
         self.registry.register(['h5', 'he5', 'hdf5', 'hdf'], HDF5DataSource)
-        self.registry.register(['csv', 'dat', 'txt'], CSVDataSource)
+        self.registry.register(['csv', 'dat', 'txt', 'json'], CSVDataSource)
         self.registry.register(['grib', 'grib2'], GRIBDataSource)
         self.registry.register(['zarr'], ZARRDataSource)
 
@@ -70,7 +70,7 @@ class DataSourceFactory:
             file_format = file_format.strip().lower()
             if file_format in ['netcdf', 'nc', 'nc4']:
                 reader_type = 'netcdf'
-            elif file_format in ['csv', 'text', 'txt', 'dat']:
+            elif file_format in ['csv', 'text', 'txt', 'dat', 'json']:
                 reader_type = 'csv'
             elif file_format in ['hdf5', 'h5', 'he5']:
                 reader_type = 'hdf5'
@@ -123,6 +123,8 @@ class DataSourceFactory:
                 ext = '.h5'
             elif 'csv' in path_lower:
                 ext = '.csv'
+            elif 'json' in path_lower:
+                ext = '.json'
             elif 'zarr' in path_lower:
                 ext = '.zarr'
             elif 'grib' in path_lower:

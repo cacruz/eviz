@@ -62,9 +62,20 @@ class PlotManager:
         """
         self.logger.info("Generate plots.")
 
-        if not self.config_manager.spec_data:
+        # Check if we have categorical data (doesn't require specs file)
+        has_categorical = False
+        if hasattr(self.config_manager, 'map_params'):
+            for idx, params in self.config_manager.map_params.items():
+                if params.get('data_type') == 'categorical':
+                    has_categorical = True
+                    break
+
+        if not self.config_manager.spec_data and not has_categorical:
             plotter = SimplePlotter()
             self.process_simple_plots(plotter)
+        elif has_categorical and not (self.config_manager.compare or self.config_manager.compare_diff or self.config_manager.overlay or self.config_manager.correlation):
+            # Process categorical data directly
+            self.process_single_plots()
         else:
             if self.config_manager.compare and not self.config_manager.compare_diff:
                 self.process_side_by_side_plots()
@@ -206,7 +217,7 @@ class PlotManager:
                 self._process_corr_plot(data_array, field_name, file_index, plot_type, figure)
             else:
                 self.logger.warning(f"_process_corr_plot not implemented for {self.__class__.__name__}")
-        elif plot_type in ['bar', 'pie', 'hist', 'scatter', 'box']:
+        elif plot_type in ['bar', 'pie', 'hist', 'scatter', 'box', 'line']:
             # CSV/categorical plot types - use pandas DataFrames directly
             if hasattr(self, '_process_csv_plot'):
                 self._process_csv_plot(data_array, field_name, file_index, plot_type, figure)

@@ -57,7 +57,7 @@ class MatplotlibCSVScatterPlotter(MatplotlibBasePlotter):
                 if hasattr(config, 'ax_opts'):
                     config.ax_opts['projection'] = None
 
-                # Create axes on the EViz figure without projection
+                # Create axes on the EViz figure without projection (default for scatter)
                 self.ax = fig.figure.add_subplot(111)
 
                 # Restore original ax_opts
@@ -107,22 +107,35 @@ class MatplotlibCSVScatterPlotter(MatplotlibBasePlotter):
                     self.logger.error(f"Columns {x_col} or {y_col} not found in DataFrame")
                     return
 
-                x_values = data[x_col].values
-                y_values = data[y_col].values
+                # Drop rows with NaN in the columns we need
+                columns_to_check = [x_col, y_col]
+                if color_col and color_col in data.columns:
+                    columns_to_check.append(color_col)
+
+                data_clean = data.dropna(subset=columns_to_check)
+                if len(data_clean) == 0:
+                    self.logger.error(f"No valid data after removing NaN values")
+                    return
+
+                if len(data_clean) < len(data):
+                    self.logger.info(f"Dropped {len(data) - len(data_clean)} rows with NaN values")
+
+                x_values = data_clean[x_col].values
+                y_values = data_clean[y_col].values
                 xlabel = x_col
                 ylabel = y_col
 
                 # Handle color column
                 if color_col and color_col in data.columns:
                     # Categorical color mapping
-                    categories = data[color_col].unique()
+                    categories = data_clean[color_col].unique()
                     colors = plt.cm.get_cmap(plot_options.get('cmap', 'viridis'))
                     color_map = {cat: colors(i / len(categories)) for i, cat in enumerate(categories)}
-                    c_values = [color_map[val] for val in data[color_col]]
+                    c_values = [color_map[val] for val in data_clean[color_col]]
 
                     # Create scatter plot with categorical colors
                     for category in categories:
-                        mask = data[color_col] == category
+                        mask = data_clean[color_col] == category
                         ax.scatter(
                             x_values[mask],
                             y_values[mask],
@@ -164,7 +177,6 @@ class MatplotlibCSVScatterPlotter(MatplotlibBasePlotter):
             if 'ylim' in plot_options:
                 ax.set_ylim(plot_options['ylim'])
 
-            # Hide spines if requested
             if plot_options.get('hide_top_spine', False):
                 ax.spines['top'].set_visible(False)
             if plot_options.get('hide_right_spine', False):
