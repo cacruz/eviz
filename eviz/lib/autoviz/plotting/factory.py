@@ -6,9 +6,9 @@ from .backends.matplotlib.polar_plot import MatplotlibPolarPlotter
 from .backends.matplotlib.scatter_plot import MatplotlibScatterPlotter
 from .backends.matplotlib.metric_plot import MatplotlibMetricPlotter
 from .backends.matplotlib.box_plot import MatplotlibBoxPlotter
-from .backends.matplotlib.csv_bar import MatplotlibCSVBarPlotter
-from .backends.matplotlib.csv_pie import MatplotlibCSVPiePlotter
-from .backends.matplotlib.csv_hist import MatplotlibCSVHistPlotter
+from .backends.matplotlib.bar_plot import MatplotlibCSVBarPlotter
+from .backends.matplotlib.pie_plot import MatplotlibCSVPiePlotter
+from .backends.matplotlib.hist_plot import MatplotlibCSVHistPlotter
 from .backends.matplotlib.csv_scatter import MatplotlibCSVScatterPlotter
 from .backends.matplotlib.csv_box import MatplotlibCSVBoxPlotter
 from .backends.matplotlib.csv_line import MatplotlibCSVLinePlotter

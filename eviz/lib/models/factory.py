@@ -82,7 +82,8 @@ class DataSourceFactory:
         """
         return source_name in cls._registry
     
-    def create_root_instance(self, config_manager: ConfigManager):
+    @staticmethod
+    def create_root_instance(config_manager: ConfigManager):
         """
         Legacy interface compatibility method.
         

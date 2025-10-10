@@ -37,3 +37,4 @@ public
 Untitled*.ipynb
 *.DS_Store
 demo*
+.coverage

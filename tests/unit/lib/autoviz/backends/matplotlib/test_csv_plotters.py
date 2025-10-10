@@ -6,9 +6,9 @@ import numpy as np
 from unittest.mock import MagicMock, patch
 import matplotlib.pyplot as plt
 
-from eviz.lib.autoviz.plotting.backends.matplotlib.csv_bar import MatplotlibCSVBarPlotter
-from eviz.lib.autoviz.plotting.backends.matplotlib.csv_pie import MatplotlibCSVPiePlotter
-from eviz.lib.autoviz.plotting.backends.matplotlib.csv_hist import MatplotlibCSVHistPlotter
+from eviz.lib.autoviz.plotting.backends.matplotlib.bar_plot import MatplotlibCSVBarPlotter
+from eviz.lib.autoviz.plotting.backends.matplotlib.pie_plot import MatplotlibCSVPiePlotter
+from eviz.lib.autoviz.plotting.backends.matplotlib.hist_plot import MatplotlibCSVHistPlotter
 
 
 @pytest.fixture
