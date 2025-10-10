@@ -14,10 +14,10 @@ warnings.filterwarnings("ignore")
 
 @dataclass
 class Fluxnet(GenericSource):
-    """ Define Fluxnet inventory data and functions.
+    """Define Fluxnet inventory data and functions.
 
-    Parameters:
-        config (Config) : Config object associated with this data source
+    Args:
+        config (Config): Config object associated with this data source
     """
     config: Config = None
     source_data: Any = None

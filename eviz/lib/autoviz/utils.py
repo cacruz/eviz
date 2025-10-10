@@ -809,11 +809,10 @@ def colorbar(mappable):
 
 
 def add_logo(fig: Figure) -> None:
-    """
-    Adds image logo to figure, positioned at the top left
-    
-    Parameters:
-        fig: The eviz Figure object
+    """Adds image logo to figure, positioned at the top left.
+
+    Args:
+        fig (Figure): The eviz Figure object
     """
     try:
         logo_paths = [
@@ -865,12 +864,11 @@ def add_logo(fig: Figure) -> None:
 
 
 def add_logo_ax(fig: Figure, desired_width_ratio: float=0.10) -> None:
-    """
-    Adds image logo to figure using axes coordinates with proper scaling
-    
-    Parameters:
-        fig: The eviz Figure object
-        desired_width_ratio: Width of logo as a fraction of figure width (default: 0.10 or 10%)
+    """Adds image logo to figure using axes coordinates with proper scaling.
+
+    Args:
+        fig (Figure): The eviz Figure object
+        desired_width_ratio (float): Width of logo as a fraction of figure width. Defaults to 0.10 (10%)
     """
     try:
         logo_paths = [
@@ -1020,13 +1018,12 @@ def load_log():
 
 
 def archive(config: "ConfigManager", output_dir: str, event_stamp: str) -> None:
-    """ Archive data for web results
+    """Archive data for web results.
 
-    Parameters:
-        config (Config)
-        output_dir (str) : Output directory to store images
-        event_stamp (str) : Time stamp for archived web results
-
+    Args:
+        config (ConfigManager): Configuration object
+        output_dir (str): Output directory to store images
+        event_stamp (str): Time stamp for archived web results
     """
     fs = [f for f in os.listdir(output_dir) if os.path.isfile(os.path.join(output_dir, f))]
     full_fs = [os.path.join(output_dir, f) for f in fs]

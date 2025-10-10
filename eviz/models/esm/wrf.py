@@ -113,12 +113,14 @@ class Wrf(NuWrf):
             return data2d, xs, ys, field_name, plot_type
 
     def dim_names(self, field_name, pid):
-        """ Get WRF dim names based on field and plot type
+        """Get WRF dim names based on field and plot type.
 
-        Parameters:
-            field_name(str) : Field name associated with this plot
-            pid (str) : plot type
+        Args:
+            field_name (str): Field name associated with this plot
+            pid (str): Plot type
 
+        Returns:
+            tuple: (dim1, dim2) dimension names
         """
         dims = []
         d = self.source_data[field_name]
@@ -163,7 +165,15 @@ class Wrf(NuWrf):
         return dim1, dim2
 
     def _extract_yz_data(self, d, time_lev=0):
-        """ Create YZ slice from N-dim data field"""
+        """Create YZ slice from N-dim data field.
+
+        Args:
+            d: Data array to extract from
+            time_lev: Time level to extract (default: 0)
+
+        Returns:
+            xarray.DataArray: 2D YZ slice
+        """
         d = d.squeeze()
         if self.get_model_dim_name('tc') in d.dims:
             num_times = np.size(d.Time)
@@ -185,11 +195,19 @@ class Wrf(NuWrf):
         return apply_conversion(self.config_manager, data2d, d.name)
 
     def _extract_xt_data(self, d, time_lev, level=None):
-        """ Extract time-series from a DataArray
+        """Extract time-series from a DataArray.
+
+        Args:
+            d: DataArray to extract from
+            time_lev: Time level or range to extract
+            level: Vertical level (optional)
+
+        Returns:
+            xarray.DataArray: 1D time series
 
         Note:
-            Assume input DataArray is at most 4-dimensional (time, lev, lon, lat)
-            and return a 1D (time) series
+            Assumes input DataArray is at most 4-dimensional (time, lev, lon, lat)
+            and returns a 1D (time) series.
         """
         d_temp = d
         if d_temp is None:
@@ -256,7 +274,15 @@ class Wrf(NuWrf):
         return apply_conversion(self.config, data2d, d.name)
 
     def _select_yrange(self, data2d, name):
-        """ Select a range of vertical levels"""
+        """Select a range of vertical levels.
+
+        Args:
+            data2d: 2D data array
+            name (str): Field name
+
+        Returns:
+            xarray.DataArray: Data subset within specified vertical range
+        """
         if 'zrange' in self.config_manager.spec_data[name]['yzplot']:
             if not self.config_manager.spec_data[name]['yzplot']['zrange']:
                 return data2d
@@ -279,9 +305,7 @@ class Wrf(NuWrf):
             return data2d
 
     def basic_plot(self):
-        """
-        Create a basic plot, i.e. one without specifications.
-        """
+        """Create a basic plot, i.e. one without specifications."""
         for k, field_names in self.config_manager.to_plot.items():
             for field_name in field_names:
                 self.fig, self.ax = plt.subplots(nrows=1, ncols=1)
@@ -289,7 +313,14 @@ class Wrf(NuWrf):
                 self._plot_dest(field_name)
 
     def _basic_plot(self, field_name, fig, ax, level=0):
-        """Helper function for basic_plot() """
+        """Helper function for basic_plot().
+
+        Args:
+            field_name (str): Field name to plot
+            fig: Figure object
+            ax: Axes object
+            level (int): Vertical level (default: 0)
+        """
         pid = self.config_manager.app_data['inputs'][0]['to_plot'][field_name]
         data2d, dim1, dim2 = self.__get_plot_data(field_name, pid=pid)
         if data2d is None:
@@ -353,8 +384,15 @@ class Wrf(NuWrf):
         return data2d, coords[dim1], coords[dim2]
 
     def _apply_vertical_level_selection(self, data2d, field_name, level):
-        """
-        Apply vertical level selection for WRF data, handling staggered grids and pressure levels.
+        """Apply vertical level selection for WRF data, handling staggered grids and pressure levels.
+
+        Args:
+            data2d: 2D data array
+            field_name (str): Field name
+            level: Vertical level to select
+
+        Returns:
+            xarray.DataArray: Data at the selected vertical level
         """
         # Get the vertical dimension name
         zname = self.get_field_dim_name(self.source_data, 'zc')

@@ -274,16 +274,15 @@ class DataProcessor:
         return dataset
 
     def _normalize_longitude(self, data, target='-180_180', lon_name=None):
-        """
-        Normalize longitude coordinates in an xarray Dataset or DataArray.
+        """Normalize longitude coordinates in an xarray Dataset or DataArray.
 
-        Parameters:
-            data: xr.Dataset or xr.DataArray
-            target: str, either '-180_180' or '0_360'
-            lon_name: str, name of longitude dimension (default None, auto-detect)
+        Args:
+            data (xr.Dataset or xr.DataArray): Input data
+            target (str): Either '-180_180' or '0_360'. Defaults to '-180_180'
+            lon_name (str, optional): Name of longitude dimension. If None, auto-detect
 
         Returns:
-            xr.Dataset or xr.DataArray with normalized longitudes
+            xr.Dataset or xr.DataArray: Data with normalized longitudes
         """
         # Auto-detect longitude coordinate if not specified
         if lon_name is None:

@@ -129,22 +129,24 @@ class Omi(ObsSource):
         return data2d, lons, lats, field_name, plot_type, file_index, figure
         
 
-def extract_field_with_coords(ds, field_name, 
+def extract_field_with_coords(ds, field_name,
                               lat_bounds=(-90, 90), lon_bounds=(-180, 180)) -> tuple:
-    """
-    Extracts a field from an xarray.Dataset, reconstructs lat/lon coordinates assuming regular global grid,
+    """Extracts a field from an xarray.Dataset and reconstructs lat/lon coordinates.
+
+    Reconstructs lat/lon coordinates assuming regular global grid,
     and masks invalid values using the _FillValue attribute.
 
-    Parameters:
-        ds (xarray.Dataset): The dataset.
-        field_name (str): The name of the variable to extract (e.g., 'ColumnAmountO3').
-        lat_bounds (tuple): Latitude bounds (min, max), default (-90, 90).
-        lon_bounds (tuple): Longitude bounds (min, max), default (-180, 180).
+    Args:
+        ds (xarray.Dataset): The dataset
+        field_name (str): The name of the variable to extract (e.g., 'ColumnAmountO3')
+        lat_bounds (tuple): Latitude bounds (min, max). Defaults to (-90, 90)
+        lon_bounds (tuple): Longitude bounds (min, max). Defaults to (-180, 180)
 
     Returns:
-        xarray.DataArray: Cleaned data array with lat/lon coordinates and invalid values masked.
-        lats (numpy.ndarray): Latitude coordinates.
-        lons (numpy.ndarray): Longitude coordinates.
+        tuple: (data_array, lats, lons) where:
+            - data_array (xarray.DataArray): Cleaned data array with lat/lon coordinates and invalid values masked
+            - lats (numpy.ndarray): Latitude coordinates
+            - lons (numpy.ndarray): Longitude coordinates
     """
     if field_name not in ds:
         raise ValueError(f"{field_name} not found in dataset.")

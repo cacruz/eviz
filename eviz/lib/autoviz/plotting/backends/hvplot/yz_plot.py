@@ -25,19 +25,18 @@ class HvplotYZPlotter(YZPlotter):
             self.logger.warning(f"Could not initialize HoloViews/hvplot extensions: {e}")   
 
     def plot(self, config_manager, plot_data):
-        """
-        Create a YZ (latitude-height) plot using hvplot.
+        """Create a YZ (latitude-height) plot using hvplot.
 
-        Parameters:
+        Args:
             config_manager: The configuration manager object
             plot_data: Tuple containing (data_array, x, y, field_name, plot_type, file_index, figure)
-                data_array: xarray.DataArray containing the data to plot
-                x: x-coordinates (latitude values)
-                y: y-coordinates (height/pressure levels)
-                field_name: Name of the field being plotted
-                plot_type: Type of plot ('yz')
-                file_index: Index of the file being plotted
-                figure: Figure object to plot on
+                - data_array: xarray.DataArray containing the data to plot
+                - x: x-coordinates (latitude values)
+                - y: y-coordinates (height/pressure levels)
+                - field_name: Name of the field being plotted
+                - plot_type: Type of plot ('yz')
+                - file_index: Index of the file being plotted
+                - figure: Figure object to plot on
 
         Returns:
             holoviews.Element: The created plot

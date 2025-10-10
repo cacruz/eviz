@@ -27,15 +27,14 @@ PPB_CONVERSION = 1e9
 _airmass_cache = {}
 
 def get_airmass(config, dry_run=False):
-    """
-    Retrieves airmass field stored in a file or URL
+    """Retrieves airmass field stored in a file or URL.
 
-    Parameters:
+    Args:
         config: eviz config object
-        dry_run: bool
+        dry_run (bool): If True, skip actual data loading. Defaults to False
 
     Returns:
-        airmass field: xArray
+        xr.DataArray: Airmass field
     """
     global _airmass_cache
     
@@ -110,14 +109,13 @@ def get_airmass(config, dry_run=False):
 
 
 def download_airmass(url):
-    """
-    Downloads airmass file
+    """Downloads airmass file.
 
-    Parameters:
+    Args:
         url (str): URL of the file
 
     Returns:
-        xArray dataset
+        xr.Dataset: xArray dataset
     """
     filename = os.path.basename(url)
     downloaded_file = os.path.join("./", filename)
@@ -130,28 +128,26 @@ def download_airmass(url):
 
 
 def calculate_total_mass(airmass):
-    """
-    Calculates the total mass given the airmass per square meter field.
+    """Calculates the total mass given the airmass per square meter field.
 
-    Parameters:
-        airmass (xarray.DataArray): The input data array representing mass per square meter.
+    Args:
+        airmass (xarray.DataArray): The input data array representing mass per square meter
 
     Returns:
-        float: The total mass in kilograms.
+        float: The total mass in kilograms
     """
     area_expanded = calculate_total_area(airmass)
     return (airmass * area_expanded).sum().item()
 
 
 def calculate_total_area(data):
-    """
-    Calculates the total surface area for a regular lat-lon grid.
+    """Calculates the total surface area for a regular lat-lon grid.
 
-    Parameters:
-        data (xarray.DataArray): The input data array.
+    Args:
+        data (xarray.DataArray): The input data array
 
     Returns:
-        xarray.DataArray: An array with the same shape as data containing cell areas in m^2.
+        xarray.DataArray: An array with the same shape as data containing cell areas in m^2
     """
     dlat = np.deg2rad(data.coords['lat'].diff('lat').mean().item())
     dlon = np.deg2rad(data.coords['lon'].diff('lon').mean().item())
@@ -162,21 +158,16 @@ def calculate_total_area(data):
 
 
 def adjust_units(units):
-    """
-    Creates a consistent unit string that will be used in the unit
-    conversion routines below.
+    """Creates a consistent unit string that will be used in the unit conversion routines below.
 
-    Parameters:
-        units: str
-            Input unit string.
+    Unit list is incomplete -- currently is geared to units from
+    common model diagnostics (e.g. kg/m2/s, kg, and variants).
+
+    Args:
+        units (str): Input unit string
 
     Returns:
-        adjusted_units: str
-            Output unit string, adjusted to a consistent value.
-
-    Remarks:
-        Unit list is incomplete -- currently is geared to units from
-        common model diagnostics (e.g. kg/m2/s, kg, and variants).
+        str: Output unit string, adjusted to a consistent value
     """
     # Error check arguments
     if not isinstance(units, str):
@@ -576,16 +567,16 @@ def ppb_to_mixing_ratio(
 
 @dataclass
 class Units:
-    """ This class defines attributes and methods to perform unit conversions of xarray data arrays.
-        The conversion will be automatic if the fields are registered in eviz's species database and
-        the units are supported. Otherwise, the conversion specification can be made in eviz's config
-        files (APP and SPECS YAML files). Please see user's guide for more information.
+    """Unit conversion class for xarray data arrays.
 
-    Parameters:
+    This class defines attributes and methods to perform unit conversions of xarray data arrays.
+    The conversion will be automatic if the fields are registered in eviz's species database and
+    the units are supported. Otherwise, the conversion specification can be made in eviz's config
+    files (APP and SPECS YAML files). Please see user's guide for more information.
 
-    config (ConfigManager) :
-        Representation of the model configuration used to specify data sources and
-        user choices for the map generation.
+    Args:
+        config (ConfigManager): Representation of the model configuration used to specify data sources
+            and user choices for the map generation
     """
     config: 'ConfigManager'
     species_db: dict = field(init=False)
@@ -602,14 +593,17 @@ class Units:
     def convert_chem(self, data, species_name, to_unit,
                      air_column_density=None,
                      airmass=None):
-        """ Conversion method for chemical species
+        """Conversion method for chemical species.
 
-        Parameters:
-            data (xArray): data to undergo unit conversion
-            to_unit (str): data destination unit
-            species_name (str): species name of the data
-            air_column_density (xArray)
-            airmass (xArray)
+        Args:
+            data (xr.DataArray): Data to undergo unit conversion
+            species_name (str): Species name of the data
+            to_unit (str): Data destination unit
+            air_column_density (xr.DataArray, optional): Air column density. Defaults to None
+            airmass (xr.DataArray, optional): Airmass data. Defaults to None
+
+        Returns:
+            xr.DataArray: Data with converted units
         """
         if species_name not in self.species_db:
             self.logger.warning(f"Species {species_name} not found in data.")
@@ -757,12 +751,15 @@ class Units:
         return new_data
 
     def convert(self, data, species_name, to_unit):
-        """ Conversion method for non-chemical species (e.g. atmospheric fields)
+        """Conversion method for non-chemical species (e.g. atmospheric fields).
 
-        Parameters:
-            to_unit (str): data destination unit
-            species_name (str): species name of the data
-            data (xArray): data to undergo unit conversion
+        Args:
+            data (xr.DataArray): Data to undergo unit conversion
+            species_name (str): Species name of the data
+            to_unit (str): Data destination unit
+
+        Returns:
+            xr.DataArray: Data with converted units
         """
         # Get a consistent value for the units string
         # (ignoring minor differences in formatting)

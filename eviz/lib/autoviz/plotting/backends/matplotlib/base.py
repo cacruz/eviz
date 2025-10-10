@@ -685,12 +685,12 @@ class MatplotlibBasePlotter(BasePlotter):
     def plot_text(self, config, field_name, pid, level=None, data=None, *args, **kwargs):
         """Add text to a map.
 
-        Parameters:
-            config (ConfigManager): configuration object for the plot
+        Args:
+            config (ConfigManager): Configuration object for the plot
             field_name (str): Name of the field
             pid (str): Plot type identifier
-            level (int): Vertical level (optional, default=None)
-            data (Any): xarray Data for basic stats (optional)
+            level (int, optional): Vertical level. Defaults to None
+            data (Any, optional): xarray Data for basic stats. Defaults to None
             *args: Additional positional arguments for customization
             **kwargs: Additional keyword arguments for customization
         """

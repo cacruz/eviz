@@ -64,15 +64,14 @@ def mkdir_p(path):
 
 
 def get_nested_key_value(dictionary: Dict, keys: List[str]) -> Any:
-    """
-    Get the value of a nested key in a dictionary.
+    """Get the value of a nested key in a dictionary.
 
-    Parameters:
-    - dictionary: The input dictionary.
-    - keys: A list of keys specifying the path to the nested key.
+    Args:
+        dictionary (Dict): The input dictionary
+        keys (List[str]): A list of keys specifying the path to the nested key
 
     Returns:
-    - The value of the nested key, or None if the key doesn't exist.
+        Any: The value of the nested key, or None if the key doesn't exist
     """
     current_dict = dictionary
     for key in keys:
@@ -106,14 +105,14 @@ def get_repo_root_dir(repo_path: str) -> str:
 
 
 def get_project_root(anchor=".git"):
-    """
-    Get the top-level project directory by searching for an anchor name
+    """Get the top-level project directory by searching for an anchor name.
 
-    Parameters:
-        anchor: A filename or directory that is unique to the project root (e.g., 'README.md', '.git').
+    Args:
+        anchor (str): A filename or directory that is unique to the project root (e.g., 'README.md', '.git').
+            Defaults to '.git'
 
     Returns:
-        Path to the project root directory.
+        Path: Path to the project root directory, or None if not found
     """
     current_dir = pathlib.Path(__file__).resolve().parent
 

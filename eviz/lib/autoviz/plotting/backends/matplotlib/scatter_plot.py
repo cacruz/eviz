@@ -144,13 +144,14 @@ class MatplotlibScatterPlotter(MatplotlibBasePlotter):
     def _plot_gridded_scatter_data(self, config, fig, x, y, data2d, field_name, findex):
         """Create a scatter plot for gridded data using SPECS data.
 
-        Parameters:
-            config (Config): Configuration with data source and plotting options.
-            fig (matplotlib figure): The figure object.
-            x, y (array-like): Coordinates for scatter points.
-            data2d (xarray or array-like): Data values for coloring.
-            field_name (str): The field being plotted.
-            findex (int): Index of this field in the comparison sequence.
+        Args:
+            config: Configuration with data source and plotting options
+            fig: Matplotlib figure object
+            x (array-like): X coordinates for scatter points
+            y (array-like): Y coordinates for scatter points
+            data2d (xarray.DataArray or array-like): Data values for coloring
+            field_name (str): The field being plotted
+            findex (int): Index of this field in the comparison sequence
         """
         ax = self.ax
         ax_opts = self.ax_opts

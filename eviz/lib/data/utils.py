@@ -14,19 +14,19 @@ logger = logging.getLogger(__name__)
 
 
 def apply_conversion(config, data2d, name):
-    """ Apply a unit conversion based on SPECS file entries
+    """Apply a unit conversion based on SPECS file entries.
 
-    Parameters:
-        config (ConfigManager) configuration object
-        data2d (DataArray) with original units
-        name (str)
-
-    Returns:
-        data2d (DataArray) with target units
-
-    For single-plots, we rely on specs file to determine the units and unit conversion factor
+    For single-plots, we rely on specs file to determine the units and unit conversion factor.
     For comparison plots, we rely on the "target" units specified in the specs file and the unit
     conversion is provided by the Units conversion module.
+
+    Args:
+        config (ConfigManager): Configuration object
+        data2d (DataArray): Data with original units
+        name (str): Field name
+
+    Returns:
+        DataArray: Data with target units
     """
     d_temp = data2d.copy()
 
@@ -260,15 +260,13 @@ def get_file_ptr(data_dir, file_pat=None):
 
 
 def read_multiple_netcdf_in_directory(directory_path):
-    """
-    Reads all NetCDF files in a specified directory using xarray and returns a combined
-    xarray Dataset.
+    """Reads all NetCDF files in a specified directory using xarray and returns a combined xarray Dataset.
 
-    Parameters:
-    directory_path (str): The path to the directory containing NetCDF files to read.
+    Args:
+        directory_path (str): The path to the directory containing NetCDF files to read
 
     Returns:
-    xarray.Dataset: The combined dataset contained in the NetCDF files.
+        xarray.Dataset: The combined dataset contained in the NetCDF files
     """
     try:
         file_paths = glob.glob(os.path.join(directory_path, '*.nc'))
@@ -283,14 +281,13 @@ def read_multiple_netcdf_in_directory(directory_path):
 
 
 def read_multiple_netcdf(file_paths):
-    """
-    Reads multiple NetCDF files using xarray and returns a combined xarray Dataset.
+    """Reads multiple NetCDF files using xarray and returns a combined xarray Dataset.
 
-    Parameters:
-    file_paths (list of str): A list of paths to the NetCDF files to read.
+    Args:
+        file_paths (list of str): A list of paths to the NetCDF files to read
 
     Returns:
-    xarray.Dataset: The combined dataset contained in the NetCDF files.
+        xarray.Dataset: The combined dataset contained in the NetCDF files
     """
     try:
         dataset = xr.open_mfdataset(file_paths, combine='by_coords')
@@ -301,14 +298,13 @@ def read_multiple_netcdf(file_paths):
 
 
 def read_netcdf(file_path):
-    """
-    Reads a NetCDF file using xarray and returns an xarray Dataset.
+    """Reads a NetCDF file using xarray and returns an xarray Dataset.
 
-    Parameters:
-    file_path (str): The path to the NetCDF file to read.
+    Args:
+        file_path (str): The path to the NetCDF file to read
 
     Returns:
-    xarray.Dataset: The dataset contained in the NetCDF file.
+        xarray.Dataset: The dataset contained in the NetCDF file
     """
     try:
         dataset = xr.open_dataset(file_path)
@@ -377,14 +373,13 @@ def compute_std_over_dim(xr_dst, std_dim, field_name=None):
 
 
 def sum_over_lev(data_array):
-    """
-    Sums over all lev layers in the given xarray DataArray to get a 2D lat-lon result.
+    """Sums over all lev layers in the given xarray DataArray to get a 2D lat-lon result.
 
-    Parameters:
-    data_array (xarray.DataArray): The input data array defined on lon, lat, and lev dimensions.
+    Args:
+        data_array (xarray.DataArray): The input data array defined on lon, lat, and lev dimensions
 
     Returns:
-    xarray.DataArray: The resulting 2D data array after summing over the lev dimension.
+        xarray.DataArray: The resulting 2D data array after summing over the lev dimension
     """
     # Sum over the 'lev' dimension
     result_array = data_array.sum(dim='lev')
@@ -399,16 +394,14 @@ Adopted from GCpy - with minor modifications
 
 
 def get_timestamp_string(date_array):
-    """
-    Convenience function returning the datetime timestamp based on the given input
+    """Convenience function returning the datetime timestamp based on the given input.
 
-    Parameters:
-        date_array: array
-            Array of integers corresponding to [year, month, day, hour, minute, second].
+    Args:
+        date_array (array): Array of integers corresponding to [year, month, day, hour, minute, second].
             Any integers not provided will be padded accordingly
+
     Returns:
-        date_str: string
-            string in datetime format (eg. 2019-01-01T00:00:00Z)
+        str: String in datetime format (eg. 2019-01-01T00:00:00Z)
     """
     # converts single integer to array for cases when only year is given
     date_array = [date_array] if isinstance(date_array, int) else date_array
@@ -427,30 +420,28 @@ def get_timestamp_string(date_array):
 
 
 def add_months(start_date, n_months):
-    """
+    """Add months to a numpy datetime64 object.
 
-    Parameters:
-        start_date: numpy.datetime64
-            numpy datetime64 object
-        n_months: integer
+    Args:
+        start_date (numpy.datetime64): Numpy datetime64 object
+        n_months (int): Number of months to add
+
     Returns:
-        new_date: numpy.datetime64
-            numpy datetime64 object with exactly n_months added to the date
+        numpy.datetime64: Numpy datetime64 object with exactly n_months added to the date
     """
     new_date = start_date.astype(datetime) + relativedelta(months=n_months)
     return np.datetime64(new_date)
 
 
 def is_full_year(start_date, end_date):
-    """
-    Verifies if two dates are a full year starting Jan 1.
+    """Verifies if two dates are a full year starting Jan 1.
 
-    Parameters:
-        start_date: numpy.datetime64
-            numpy datetime64 object
-        end_date: numpy.datetime64
-            numpy datetime64 object
-    Returns: boolean
+    Args:
+        start_date (numpy.datetime64): Numpy datetime64 object
+        end_date (numpy.datetime64): Numpy datetime64 object
+
+    Returns:
+        bool: True if the dates span a full year starting Jan 1, False otherwise
     """
     return (
             add_months(start_date, 12) == end_date

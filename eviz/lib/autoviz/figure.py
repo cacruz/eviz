@@ -16,17 +16,17 @@ import eviz.lib.autoviz.utils as pu
 
 
 class Figure(mfigure.Figure):
-    """ Enhanced Figure class inheriting from Matplotlib's Figure with eViz framework
-        customizations.
+    """Enhanced Figure class inheriting from Matplotlib's Figure with eViz framework customizations.
 
-    Parameters:
+    Args:
         config_manager (ConfigManager): Representation of the model configuration
         plot_type (str): Type of plot to be created
+        nrows (int, optional): Number of subplot rows. Defaults to None
+        ncols (int, optional): Number of subplot columns. Defaults to None
+        **kwargs: Additional keyword arguments passed to matplotlib.figure.Figure
 
-        See also
-        --------
+    See Also:
         matplotlib.figure.Figure
-
     """
     def __init__(self, config_manager, plot_type, 
         *,
@@ -552,16 +552,16 @@ class Figure(mfigure.Figure):
         return cbar
 
     def update_ax_opts(self, field_name, ax, pid, level=None) -> Dict[str, Any]:
-        """ Set (or reset) some map options
+        """Set (or reset) some map options.
 
-        Parameters:
-            field_name (str) : Name of field that needs axes options updated
-            ax (Axes) : Axes object
-            pid (str) : Plot type identifier
-            level (int) : Vertical level (optional, default=None)
+        Args:
+            field_name (str): Name of field that needs axes options updated
+            ax (Axes): Axes object
+            pid (str): Plot type identifier
+            level (int, optional): Vertical level. Defaults to None
 
         Returns:
-            Updated axes internal state
+            Dict[str, Any]: Updated axes internal state
         """
         if not self.config_manager.compare or not self.config_manager.compare_diff:
             return self._update_single_plot(field_name, pid, level)
@@ -627,11 +627,10 @@ class Figure(mfigure.Figure):
                 self._ax_opts['create_clevs'] = True
 
     def apply_rc_params(self, default_params=None):
-        """
-        Apply matplotlib rcParams from a config dictionary.
+        """Apply matplotlib rcParams from a config dictionary.
 
-        Parameters:
-            default_params (dict, optional): Base set of rcParams to start with.
+        Args:
+            default_params (dict, optional): Base set of rcParams to start with. Defaults to None
         """
         if default_params is None:
             default_params = {
