@@ -487,5 +487,4 @@ class TestYAMLParser:
         """Test that data type constants are defined."""
         assert 'gridded' in YAMLParser.DATA_TYPES
         assert 'categorical' in YAMLParser.DATA_TYPES
-        assert 'timeseries' in YAMLParser.DATA_TYPES
-        assert 'point' in YAMLParser.DATA_TYPES
+        assert 'observational' in YAMLParser.DATA_TYPES

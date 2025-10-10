@@ -180,7 +180,7 @@ class MatplotlibCSVHistPlotter(MatplotlibBasePlotter):
                     xlabel_freq = f'Cumulative {xlabel_freq}'
                 ax.set_xlabel(xlabel_freq, fontsize=10)
 
-            title = plot_options.get('title', f'{xlabel} - Histogram')
+            title = plot_options.get('title', f'{xlabel}')
             ax.set_title(title, fontsize=plot_options.get('title_fontsize', 12))
 
             if plot_options.get('grid', True):

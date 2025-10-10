@@ -148,9 +148,7 @@ class MatplotlibCSVBoxPlotter(MatplotlibBasePlotter):
 
             if by_col:
                 title = plot_options.get('title', f'{ylabel} by {xlabel}')
-            else:
-                title = plot_options.get('title', f'{ylabel} - Box Plot')
-            ax.set_title(title, fontsize=plot_options.get('title_fontsize', 12))
+                ax.set_title(title, fontsize=plot_options.get('title_fontsize', 12))
 
             if plot_options.get('grid', True):
                 ax.grid(axis='y', alpha=0.3, linestyle='--')

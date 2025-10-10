@@ -193,40 +193,95 @@ fieldname:
 # Below are examples for each available categorical plot type. Note the plot attributes
 # are the same that matplotlib allows for each plot type and only some are shown below.
 
-# Histogram options
+# Histogram helps to visualize the frequency distribution of a variable (or numerical category)
+# Options (defaults shown)
 hist:
   histplot:
+    bins: auto
+    alpha: 0.7
     color: steelblue
     edgecolor: black
-    alpha: 0.7
+    linewidth: 0.5
     density: false
-    show_stats: true
+    cumulative: false
+    orientation: vertical
+    show_stats: false
+    show_median: false
+    show_mean: false
+    title: <xlabel>
 
-# Bar chart options
+# Bar chart helps to visually _compare_ numerical data across different categories
+# Options (defaults shown)
 bar:
   barplot:
-    color: coral
-    orientation: vertical
+    alpha: 1.0
+    color: steelblue
     width: 0.8
-    show_values: true
+    orientation: vertical
+    edgecolor: black
+    linewidth: 0.5
+    grid: true
+    # Aggregate data by x column
+    agg: <mean,sum,count,median>
+    show_values: false
+    value_format: '%.1f'
+    title: <field_name>
 
-# Pie chart options
+# Pie chart helps to visualize the part-to-whole relationship of data across categories
+# Options (defaults shown)
 pie:
   pieplot:
+    # define a list of color strings or hex codes for each slice
+    colors: None  # i.e. automatic
+    # explode: an array of values, one for each slice, indicating how far each slice should 
+    # be offset from the center of the pie. A value of 0 means no offset.
     explode: [0.1, 0, 0, 0, 0]
-    autopct: '%1.1f%%'
     startangle: 90
     shadow: false
+    labeldistance: 1.1 # ratio of the radius at which the labels are drawn
+    autopct: '%1.1f%%'
+    pctdistance: 0.6  # ratio of the radius at which the autopct percentages are drawn
+    counterclock: false  # i.e. clockwise is default
+    label_fontsize: 10
+    pct_fontsize: 9
+    title_fontsize: 12
+    legend: false
 
-# Scatter plot options
+# Scatter plot to visualize and analyze the relationship and correlation between two numerical variables
+# Options (defaults shown)
 scatter:
   scatterplot:
-    alpha: 0.6
+    marker: 'o'  # also 's', '^', 'X'
     s: 50
+    # color of markers either a single color
+    color: steelblue
+    # or use a colormap for  multiple categories
     cmap: viridis
+    alpha: 0.7
+    edgecolor: black
+    linewidths: 0.6
+    grid: true
+    hide_top_spine: false
+    hide_right_spine: false
+    hide_bottom_spine: false
+    hide_left_spine: false
+    title: <ylabel vs xlabel>
 
-# Box plot options
+# Box plot helps to visualize the distribution, center, and spread of numerical data and to compare 
+# distributions across multiple datasets
+# Options (defaults shown)
 box:
   boxplot:
     color: lightblue
-    showmeans: true
+    alpha: 0.7
+    showmeans: false
+    meanline: false
+    notch: false
+    vert: true
+    grid: true
+    rotate_labels: false
+    xlabel_fontsize: 10
+    ylabel_fontsize: 10
+    title: <ylabel vs xlabel>
+
+

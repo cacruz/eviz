@@ -1,0 +1,14 @@
+# Scatter plot options
+scatter:
+  scatterplot:
+    alpha: 0.6
+    s: 20
+    cmap: viridis
+    hide_top_spine: true
+    hide_right_spine: true
+
+# Box plot options
+box:
+  boxplot:
+    color: lightblue
+    showmeans: true

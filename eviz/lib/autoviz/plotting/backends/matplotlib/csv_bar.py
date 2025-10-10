@@ -186,7 +186,7 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
                     ax.text(label_x, label_y, label_format % value,
                            ha=ha, va=va, fontsize=8)
 
-            title = plot_options.get('title', f'{field_name} - Bar Chart')
+            title = plot_options.get('title', f'{field_name}')
             ax.set_title(title, fontsize=plot_options.get('title_fontsize', 12))
 
             if plot_options.get('grid', True):

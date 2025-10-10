@@ -1,9 +1,9 @@
 inputs:
    # File name, can be local or absolute file path
-  - name: <path/to/data/filename>        # Required: path to dataset (NetCDF, CSV, etc.)
+  - name: </path/to/data/filename>        # Required: path to dataset (NetCDF, CSV, etc.)
     # Optional location when only filename is specified above
-    location: <path/to/data>
-    data_type: <gridded|categorical|timeseries|point>  # Optional (default: gridded)
+    location: </path/to/data>
+    data_type: <gridded|categorical|observational>  # Optional (default: gridded)
     # The following string will be used in the plot title
     exp_name    : BenchmarkF
     # If given, the following string will be used for comparisons
@@ -26,25 +26,23 @@ inputs:
         temperature: xy,yz
 
     # ---- Categorical data example ----
-    # For CSV or similarly-formatted tabular data (e.g., config/examples/csv/cars.csv)
+    # For CSV or similarly-formatted tabular data or JSON formatted data
+    # Note format after to_plot shows the plot type first (hist,bar,pe,scatter,box) then the data
     to_plot:
       hist:
         x: <column_name>
-        bins: <int>                   # optional
       bar:
         x: <categorical_column>
         y: <numeric_column>
-        agg: <mean|sum|count|median>  # optional
       pie:
         labels: <categorical_column>
         values: <numeric_column>
       scatter:
         x: <column_name>
         y: <column_name>
-        color: <column_name>          # optional
       box:
         y: <column_name>
-        by: <categorical_column>      # optional
+        by: <category>
 
 
 # The following example shows a file without an extension. In that case, we can specify using what 'reader' to

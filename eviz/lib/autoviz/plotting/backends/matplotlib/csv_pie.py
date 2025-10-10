@@ -173,7 +173,7 @@ class MatplotlibCSVPiePlotter(MatplotlibBasePlotter):
             # Equal aspect ratio ensures that pie is drawn as a circle
             ax.axis('equal')
 
-            title = plot_options.get('title', f'{field_name} - Pie Chart')
+            title = plot_options.get('title', f'{field_name}')
             ax.set_title(title, fontsize=plot_options.get('title_fontsize', 12))
 
             if plot_options.get('legend', False):

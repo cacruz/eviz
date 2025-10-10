@@ -1,0 +1,34 @@
+# Example categorical data configuration for cars dataset
+inputs:
+- name: cars.csv
+  location: ${HOME}/data/eviz/categorical
+  data_type: categorical
+  specs_file: config/examples/categorical/cars_specs.yaml
+  to_plot:
+    hist:
+      x: mpg
+    bar:
+      x: origin
+      y: horsepower
+    pie:
+      labels: cylinders
+      values: weight
+    scatter:
+      x: weight
+      y: mpg
+    box:
+      y: mpg
+      by: cylinders
+    # box:
+    #   y: displacement
+
+outputs:
+  output_dir: ${HOME}/scratch/eviz/output/categorical
+  make_pdf: false
+  print_format: png
+  print_to_file: yes
+  make_gif: no
+
+system_opts:
+  archive_web_results: false
+  use_mp_pool: false

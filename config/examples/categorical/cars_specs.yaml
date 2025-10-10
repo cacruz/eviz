@@ -1,0 +1,33 @@
+# Histogram options
+hist:
+  histplot:
+    color: grey
+    show_mean: true
+    title: Miles per gallon
+
+# Bar chart options
+bar:
+  barplot:
+    orientation: vertical
+    width: 0.8
+    show_values: true
+    title: Horsepower vs region
+
+# Pie chart options
+pie:
+  pieplot:
+    autopct: '%1.1f%%'
+    startangle: 45
+    title: Proportion of number of cylinders used
+
+# Scatter plot options
+scatter:
+  scatterplot:
+    s: 20
+    marker: '^'
+
+# Box plot options
+box:
+  boxplot:
+    color: lightblue
+    showmeans: true
