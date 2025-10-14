@@ -71,10 +71,13 @@ class GriddedDataSource(GenericDataSource):
         """
         Process raw dataset into visualization-ready format.
         
-        Args:
-            dataset: Raw xarray Dataset to process
+        Parameters
+        ----------
+            dataset
+                Raw xarray Dataset to process
             
-        Returns:
+        Returns
+        -------
             Dictionary containing processed data and metadata
         """
         self.logger.debug(f"Processing gridded dataset with variables: {list(dataset.data_vars)}")
@@ -95,10 +98,13 @@ class GriddedDataSource(GenericDataSource):
         """
         Validate that the dataset is compatible with gridded data processing.
         
-        Args:
-            dataset: Dataset to validate
+        Parameters
+        ----------
+            dataset
+                Dataset to validate
             
-        Returns:
+        Returns
+        -------
             True if dataset is valid for gridded processing
         """
         if not isinstance(dataset, xr.Dataset):
@@ -160,8 +166,10 @@ class GriddedDataSource(GenericDataSource):
         """
         Generate simple plots for all fields in the dataset when no SPECS file is provided
 
-        Args:
-            plotter: The plotter object to use for generating plots
+        Parameters
+        ----------
+            plotter
+                The plotter object to use for generating plots
         """
         map_params = self.config_manager.map_params
         field_num = 0
@@ -193,13 +201,19 @@ class GriddedDataSource(GenericDataSource):
                                    plot_type: str) -> tuple:
         """Prepare data for simple plots. This method is used when no SPECS file is provided.
         It extracts the appropriate slice of data for the given plot type.
-        Args:
-            data_array (xr.DataArray): The data array to process.
-            field_name (str): The name of the field.
-            plot_type (str): The type of plot to generate.
+        Parameters
+        ----------
+            data_array : xr.DataArray
+                The data array to process.
+            field_name : str
+                The name of the field.
+            plot_type : str
+                The type of plot to generate.
         
-        Returns:
-            tuple: A tuple containing the 2D data array, dimension names, and plot type.
+        Returns
+        -------
+            tuple
+                A tuple containing the 2D data array, dimension names, and plot type.
             Returns None if the plot type is not supported.
         """
         if data_array is None:

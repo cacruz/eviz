@@ -16,14 +16,15 @@ logger = logging.getLogger(__name__)
 def apply_conversion(config, data2d, name):
     """ Apply a unit conversion based on SPECS file entries
 
-    Parameters:
+    Parameters
+    ----------
         config (ConfigManager) configuration object
         data2d (DataArray) with original units
         name (str)
 
-    Returns:
+    Returns
+    -------
         data2d (DataArray) with target units
-
     For single-plots, we rely on specs file to determine the units and unit conversion factor
     For comparison plots, we rely on the "target" units specified in the specs file and the unit
     conversion is provided by the Units conversion module.
@@ -121,12 +122,17 @@ def grid_cell_areas(lon1d, lat1d, radius=constants.R_EARTH_M):
     """ Calculate grid cell areas given 1D arrays of longitudes and latitudes
     for a planet with the given radius.
 
-    Args:
-        lon1d (ndarray): Array of longitude points [degrees] of shape (M,)
-        lat1d (ndarray): Array of latitude points [degrees] of shape (M,)
-        radius (float, optional): Radius of the planet [metres] (currently assumed spherical)
+    Parameters
+    ----------
+        lon1d : ndarray
+            Array of longitude points [degrees] of shape (M,)
+        lat1d : ndarray
+            Array of latitude points [degrees] of shape (M,)
+        radius : float, optional
+            Radius of the planet [metres] (currently assumed spherical)
 
-    Returns:
+    Returns
+    -------
         Array of grid cell areas [metres**2] of shape (M, N).
     """
     lon_bounds_radian = np.deg2rad(_guess_bounds(lon1d))
@@ -150,12 +156,17 @@ def _quadrant_area(radian_lat_bounds, radian_lon_bounds, radius_of_earth):
     The calculations are done at 64 bit precision and the returned array
     will be of type numpy.float64.
 
-    Args:
-        radian_lat_bounds:  Array of latitude bounds (radians) of shape (M, 2)
-        radian_lon_bounds:  Array of longitude bounds (radians) of shape (N, 2)
-        radius_of_earth: Radius of the Earth (currently assumed spherical)
+    Parameters
+    ----------
+        radian_lat_bounds
+            Array of latitude bounds (radians) of shape (M, 2)
+        radian_lon_bounds
+            Array of longitude bounds (radians) of shape (N, 2)
+        radius_of_earth
+            Radius of the Earth (currently assumed spherical)
 
-    Returns:
+    Returns
+    -------
         Array of grid cell areas of shape (M, N).
     """
     # ensure pairs of bounds
@@ -185,11 +196,15 @@ def _guess_bounds(points, bound_position=0.5):
 
     Simplified function from iris.coord.Coord.
 
-    Args:
-        points (ndarray): Array of grid points of shape (N,).
-        bound_position (float): Bounds offset relative to the grid cell centre.
+    Parameters
+    ----------
+        points : ndarray
+            Array of grid points of shape (N,).
+        bound_position : float
+            Bounds offset relative to the grid cell centre.
 
-    Returns:
+    Returns
+    -------
         Array of shape (N, 2).
     """
     diffs = np.diff(points)
@@ -206,13 +221,19 @@ def calc_spatial_mean(xr_da, lon_name="longitude", lat_name="latitude",
                       radius=constants.R_EARTH_M):
     """ Calculate spatial mean of xarray.DataArray with grid cell weighting.
 
-    Args:
-        xr_da (xarray.DataArray): Data to average
-        lon_name (str, optional): Name of x-coordinate
-        lat_name (str, optional): Name of y-coordinate
-        radius (float):  Radius of the planet (in meters)
+    Parameters
+    ----------
+        xr_da : xarray.DataArray
+            Data to average
+        lon_name : str, optional
+            Name of x-coordinate
+        lat_name : str, optional
+            Name of y-coordinate
+        radius : float
+            Radius of the planet (in meters)
 
-    Returns:
+    Returns
+    -------
         Spatially averaged xarray.DataArray.
     """
     lon = xr_da[lon_name].values
@@ -228,13 +249,19 @@ def calc_spatial_integral(xr_da, lon_name="longitude", lat_name="latitude",
                           radius=constants.R_EARTH_M):
     """ Calculate spatial integral of xarray.DataArray with grid cell weighting.
 
-    Args:
-        xr_da: xarray.DataArray Data to average
-        lon_name: str, optional Name of x-coordinate
-        lat_name: str, optional Name of y-coordinate
-        radius: float Radius of the planet [metres]
+    Parameters
+    ----------
+        xr_da
+            xarray.DataArray Data to average
+        lon_name
+            str, optional Name of x-coordinate
+        lat_name
+            str, optional Name of y-coordinate
+        radius
+            float Radius of the planet [metres]
 
-    Returns:
+    Returns
+    -------
         Spatially averaged xarray.DataArray.
     """
     lon = xr_da[lon_name].values
@@ -264,11 +291,14 @@ def read_multiple_netcdf_in_directory(directory_path):
     Reads all NetCDF files in a specified directory using xarray and returns a combined
     xarray Dataset.
 
-    Parameters:
+    Parameters
+    ----------
     directory_path (str): The path to the directory containing NetCDF files to read.
 
-    Returns:
-    xarray.Dataset: The combined dataset contained in the NetCDF files.
+    Returns
+    -------
+    xarray.Dataset
+        The combined dataset contained in the NetCDF files.
     """
     try:
         file_paths = glob.glob(os.path.join(directory_path, '*.nc'))
@@ -286,11 +316,14 @@ def read_multiple_netcdf(file_paths):
     """
     Reads multiple NetCDF files using xarray and returns a combined xarray Dataset.
 
-    Parameters:
+    Parameters
+    ----------
     file_paths (list of str): A list of paths to the NetCDF files to read.
 
-    Returns:
-    xarray.Dataset: The combined dataset contained in the NetCDF files.
+    Returns
+    -------
+    xarray.Dataset
+        The combined dataset contained in the NetCDF files.
     """
     try:
         dataset = xr.open_mfdataset(file_paths, combine='by_coords')
@@ -304,11 +337,14 @@ def read_netcdf(file_path):
     """
     Reads a NetCDF file using xarray and returns an xarray Dataset.
 
-    Parameters:
+    Parameters
+    ----------
     file_path (str): The path to the NetCDF file to read.
 
-    Returns:
-    xarray.Dataset: The dataset contained in the NetCDF file.
+    Returns
+    -------
+    xarray.Dataset
+        The dataset contained in the NetCDF file.
     """
     try:
         dataset = xr.open_dataset(file_path)
@@ -321,10 +357,14 @@ def read_netcdf(file_path):
 def get_dst_attribute(xr_dst, attr_name):
     """ Get an attribute value from a Xarray Dataset or DataArray
 
-      Args:
-         xr_dst: Xarray Dataset or DataArray
-         attr_name: attribute name
-      Returns:
+      Parameters
+      ----------
+         xr_dst
+             Xarray Dataset or DataArray
+         attr_name
+             attribute name
+      Returns
+      -------
          Attribute value or None if the attribute does not exist.
     """
     try:
@@ -343,9 +383,9 @@ def compute_means(xr_dst, means):
             'DS-DEC' = seasonal (DJF, MAM, JJA and SON)
             '1A' = annual
 
-      Returns:
+      Returns
+      -------
            the time average of a Xarray Dataset or DataArray.
-
     """
     return xr_dst.resample(time=means).mean()
 
@@ -354,7 +394,8 @@ def compute_mean_over_dim(xr_dst, mean_dim, field_name=None):
     """ Computer average over a dataArray (or dataset) dimension
         mean_dim can be 'Time', 'x', 'y',  or a tuple of dimensions etc.
 
-    Returns:
+    Returns
+    -------
         the average of a Xarray Dataset or DataArray over a specified dimension
     """
     if field_name is not None:
@@ -367,7 +408,8 @@ def compute_std_over_dim(xr_dst, std_dim, field_name=None):
     """ Computer standard deviation over a dataArray (or dataset) dimension
         std_dim can be 'Time', 'x', 'y',  or a tuple of dimensions etc.
 
-      Returns:
+      Returns
+      -------
            the standard deviation of a Xarray Dataset or DataArray over a specified dimension
     """
     if field_name is not None:
@@ -380,11 +422,14 @@ def sum_over_lev(data_array):
     """
     Sums over all lev layers in the given xarray DataArray to get a 2D lat-lon result.
 
-    Parameters:
+    Parameters
+    ----------
     data_array (xarray.DataArray): The input data array defined on lon, lat, and lev dimensions.
 
-    Returns:
-    xarray.DataArray: The resulting 2D data array after summing over the lev dimension.
+    Returns
+    -------
+    xarray.DataArray
+        The resulting 2D data array after summing over the lev dimension.
     """
     # Sum over the 'lev' dimension
     result_array = data_array.sum(dim='lev')
@@ -402,13 +447,17 @@ def get_timestamp_string(date_array):
     """
     Convenience function returning the datetime timestamp based on the given input
 
-    Parameters:
+    Parameters
+    ----------
         date_array: array
             Array of integers corresponding to [year, month, day, hour, minute, second].
             Any integers not provided will be padded accordingly
-    Returns:
-        date_str: string
-            string in datetime format (eg. 2019-01-01T00:00:00Z)
+    Returns
+    -------
+        date_str
+            string
+            string in datetime format (eg. 2019-01-01T00
+                00:00Z)
     """
     # converts single integer to array for cases when only year is given
     date_array = [date_array] if isinstance(date_array, int) else date_array
@@ -429,12 +478,15 @@ def get_timestamp_string(date_array):
 def add_months(start_date, n_months):
     """
 
-    Parameters:
+    Parameters
+    ----------
         start_date: numpy.datetime64
             numpy datetime64 object
         n_months: integer
-    Returns:
-        new_date: numpy.datetime64
+    Returns
+    -------
+        new_date
+            numpy.datetime64
             numpy datetime64 object with exactly n_months added to the date
     """
     new_date = start_date.astype(datetime) + relativedelta(months=n_months)
@@ -445,12 +497,16 @@ def is_full_year(start_date, end_date):
     """
     Verifies if two dates are a full year starting Jan 1.
 
-    Parameters:
+    Parameters
+    ----------
         start_date: numpy.datetime64
             numpy datetime64 object
         end_date: numpy.datetime64
             numpy datetime64 object
-    Returns: boolean
+
+    Returns
+    -------
+    boolean
     """
     return (
             add_months(start_date, 12) == end_date

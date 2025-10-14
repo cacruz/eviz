@@ -23,11 +23,13 @@ class DataIntegrator:
     def integrate_data_sources(self, data_sources: List[DataSource], **kwargs) -> xr.Dataset:
         """Integrate multiple data sources into a single dataset.
         
-        Args:
-            data_sources: The data sources to integrate
-            **kwargs: Additional integration parameters
+        Parameters
+        ----------
+            data_sources
+                The data sources to integrate
             
-        Returns:
+        Returns
+        -------
             An integrated dataset
         """
         self.logger.debug(f"Integrating {len(data_sources)} data sources")
@@ -49,11 +51,13 @@ class DataIntegrator:
     def _merge_datasets(self, datasets: List[xr.Dataset], **kwargs) -> xr.Dataset:
         """Merge multiple datasets along shared dimensions.
         
-        Args:
-            datasets: The datasets to merge
-            **kwargs: Additional merging parameters
+        Parameters
+        ----------
+            datasets
+                The datasets to merge
             
-        Returns:
+        Returns
+        -------
             A merged dataset
         """
         self.logger.debug("Merging datasets")
@@ -75,11 +79,13 @@ class DataIntegrator:
     def _concatenate_datasets(self, datasets: List[xr.Dataset], **kwargs) -> xr.Dataset:
         """Concatenate multiple datasets along a specified dimension.
         
-        Args:
-            datasets: The datasets to concatenate
-            **kwargs: Additional concatenation parameters
+        Parameters
+        ----------
+            datasets
+                The datasets to concatenate
             
-        Returns:
+        Returns
+        -------
             A concatenated dataset
         """
         self.logger.debug("Concatenating datasets")
@@ -105,13 +111,19 @@ class DataIntegrator:
     def integrate_variables(self, dataset: xr.Dataset, variables: List[str], operation: str, output_name: str) -> xr.Dataset:
         """Integrate multiple variables within a dataset.
         
-        Args:
-            dataset: The dataset containing the variables
-            variables: The variables to integrate
-            operation: The operation to apply ('add', 'subtract', 'multiply', 'divide', 'mean', 'max', 'min')
-            output_name: The name of the output variable
+        Parameters
+        ----------
+            dataset
+                The dataset containing the variables
+            variables
+                The variables to integrate
+            operation
+                The operation to apply ('add', 'subtract', 'multiply', 'divide', 'mean', 'max', 'min')
+            output_name
+                The name of the output variable
             
-        Returns:
+        Returns
+        -------
             The dataset with the integrated variable added
         """
         self.logger.debug(f"Integrating variables {variables} with operation '{operation}'")
@@ -172,11 +184,13 @@ class DataIntegrator:
         
         This method is useful for combining datasets with different time ranges.
         
-        Args:
-            datasets: The datasets to integrate
-            **kwargs: Additional integration parameters
+        Parameters
+        ----------
+            datasets
+                The datasets to integrate
             
-        Returns:
+        Returns
+        -------
             An integrated dataset
         """
         self.logger.debug("Integrating datasets by time")

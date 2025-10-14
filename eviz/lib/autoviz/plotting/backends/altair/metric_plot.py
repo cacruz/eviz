@@ -120,13 +120,17 @@ class AltairMetricPlotter(XYPlotter):
     def plot(self, config: "ConfigManager", data_to_plot: tuple) -> alt.Chart:
         """Create an interactive correlation map using Altair.
         
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple containing (data2d, x, y, field_name, plot_type, findex, fig)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple containing (data2d, x, y, field_name, plot_type, findex, fig)
                 If data2d is a tuple of two DataArrays, compute correlation between them
                 Otherwise, assume data2d is already a correlation map
         
-        Returns:
+        Returns
+        -------
             The created Altair chart object
         """
         if isinstance(data_to_plot[0], tuple) and len(data_to_plot[0]) == 2:

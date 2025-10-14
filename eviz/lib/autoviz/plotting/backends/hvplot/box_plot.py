@@ -22,12 +22,16 @@ class HvplotBoxPlotter(BoxPlotter):
     def plot(self, config, data_to_plot):
         """Create an interactive Box plot per time step using HvPlot.
         
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple containing (data, categories, values, field_name,
-                        plot_type, findex, fig)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple containing (data, categories, values, field_name,
+                plot_type, findex, fig)
         
-        Returns:
+        Returns
+        -------
             The created HvPlot object
         """
         data, _, _, field_name, plot_type, findex, _ = data_to_plot

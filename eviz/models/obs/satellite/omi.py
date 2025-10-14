@@ -136,17 +136,27 @@ def extract_field_with_coords(ds, field_name,
     Reconstructs lat/lon coordinates assuming regular global grid,
     and masks invalid values using the _FillValue attribute.
 
-    Args:
-        ds (xarray.Dataset): The dataset
-        field_name (str): The name of the variable to extract (e.g., 'ColumnAmountO3')
-        lat_bounds (tuple): Latitude bounds (min, max). Defaults to (-90, 90)
-        lon_bounds (tuple): Longitude bounds (min, max). Defaults to (-180, 180)
+    Parameters
+    ----------
+        ds : xarray.Dataset
+            The dataset
+        field_name : str
+            The name of the variable to extract (e.g., 'ColumnAmountO3')
+        lat_bounds : tuple
+            Latitude bounds (min, max). Defaults to (-90, 90)
+        lon_bounds : tuple
+            Longitude bounds (min, max). Defaults to (-180, 180)
 
-    Returns:
-        tuple: (data_array, lats, lons) where:
-            - data_array (xarray.DataArray): Cleaned data array with lat/lon coordinates and invalid values masked
-            - lats (numpy.ndarray): Latitude coordinates
-            - lons (numpy.ndarray): Longitude coordinates
+    Returns
+    -------
+        tuple
+            (data_array, lats, lons) where:
+            - data_array (xarray.DataArray)
+                Cleaned data array with lat/lon coordinates and invalid values masked
+            - lats (numpy.ndarray)
+                Latitude coordinates
+            - lons (numpy.ndarray)
+                Longitude coordinates
     """
     if field_name not in ds:
         raise ValueError(f"{field_name} not found in dataset.")

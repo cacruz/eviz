@@ -49,17 +49,20 @@ def create_config(args) -> ConfigManager:
     """
     Create a ConfigManager instance from command-line arguments.
     
-    Args:
-        args (argparse.Namespace): Command-line arguments containing configuration options.
+    Parameters
+    ----------
+        args : argparse.Namespace
+            Command-line arguments containing configuration options.
             Expected attributes include:
             - sources: List of source names (e.g., 'gridded', 'wrf')
             - config: Optional path to configuration directory
             - configfile: Optional path to specific configuration file
     
-    Returns:
-        ConfigManager: A fully initialized configuration manager with input, output,
-                      system, and history configurations.
-    
+    Returns
+    -------
+        ConfigManager
+            A fully initialized configuration manager with input, output,
+            system, and history configurations.
     If no configuration directory is specified, it attempts to use the EVIZ_CONFIG_PATH
     environment variable. If that is not set, it falls back to the default path defined
     in constants.config_path.
@@ -100,34 +103,50 @@ def get_factory_from_user_input(inputs) -> list:
     """
     Return factory classes associated with user input sources.
     
-    Args:
-        inputs (list): List of source names (e.g., 'gridded', 'wrf', 'omi')
+    Parameters
+    ----------
+        inputs : list
+            List of source names (e.g., 'gridded', 'wrf', 'omi')
     
-    Returns:
-        list: List of factory instances corresponding to the specified source names.
-    
+    Returns
+    -------
+        list
+            List of factory instances corresponding to the specified source names.
     This function maps source names to their corresponding factory classes, which are
     responsible for creating appropriate model instances for data processing and visualization.
-    
     Each source name is associated with a unique named configuration existing within
     the EVIZ_CONFIG_PATH directory structure.
-    
-    Supported sources include:
-    - 'test': DataSourceFactory (for unit tests)
-    - 'gridded': DataSourceFactory (for generic NetCDF data)
-    - 'geos': DataSourceFactory (for MERRA data)
-    - 'giss': GissFactory (for GISS ModelE NetCDF data)
-    - 'ccm', 'cf': DataSourceFactory (for special streams)
-    - 'crest' : CrestFactory (for CREST data)
-    - 'lis': LisFactory (for Land Information System data)
-    - 'wrf': WrfFactory (for Weather Research and Forecasting model data)
-    - 'grib': GribFactory (for GRIB data)
-    - 'airnow': AirnowFactory (for AirNow CSV data)
-    - 'ghg': GhgFactory (for GHG inventories, e.g. NOAA GML)
-    - 'fluxnet': FluxnetFactory (for FluxNet CSV data)
-    - 'omi': OmiFactory (for OMI HDF5 data)
-    - 'mopitt': MopittFactory (for MOPITT HDF5 data)
-    - 'landsat': LandsatFactory (for Landsat HDF4 data)
+    Supported sources include
+    - 'test'
+        DataSourceFactory (for unit tests)
+    - 'gridded'
+        DataSourceFactory (for generic NetCDF data)
+    - 'geos'
+        DataSourceFactory (for MERRA data)
+    - 'giss'
+        GissFactory (for GISS ModelE NetCDF data)
+    - 'ccm', 'cf'
+        DataSourceFactory (for special streams)
+    - 'crest'
+        CrestFactory (for CREST data)
+    - 'lis'
+        LisFactory (for Land Information System data)
+    - 'wrf'
+        WrfFactory (for Weather Research and Forecasting model data)
+    - 'grib'
+        GribFactory (for GRIB data)
+    - 'airnow'
+        AirnowFactory (for AirNow CSV data)
+    - 'ghg'
+        GhgFactory (for GHG inventories, e.g. NOAA GML)
+    - 'fluxnet'
+        FluxnetFactory (for FluxNet CSV data)
+    - 'omi'
+        OmiFactory (for OMI HDF5 data)
+    - 'mopitt'
+        MopittFactory (for MOPITT HDF5 data)
+    - 'landsat'
+        LandsatFactory (for Landsat HDF4 data)
     """
     mappings = {
         "test": GriddedSourceFactory(),       # for unit tests
@@ -175,7 +194,8 @@ class Autoviz:
     sources, initializes configuration, and manages the visualization workflow. It supports
     various data sources including gridded data, regional models, and observational datasets.
     
-    Attributes:
+    Attributes
+    ----------
 
         source_names (list): List of source model names to process (e.g., 'gridded', 'wrf')
         args (argparse.Namespace, optional): Command-line arguments for configuration.
@@ -212,8 +232,10 @@ class Autoviz:
         """
         Initialize the Autoviz instance after dataclass initialization.
 
-        Raises:
-            ValueError: If no factories are found for the specified sources.
+        Raises
+        ------
+            ValueError
+                If no factories are found for the specified sources.
         """
         self.logger.debug("Autoviz initialization")
         # Add this workaround to simplify working within a Jupyter notebook, that is, to avoid
@@ -306,8 +328,10 @@ class Autoviz:
         """
         Assign model input files as specified in model config file.
         
-        Args:
-            input_files (list): Names of input files to be processed.
+        Parameters
+        ----------
+            input_files : list
+                Names of input files to be processed.
         """
         config = self._config_manager.input_config
         config.set_input_files(input_files)
@@ -354,8 +378,10 @@ class Autoviz:
         """
         Assign model output directory as specified in model config file.
         
-        Args:
-            output_dir (str): Path to the directory where output files should be saved.
+        Parameters
+        ----------
+            output_dir : str
+                Path to the directory where output files should be saved.
         """
         config = self._config_manager.output_config
         config.set_output_dir(output_dir)

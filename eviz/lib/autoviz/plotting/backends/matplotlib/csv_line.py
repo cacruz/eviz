@@ -17,9 +17,12 @@ class MatplotlibCSVLinePlotter(MatplotlibBasePlotter):
     def plot(self, config, data_to_plot):
         """Create a line plot using Matplotlib.
 
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple containing (data, field_name, plot_type, findex, fig, plot_options, plot_params)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple containing (data, field_name, plot_type, findex, fig, plot_options, plot_params)
                 - data: pandas DataFrame with the data to plot
                 - field_name: Name of the field/column being plotted
                 - plot_type: 'line'
@@ -28,7 +31,8 @@ class MatplotlibCSVLinePlotter(MatplotlibBasePlotter):
                 - plot_options: Dict of plot-specific options (color, style, etc.)
                 - plot_params: Dict of plot parameters (x, y, color, style for categorical data)
 
-        Returns:
+        Returns
+        -------
             The created/updated figure
         """
         # Unpack data_to_plot with backward compatibility
@@ -83,12 +87,18 @@ class MatplotlibCSVLinePlotter(MatplotlibBasePlotter):
     def _plot_line_data(self, config, data, field_name, plot_options, plot_params):
         """Create the actual line plot.
 
-        Args:
-            config: Configuration manager
-            data: pandas DataFrame
-            field_name: Name of the field being plotted
-            plot_options: Dictionary of plotting options
-            plot_params: Dictionary of plot parameters (x, y, color, style for categorical data)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data
+                pandas DataFrame
+            field_name
+                Name of the field being plotted
+            plot_options
+                Dictionary of plotting options
+            plot_params
+                Dictionary of plot parameters (x, y, color, style for categorical data)
         """
         ax = self.ax
 

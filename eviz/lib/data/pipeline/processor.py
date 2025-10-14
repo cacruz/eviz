@@ -44,10 +44,13 @@ class DataProcessor:
     def process_data_source(self, data_source: DataSource) -> DataSource:
         """Process a data source.
         
-        Args:
-            data_source: The data source to process
+        Parameters
+        ----------
+            data_source
+                The data source to process
             
-        Returns:
+        Returns
+        -------
             The processed data source
         """
         if not data_source.validate_data():
@@ -69,10 +72,13 @@ class DataProcessor:
     def _apply_geos_processing(self, data_source: DataSource) -> DataSource:
         """Apply GEOS processing operations if requested.
         
-        Args:
-            data_source: The data source to process
+        Parameters
+        ----------
+            data_source
+                The data source to process
             
-        Returns:
+        Returns
+        -------
             The processed data source
         """
         if not self.config_manager:
@@ -93,10 +99,13 @@ class DataProcessor:
     def _apply_tropopause_height(self, data_source: DataSource):
         """Apply tropopause height processing.
         
-        Args:
-            data_source: The data source to process
+        Parameters
+        ----------
+            data_source
+                The data source to process
             
-        Returns:
+        Returns
+        -------
             The processed data source
         """
         self.logger.info("Applying tropopause height overlay")
@@ -147,10 +156,13 @@ class DataProcessor:
     def _apply_sphum_conversion(self, data_source: DataSource) -> DataSource:
         """Apply specific humidity conversion.
         
-        Args:
-            data_source: The data source to process
+        Parameters
+        ----------
+            data_source
+                The data source to process
             
-        Returns:
+        Returns
+        -------
             The processed data source
         """
         radionuclides = ['Be10', 'Be10s', 'Be7', 'Be7s', 'Pb210', 'Rn222']
@@ -196,11 +208,16 @@ class DataProcessor:
                                     target_units: str) -> None:
         """Convert radionuclide units using specific humidity.
         
-        Args:
-            data_source: The data source containing the species data
-            species_name: Name of the species to convert
-            specific_hum: Specific humidity data
-            target_units: Target units for conversion
+        Parameters
+        ----------
+            data_source
+                The data source containing the species data
+            species_name
+                Name of the species to convert
+            specific_hum
+                Specific humidity data
+            target_units
+                Target units for conversion
         """
         try:
             ds_index = self.config_manager.data_source.get_ds_index()
@@ -247,10 +264,13 @@ class DataProcessor:
     def _process_dataset(self, dataset: xr.Dataset, model_name: str = None) -> Optional[xr.Dataset]:
         """Process a Xarray dataset.
 
-        Args:
-            dataset: The dataset to process
+        Parameters
+        ----------
+            dataset
+                The dataset to process
 
-        Returns:
+        Returns
+        -------
             The processed dataset
         """
         if dataset is None:
@@ -276,13 +296,19 @@ class DataProcessor:
     def _normalize_longitude(self, data, target='-180_180', lon_name=None):
         """Normalize longitude coordinates in an xarray Dataset or DataArray.
 
-        Args:
-            data (xr.Dataset or xr.DataArray): Input data
-            target (str): Either '-180_180' or '0_360'. Defaults to '-180_180'
-            lon_name (str, optional): Name of longitude dimension. If None, auto-detect
+        Parameters
+        ----------
+            data : xr.Dataset or xr.DataArray
+                Input data
+            target : str
+                Either '-180_180' or '0_360'. Defaults to '-180_180'
+            lon_name : str, optional
+                Name of longitude dimension. If None, auto-detect
 
-        Returns:
-            xr.Dataset or xr.DataArray: Data with normalized longitudes
+        Returns
+        -------
+            xr.Dataset or xr.DataArray
+                Data with normalized longitudes
         """
         # Auto-detect longitude coordinate if not specified
         if lon_name is None:
@@ -331,11 +357,15 @@ class DataProcessor:
         """
         Find longitude coordinate variable in the dataset.
         
-        Args:
-            data: xr.Dataset or xr.DataArray
+        Parameters
+        ----------
+            data
+                xr.Dataset or xr.DataArray
             
-        Returns:
-            str or None: Name of longitude coordinate, or None if not found
+        Returns
+        -------
+            str or None
+                Name of longitude coordinate, or None if not found
         """
         # List of common longitude names (same as in ConfigManager)
         lon_names = ['lon', 'longitude', 'x', 'XLONG', 'LONGITUDE', 'Longitude']
@@ -359,11 +389,15 @@ class DataProcessor:
         """
         Detect if a dataset is WRF-like (has WRF-style coordinates).
         
-        Args:
-            dataset: xarray Dataset to check
+        Parameters
+        ----------
+            dataset
+                xarray Dataset to check
             
-        Returns:
-            bool: True if dataset appears to be WRF-like
+        Returns
+        -------
+            bool
+                True if dataset appears to be WRF-like
         """
         # Check for WRF-specific indicators
         wrf_indicators = [
@@ -384,9 +418,12 @@ class DataProcessor:
     def _extract_metadata(self, dataset: xr.Dataset, data_source: DataSource) -> None:
         """Extract metadata from the dataset and store it in the data source.
         
-        Args:
-            dataset: The dataset to extract metadata from
-            data_source: The data source to store metadata in
+        Parameters
+        ----------
+            dataset
+                The dataset to extract metadata from
+            data_source
+                The data source to store metadata in
         """
         if dataset is None:
             return
@@ -426,10 +463,13 @@ class DataProcessor:
         This method renames dimensions to standard names (lon, lat, lev, time)
         regardless of their original names in the source data.
         
-        Args:
-            dataset: xarray Dataset to rename dimensions in
+        Parameters
+        ----------
+            dataset
+                xarray Dataset to rename dimensions in
             
-        Returns:
+        Returns
+        -------
             xarray Dataset with standardized dimension names
         """
         self.logger.debug(f"Standardizing coordinates for model name {model_name}")
@@ -479,14 +519,21 @@ class DataProcessor:
         """
         Get the model-specific dimension name for a gridded dimension.
         
-        Args:
-            gridded_dim_name (str): GriddedSource dimension name (e.g., 'xc', 'yc', 'zc', 'tc')
-            available_dims (list, optional): List of available dimensions in the dataset
-            model_name (str, optional): Name of the model
-            config_manager (ConfigManager, optional): Configuration manager to use
+        Parameters
+        ----------
+            gridded_dim_name : str
+                GriddedSource dimension name (e.g., 'xc', 'yc', 'zc', 'tc')
+            available_dims : list, optional
+                List of available dimensions in the dataset
+            model_name : str, optional
+                Name of the model
+            config_manager : ConfigManager, optional
+                Configuration manager to use
             
-        Returns:
-            str or None: The model-specific dimension name if found, otherwise None
+        Returns
+        -------
+            str or None
+                The model-specific dimension name if found, otherwise None
         """        
         cm = config_manager or self.config_manager
         
@@ -561,10 +608,13 @@ class DataProcessor:
     def _handle_missing_values(self, dataset: xr.Dataset) -> xr.Dataset:
         """Handle missing values in the dataset.
 
-        Args:
-            dataset: The dataset to process
+        Parameters
+        ----------
+            dataset
+                The dataset to process
 
-        Returns:
+        Returns
+        -------
             The processed dataset
         """
         # Replace NaN values with the _FillValue attribute if available
@@ -587,10 +637,13 @@ class DataProcessor:
     def _apply_unit_conversions(self, dataset: xr.Dataset) -> xr.Dataset:
         """Apply unit conversions to the dataset.
 
-        Args:
-            dataset: The dataset to process
+        Parameters
+        ----------
+            dataset
+                The dataset to process
 
-        Returns:
+        Returns
+        -------
             The processed dataset
         """
         # Apply common unit conversions
@@ -632,14 +685,21 @@ class DataProcessor:
         """
         Regrid one of the two input arrays to match the other's grid, based on resolution.
 
-        Args:
-            d1: First data array.
-            d2: Second data array.
-            dims: Tuple of (dim1, dim2), the coordinate dimension names.
-            method: Interpolation method ('linear', 'nearest').
-            extrapolate: Whether to allow extrapolation.
+        Parameters
+        ----------
+            d1
+                First data array.
+            d2
+                Second data array.
+            dims
+                Tuple of (dim1, dim2), the coordinate dimension names.
+            method
+                Interpolation method ('linear', 'nearest').
+            extrapolate
+                Whether to allow extrapolation.
 
-        Returns:
+        Returns
+        -------
             Regridded version of d2 that matches d1's grid.
         """
         if dims is None:
@@ -715,14 +775,21 @@ class DataProcessor:
         """
         Regrid a data array to match the grid of another.
 
-        Args:
-            source: The data array to regrid.
-            target: The target grid (another data array).
-            dims: Tuple of (dim1, dim2) representing the coordinate names (e.g., ('lat', 'lon')).
-            method: Interpolation method ('linear', 'nearest').
-            extrapolate: Whether to extrapolate beyond source bounds.
+        Parameters
+        ----------
+            source
+                The data array to regrid.
+            target
+                The target grid (another data array).
+            dims
+                Tuple of (dim1, dim2) representing the coordinate names (e.g., ('lat', 'lon')).
+            method
+                Interpolation method ('linear', 'nearest').
+            extrapolate
+                Whether to extrapolate beyond source bounds.
 
-        Returns:
+        Returns
+        -------
             Regridded DataArray.
         """
         dim1, dim2 = dims
@@ -773,12 +840,17 @@ class DataProcessor:
         """
         Compute the difference between two data arrays.
         
-        Args:
-            d1: First data array
-            d2: Second data array
-            method: Method to compute difference ('difference', 'percd', 'percc', 'ratio')
+        Parameters
+        ----------
+            d1
+                First data array
+            d2
+                Second data array
+            method
+                Method to compute difference ('difference', 'percd', 'percc', 'ratio')
             
-        Returns:
+        Returns
+        -------
             DataArray containing the computed difference
         """
         if d1.shape != d2.shape:
@@ -815,10 +887,13 @@ class DataProcessor:
         but no coordinate arrays. This method creates synthetic coordinate arrays and renames
         dimensions to standard names in one step.
         
-        Args:
-            dataset: Raw GISS dataset
+        Parameters
+        ----------
+            dataset
+                Raw GISS dataset
             
-        Returns:
+        Returns
+        -------
             Dataset with synthetic coordinate arrays added and dimensions renamed
         """
         self.logger.info("Applying GISS ModelE post-processing to add coordinate arrays")
@@ -879,10 +954,13 @@ class DataProcessor:
         For GISS data, some variables like 't' are 3D (lev, lat, lon) but represent
         a single time slice. For plotting purposes, we need to add a time dimension.
         
-        Args:
-            dataset: Dataset to process
+        Parameters
+        ----------
+            dataset
+                Dataset to process
             
-        Returns:
+        Returns
+        -------
             Dataset with time dimensions added where appropriate
         """
         variables_to_process = []

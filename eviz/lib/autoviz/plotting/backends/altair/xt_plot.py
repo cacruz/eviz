@@ -20,11 +20,15 @@ class AltairXTPlotter(XTPlotter):
     def plot(self, config, data_to_plot):
         """Create an interactive XT plot using Altair.
         
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple containing (data2d, x, y, field_name, plot_type, findex, fig)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple containing (data2d, x, y, field_name, plot_type, findex, fig)
         
-        Returns:
+        Returns
+        -------
             The created Altair chart object
         """
         data2d, _, _, field_name, plot_type, findex, _ = data_to_plot

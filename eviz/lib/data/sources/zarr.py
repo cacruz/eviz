@@ -10,19 +10,25 @@ class ZARRDataSource(DataSource):
     def __init__(self, model_name: str = None, config_manager=None):
         """Initialize a new ZARR DataSource.
         
-        Args:
-            model_name: Name of the model this data source belongs to
-            config_manager: Configuration manager instance
+        Parameters
+        ----------
+            model_name
+                Name of the model this data source belongs to
+            config_manager
+                Configuration manager instance
         """
         super().__init__(model_name, config_manager)
     
     def load_data(self, file_path: str) -> xr.Dataset:
         """Load data from a Zarr store into an Xarray dataset.
         
-        Args:
-            file_path: Path to the Zarr store
+        Parameters
+        ----------
+            file_path
+                Path to the Zarr store
             
-        Returns:
+        Returns
+        -------
             The loaded dataset
         """
         self.logger.debug(f"Loading Zarr data from {file_path}")
@@ -62,10 +68,13 @@ class ZARRDataSource(DataSource):
     def _process_data(self, dataset: xr.Dataset) -> xr.Dataset:
         """Process the loaded Zarr data.
         
-        Args:
-            dataset: The dataset to process
+        Parameters
+        ----------
+            dataset
+                The dataset to process
             
-        Returns:
+        Returns
+        -------
             The processed dataset
         """
         self.logger.debug("Processing Zarr data")
@@ -78,8 +87,10 @@ class ZARRDataSource(DataSource):
     def _extract_metadata(self, dataset: xr.Dataset) -> None:
         """Extract metadata from the dataset.
         
-        Args:
-            dataset: The dataset to extract metadata from
+        Parameters
+        ----------
+            dataset
+                The dataset to extract metadata from
         """
         if dataset is None:
             return

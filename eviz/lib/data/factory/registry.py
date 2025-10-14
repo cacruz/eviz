@@ -23,9 +23,12 @@ class DataSourceRegistry:
     def register(self, extensions: List[str], data_source_class: Type[DataSource]) -> None:
         """Register a data source class for the specified file extensions.
         
-        Args:
-            extensions: List of file extensions (without the dot)
-            data_source_class: The data source class to register
+        Parameters
+        ----------
+            extensions
+                List of file extensions (without the dot)
+            data_source_class
+                The data source class to register
         """
         for ext in extensions:
             ext = ext.lower()
@@ -36,14 +39,18 @@ class DataSourceRegistry:
     def get_data_source_class(self, file_extension: str) -> Type[DataSource]:
         """Get the data source class for the specified file extension.
         
-        Args:
-            file_extension: The file extension (with or without the dot)
+        Parameters
+        ----------
+            file_extension
+                The file extension (with or without the dot)
             
-        Returns:
+        Returns
+        -------
             The data source class for the specified file extension
-            
-        Raises:
-            ValueError: If no data source class is registered for the specified file extension
+        Raises
+        ------
+            ValueError
+                If no data source class is registered for the specified file extension
         """
         ext = file_extension.lower()
         if ext.startswith('.'):
@@ -57,7 +64,8 @@ class DataSourceRegistry:
     def get_supported_extensions(self) -> Set[str]:
         """Get the set of supported file extensions.
         
-        Returns:
+        Returns
+        -------
             Set of supported file extensions
         """
         return set(self._registry.keys())
@@ -65,10 +73,13 @@ class DataSourceRegistry:
     def is_supported(self, file_extension: str) -> bool:
         """Check if the specified file extension is supported.
         
-        Args:
-            file_extension: The file extension (with or without the dot)
+        Parameters
+        ----------
+            file_extension
+                The file extension (with or without the dot)
             
-        Returns:
+        Returns
+        -------
             True if the file extension is supported, False otherwise
         """
         ext = file_extension.lower()

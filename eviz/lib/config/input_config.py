@@ -69,11 +69,15 @@ class InputConfig:
         """
         Get the format specified for a file.
         
-        Args:
-            file_path (str): The path to the file
+        Parameters
+        ----------
+            file_path : str
+                The path to the file
             
-        Returns:
-            Optional[str]: The format or None if not specified
+        Returns
+        -------
+            Optional[str]
+                The format or None if not specified
         """
         return self._file_format_mapping.get(file_path)
 
@@ -93,13 +97,19 @@ class InputConfig:
         """
         Create a data source for the given file path and source name.
         
-        Args:
-            file_path (str): Path to the data file
-            source_name (str): Name of the source
-            reader_type (Optional[str]): Optional reader type
+        Parameters
+        ----------
+            file_path : str
+                Path to the data file
+            source_name : str
+                Name of the source
+            reader_type : Optional[str]
+                Optional reader type
             
-        Returns:
-            DataSource: The created data source
+        Returns
+        -------
+            DataSource
+                The created data source
         """
         factory = DataSourceFactory(self.config_manager)
         file_format = self._file_format_mapping.get(file_path)
@@ -119,8 +129,10 @@ class InputConfig:
         """
         Determine the reader types needed for each source and group files by reader type.
         
-        Returns:
-            Dict[str, List[Dict[str, Any]]]: A dictionary mapping source names to lists of 
+        Returns
+        -------
+            Dict[str, List[Dict[str, Any]]]
+                A dictionary mapping source names to lists of 
             file entries grouped by reader type
         """
         reader_mapping = {source_name: [] for source_name in self.source_names}
@@ -163,11 +175,15 @@ class InputConfig:
         """
         Determine the appropriate reader type based on format string.
         
-        Args:
-            format_str (str): The format string (e.g., 'netcdf', 'csv', 'hdf5')
+        Parameters
+        ----------
+            format_str : str
+                The format string (e.g., 'netcdf', 'csv', 'hdf5')
             
-        Returns:
-            str: The reader type identifier
+        Returns
+        -------
+            str
+                The reader type identifier
         """
         format_lower = format_str.lower()
         if format_lower in ['netcdf', 'nc', 'nc4']:
@@ -190,11 +206,15 @@ class InputConfig:
         """
         Determine the appropriate reader type based on file extension
         
-        Args:
-            file_path (str): The file path which might include wildcards
+        Parameters
+        ----------
+            file_path : str
+                The file path which might include wildcards
                 
-        Returns:
-            str: The reader type identifier ('NetCDF', 'CSV', 'HDF5', or 'HDF4') or None if unknown
+        Returns
+        -------
+            str
+                The reader type identifier ('NetCDF', 'CSV', 'HDF5', or 'HDF4') or None if unknown
         """
         if explicit_reader:
             return explicit_reader
@@ -232,11 +252,15 @@ class InputConfig:
         """
         Get the appropriate reader for a file.
         
-        Args:
-            source_name (str): The name of the data source
-            file_path (str): The path to the file
+        Parameters
+        ----------
+            source_name : str
+                The name of the data source
+            file_path : str
+                The path to the file
             
-        Returns:
+        Returns
+        -------
             The appropriate reader or None if not found
         """
         reader_type = self._file_reader_mapping.get(file_path)
@@ -250,10 +274,13 @@ class InputConfig:
         """
         Get the primary reader for a source.
         
-        Args:
-            source_name (str): The name of the data source
+        Parameters
+        ----------
+            source_name : str
+                The name of the data source
             
-        Returns:
+        Returns
+        -------
             The primary reader or None if not found
         """
         if source_name in self.readers:
@@ -267,13 +294,19 @@ class InputConfig:
         """
         Return the appropriate reader based on file extension using the factory.
 
-        Args:
-            source_name (str): The name of the data source.
-            file_extension (str): The file extension of the input file.
-            reader_type (str): optional reader type to use.
+        Parameters
+        ----------
+            source_name : str
+                The name of the data source.
+            file_extension : str
+                The file extension of the input file.
+            reader_type : str
+                optional reader type to use.
 
-        Returns:
-            Any: An instance of the appropriate data source class.
+        Returns
+        -------
+            Any
+                An instance of the appropriate data source class.
         """
         dummy_path = f"dummy{file_extension}"
         try:
@@ -331,11 +364,15 @@ class InputConfig:
         """
         Get all available variables across all readers for a source.
         
-        Args:
-            source_name (str): The name of the data source
+        Parameters
+        ----------
+            source_name : str
+                The name of the data source
             
-        Returns:
-            Dict[str, Any]: A dictionary of all variables
+        Returns
+        -------
+            Dict[str, Any]
+                A dictionary of all variables
         """
         all_vars = {}
         if source_name in self.readers:
@@ -353,12 +390,17 @@ class InputConfig:
         """
         Get metadata for a specific file.
         
-        Args:
-            source_name (str): The name of the data source
-            file_path (str): The path to the file
+        Parameters
+        ----------
+            source_name : str
+                The name of the data source
+            file_path : str
+                The path to the file
             
-        Returns:
-            Dict[str, Any]: Metadata for the file
+        Returns
+        -------
+            Dict[str, Any]
+                Metadata for the file
         """
         reader = self.get_reader_for_file(source_name, file_path)
         if reader:
@@ -475,12 +517,17 @@ class InputConfig:
         """
         Get the list of plot types for a specific field.
 
-        Args:
-            file_entry (Dict[str, Any]): The file entry from file_list
-            field_name (str): The name of the field
+        Parameters
+        ----------
+            file_entry : Dict[str, Any]
+                The file entry from file_list
+            field_name : str
+                The name of the field
 
-        Returns:
-            List[str]: List of plot types (e.g., ['bar', 'pie', 'hist'])
+        Returns
+        -------
+            List[str]
+                List of plot types (e.g., ['bar', 'pie', 'hist'])
         """
         if 'to_plot' not in file_entry:
             return []
@@ -509,13 +556,19 @@ class InputConfig:
         """
         Get plotting options for a specific field and plot type.
 
-        Args:
-            file_entry (Dict[str, Any]): The file entry from file_list
-            field_name (str): The name of the field
-            plot_type (str, optional): The specific plot type to get options for
+        Parameters
+        ----------
+            file_entry : Dict[str, Any]
+                The file entry from file_list
+            field_name : str
+                The name of the field
+            plot_type : str, optional
+                The specific plot type to get options for
 
-        Returns:
-            Dict[str, Any]: Dictionary of plotting options
+        Returns
+        -------
+            Dict[str, Any]
+                Dictionary of plotting options
         """
         if 'to_plot' not in file_entry:
             return {}

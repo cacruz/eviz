@@ -244,12 +244,18 @@ def print_map(config: "ConfigManager",
               level: Optional[int] = None) -> None:
     """Save or display a plot, handling output directory, file naming, and optional archiving.
 
-    Args:
-        config: Configuration object with plotting and output options.
-        plot_type (str): Type of plot (e.g., 'xy', 'yz', etc.).
-        findex (int): File index for naming.
-        fig: Figure object to save or show.
-        level (int, optional): Vertical level for the plot, if applicable.
+    Parameters
+    ----------
+        config
+            Configuration object with plotting and output options.
+        plot_type : str
+            Type of plot (e.g., 'xy', 'yz', etc.).
+        findex : int
+            File index for naming.
+        fig
+            Figure object to save or show.
+        level : int, optional
+            Vertical level for the plot, if applicable.
     """
 
     def resolve_output_dir(config: "ConfigManager") -> str:
@@ -311,10 +317,13 @@ def print_map(config: "ConfigManager",
     def _process_custom_filename(custom_filename: str) -> str:
         """Process custom filename handling path expansion and extension logic.
         
-        Args:
-            custom_filename: User-provided filename (may include path, extension)
+        Parameters
+        ----------
+            custom_filename
+                User-provided filename (may include path, extension)
             
-        Returns:
+        Returns
+        -------
             Processed filename ready for use
         """
         # Expand user directory (~)
@@ -326,11 +335,15 @@ def print_map(config: "ConfigManager",
     def _add_extension_if_needed(filename: str, default_extension: str) -> str:
         """Add file extension if not already present.
         
-        Args:
-            filename: Filename that may or may not have an extension
-            default_extension: Extension to add if none present (e.g., 'png')
+        Parameters
+        ----------
+            filename
+                Filename that may or may not have an extension
+            default_extension
+                Extension to add if none present (e.g., 'png')
             
-        Returns:
+        Returns
+        -------
             Filename with proper extension
         """
         # Check if filename already has an extension
@@ -811,8 +824,10 @@ def colorbar(mappable):
 def add_logo(fig: Figure) -> None:
     """Adds image logo to figure, positioned at the top left.
 
-    Args:
-        fig (Figure): The eviz Figure object
+    Parameters
+    ----------
+        fig : Figure
+            The eviz Figure object
     """
     try:
         logo_paths = [
@@ -866,9 +881,12 @@ def add_logo(fig: Figure) -> None:
 def add_logo_ax(fig: Figure, desired_width_ratio: float=0.10) -> None:
     """Adds image logo to figure using axes coordinates with proper scaling.
 
-    Args:
-        fig (Figure): The eviz Figure object
-        desired_width_ratio (float): Width of logo as a fraction of figure width. Defaults to 0.10 (10%)
+    Parameters
+    ----------
+        fig : Figure
+            The eviz Figure object
+        desired_width_ratio : float
+            Width of logo as a fraction of figure width. Defaults to 0.10 (10%)
     """
     try:
         logo_paths = [
@@ -1020,10 +1038,14 @@ def load_log():
 def archive(config: "ConfigManager", output_dir: str, event_stamp: str) -> None:
     """Archive data for web results.
 
-    Args:
-        config (ConfigManager): Configuration object
-        output_dir (str): Output directory to store images
-        event_stamp (str): Time stamp for archived web results
+    Parameters
+    ----------
+        config : ConfigManager
+            Configuration object
+        output_dir : str
+            Output directory to store images
+        event_stamp : str
+            Time stamp for archived web results
     """
     fs = [f for f in os.listdir(output_dir) if os.path.isfile(os.path.join(output_dir, f))]
     full_fs = [os.path.join(output_dir, f) for f in fs]

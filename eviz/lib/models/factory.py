@@ -31,9 +31,12 @@ class DataSourceFactory:
         """
         Register a data source class with a source name.
         
-        Args:
-            source_name: Name to associate with this data source
-            data_source_class: Class to instantiate for this source name
+        Parameters
+        ----------
+            source_name
+                Name to associate with this data source
+            data_source_class
+                Class to instantiate for this source name
         """
         cls._registry[source_name] = data_source_class
         cls._logger.debug(f"Registered data source '{source_name}' -> {data_source_class.__name__}")
@@ -43,11 +46,15 @@ class DataSourceFactory:
         """
         Create a data source instance for the given source name.
         
-        Args:
-            source_name: Name of the data source to create
-            config_manager: Configuration manager instance
+        Parameters
+        ----------
+            source_name
+                Name of the data source to create
+            config_manager
+                Configuration manager instance
             
-        Returns:
+        Returns
+        -------
             Data source instance or None if not found
         """
         if source_name not in cls._registry:
@@ -64,7 +71,8 @@ class DataSourceFactory:
         """
         Get list of all registered source names.
         
-        Returns:
+        Returns
+        -------
             List of registered source names
         """
         return list(cls._registry.keys())
@@ -74,10 +82,13 @@ class DataSourceFactory:
         """
         Check if a source name is registered.
         
-        Args:
-            source_name: Name to check
+        Parameters
+        ----------
+            source_name
+                Name to check
             
-        Returns:
+        Returns
+        -------
             True if registered, False otherwise
         """
         return source_name in cls._registry
@@ -90,10 +101,13 @@ class DataSourceFactory:
         This method provides compatibility with the old factory interface
         where factories were instantiated and then called to create instances.
         
-        Args:
-            config_manager: Configuration manager instance
+        Parameters
+        ----------
+            config_manager
+                Configuration manager instance
             
-        Returns:
+        Returns
+        -------
             Legacy GenericSource instance for backward compatibility
         """
         # Import here to avoid circular imports

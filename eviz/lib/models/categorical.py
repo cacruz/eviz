@@ -46,10 +46,13 @@ class CategoricalDataSource(GenericDataSource):
         For categorical data, we convert the xarray Dataset to a pandas
         DataFrame for easier manipulation of tabular data.
 
-        Args:
-            dataset: Raw xarray Dataset (typically loaded from CSV)
+        Parameters
+        ----------
+            dataset
+                Raw xarray Dataset (typically loaded from CSV)
 
-        Returns:
+        Returns
+        -------
             Dictionary containing processed data and metadata
         """
         self.logger.debug(f"Processing categorical dataset with variables: {list(dataset.data_vars)}")
@@ -74,10 +77,13 @@ class CategoricalDataSource(GenericDataSource):
         """
         Validate that the dataset is compatible with categorical data processing.
 
-        Args:
-            dataset: Dataset to validate
+        Parameters
+        ----------
+            dataset
+                Dataset to validate
 
-        Returns:
+        Returns
+        -------
             True if dataset is valid for categorical operations
         """
         if dataset is None or not isinstance(dataset, xr.Dataset):
@@ -104,7 +110,8 @@ class CategoricalDataSource(GenericDataSource):
         """
         Get list of plot types supported by categorical data source.
 
-        Returns:
+        Returns
+        -------
             List of supported plot type strings
         """
         return ['bar', 'hist', 'scatter', 'box', 'pie']

@@ -15,19 +15,23 @@ class ConfigurationAdapter:
     pipeline. It interprets configuration settings, loads and processes data according to
     those settings, and provides access to the resulting data sources and datasets.
     
-    Attributes:
+    Attributes
+    ----------
         config_manager: The configuration manager containing app_data, input_config, etc.
         data_sources: Dictionary mapping file paths to their corresponding DataSource objects
         
-    Note:
+    Note
+    ----
         The adapter initializes a DataPipeline instance and attaches it to the config_manager
         as _pipeline. This pipeline is used for all data processing operations.
     """
     def __init__(self, config_manager):
         """Initialize a new ConfigurationAdapter.
         
-        Args:
-            config_manager: The configuration manager
+        Parameters
+        ----------
+            config_manager
+                The configuration manager
         """
         self.logger.debug("Initialize data pipeline")
         self.config_manager = config_manager
@@ -117,10 +121,13 @@ class ConfigurationAdapter:
     def _get_file_path(file_entry: Dict[str, Any]) -> str:
         """Get the full file path from a file entry.
         
-        Args:
-            file_entry: The file entry from app_data.inputs
+        Parameters
+        ----------
+            file_entry
+                The file entry from app_data.inputs
             
-        Returns:
+        Returns
+        -------
             The full file path
         """
         location = file_entry.get('location', '')
@@ -134,10 +141,13 @@ class ConfigurationAdapter:
     def get_data_source(self, file_path: str) -> Optional[DataSource]:
         """Get a data source from the adapter.
         
-        Args:
-            file_path: Path to the data file
+        Parameters
+        ----------
+            file_path
+                Path to the data file
             
-        Returns:
+        Returns
+        -------
             The data source for the file path, or None if not found
         """
         return self.data_sources.get(file_path)
@@ -145,7 +155,8 @@ class ConfigurationAdapter:
     def get_all_data_sources(self) -> Dict[str, DataSource]:
         """Get all data sources from the adapter.
         
-        Returns:
+        Returns
+        -------
             A dictionary mapping file paths to data sources
         """
         return self.data_sources
@@ -153,7 +164,8 @@ class ConfigurationAdapter:
     def get_dataset(self) -> Optional[xr.Dataset]:
         """Get the integrated dataset from the adapter.
         
-        Returns:
+        Returns
+        -------
             The integrated dataset, or None if not available
         """
         if hasattr(self.config_manager, '_pipeline') and self.config_manager._pipeline:

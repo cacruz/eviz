@@ -21,11 +21,13 @@ class DataTransformer:
     def transform_data_source(self, data_source: DataSource, **kwargs) -> DataSource:
         """Transform a data source.
         
-        Args:
-            data_source: The data source to transform
-            **kwargs: Additional transformation parameters
+        Parameters
+        ----------
+            data_source
+                The data source to transform
             
-        Returns:
+        Returns
+        -------
             The transformed data source
         """
         self.logger.debug("Transforming data source")
@@ -42,10 +44,13 @@ class DataTransformer:
     def _transform_dataset(dataset: xr.Dataset) -> xr.Dataset:
         """Transform a Xarray dataset.
         
-        Args:
-            dataset: The dataset to transform
+        Parameters
+        ----------
+            dataset
+                The dataset to transform
 
-        Returns:
+        Returns
+        -------
             The transformed dataset
         """
         # TODO: Implement data transformation logic

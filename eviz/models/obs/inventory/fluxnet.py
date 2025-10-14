@@ -16,8 +16,10 @@ warnings.filterwarnings("ignore")
 class Fluxnet(GenericSource):
     """Define Fluxnet inventory data and functions.
 
-    Args:
-        config (Config): Config object associated with this data source
+    Parameters
+    ----------
+        config : Config
+            Config object associated with this data source
     """
     config: Config = None
     source_data: Any = None

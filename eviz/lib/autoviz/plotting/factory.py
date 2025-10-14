@@ -31,15 +31,20 @@ class PlotterFactory:
     def create_plotter(plot_type, backend="matplotlib"):
         """Create a plotter for the given plot type and backend.
         
-        Args:
-            plot_type: Type of plot ('xy', 'yz', 'xt', 'sc', etc.)
-            backend: Backend to use ('matplotlib', 'hvplot', 'altair')
+        Parameters
+        ----------
+            plot_type
+                Type of plot ('xy', 'yz', 'xt', 'sc', etc.)
+            backend
+                Backend to use ('matplotlib', 'hvplot', 'altair')
             
-        Returns:
+        Returns
+        -------
             An instance of the appropriate plotter
-            
-        Raises:
-            ValueError: If no plotter is available for the given plot type and backend
+        Raises
+        ------
+            ValueError
+                If no plotter is available for the given plot type and backend
         """
         # Dictionary mapping (plot_type, backend) to plotter class
         plotters = {

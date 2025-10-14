@@ -19,11 +19,15 @@ class HvplotLinePlotter(BasePlotter):
     def plot(self, config, data_to_plot):
         """Create an interactive Line plot using HvPlot.
         
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple containing (data, x, y, field_name, plot_type, findex, fig)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple containing (data, x, y, field_name, plot_type, findex, fig)
         
-        Returns:
+        Returns
+        -------
             The created HvPlot object
         """
         data, x, y, field_name, plot_type, findex, _ = data_to_plot

@@ -12,9 +12,12 @@ class HDF5DataSource(DataSource):
     def __init__(self, model_name: str = None, config_manager=None):
         """Initialize a new HDF5DataSource.
         
-        Args:
-            model_name: Name of the model this data source belongs to
-            config_manager: Configuration manager instance
+        Parameters
+        ----------
+            model_name
+                Name of the model this data source belongs to
+            config_manager
+                Configuration manager instance
         """
         super().__init__(model_name, config_manager)
         self.h5_file = None
@@ -27,10 +30,13 @@ class HDF5DataSource(DataSource):
     def load_data(self, file_path: str) -> xr.Dataset:
         """Load data from an HDF5 file into an Xarray dataset.
         
-        Args:
-            file_path: Path to the HDF5 file
+        Parameters
+        ----------
+            file_path
+                Path to the HDF5 file
             
-        Returns:
+        Returns
+        -------
             An Xarray dataset containing the loaded data
         """
         self.logger.debug(f"Loading HDF5 data from {file_path}")
@@ -57,10 +63,13 @@ class HDF5DataSource(DataSource):
     def _load_with_h5py(self, file_path: str) -> xr.Dataset:
         """Load an HDF5 file using h5py and convert to xarray.
         
-        Args:
-            file_path: Path to the HDF5 file
+        Parameters
+        ----------
+            file_path
+                Path to the HDF5 file
             
-        Returns:
+        Returns
+        -------
             An Xarray dataset containing the loaded data
         """
         self.h5_file = h5py.File(file_path, 'r')
@@ -73,11 +82,16 @@ class HDF5DataSource(DataSource):
     def _process_h5_group(self, group, dataset_dict, coords_dict, path=""):
         """Process an HDF5 group recursively.
         
-        Args:
-            group: The HDF5 group to process
-            dataset_dict: Dictionary to store datasets
-            coords_dict: Dictionary to store coordinates
-            path: Current path in the HDF5 hierarchy
+        Parameters
+        ----------
+            group
+                The HDF5 group to process
+            dataset_dict
+                Dictionary to store datasets
+            coords_dict
+                Dictionary to store coordinates
+            path
+                Current path in the HDF5 hierarchy
         """
         for key, item in group.items():
             item_path = f"{path}/{key}" if path else key
@@ -100,8 +114,10 @@ class HDF5DataSource(DataSource):
     def _extract_metadata(self, dataset: xr.Dataset) -> None:
         """Extract metadata from the dataset.
         
-        Args:
-            dataset: The dataset to extract metadata from
+        Parameters
+        ----------
+            dataset
+                The dataset to extract metadata from
         """
         if dataset is None:
             return

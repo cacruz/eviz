@@ -26,15 +26,18 @@ class Geos(GriddedSource):
 def parse_history(hist_fname):
     """ Parse a GEOS HISTORY.rc file.
 
-    Args:
-        hist_fname (str) : Name of HISTORY.rc file
+    Parameters
+    ----------
+        hist_fname : str
+            Name of HISTORY.rc file
 
-    Returns:
-        A dictionary containing the following keys:
-         - EXPID
-         - EXPDSC
-         - EXPSRC
-         - COLLECTIONS
+    Returns
+    -------
+        A dictionary containing the following keys
+            - EXPID
+            - EXPDSC
+            - EXPSRC
+            - COLLECTIONS
       The value associated with the COLLECTIONS key is itself a dictionary of all the
       collections produced by HISTORY. Each collection is also a dictionary of the
       settings (template, mode, resolution, fields, etc.) associated with that collection.
@@ -97,11 +100,15 @@ def get_collection(col_name, lines):
        parses the lines to create a dictionary of the settings associated with the
        collection.
 
-       Args:
-          col_name: (str) name of a collection
-          lines: (list) list of lines in the HISTORY.rc file
+       Parameters
+       ----------
+          col_name
+              (str) name of a collection
+          lines
+              (list) list of lines in the HISTORY.rc file
 
-       Returns:
+       Returns
+       -------
           - Dictionary of all the settings for the collection.
     """
 

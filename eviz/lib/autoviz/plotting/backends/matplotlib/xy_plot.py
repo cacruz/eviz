@@ -17,11 +17,15 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
     def plot(self, config, data_to_plot):
         """Create an XY plot using Matplotlib.
         
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple containing (data2d, x, y, field_name, plot_type, findex, fig)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple containing (data2d, x, y, field_name, plot_type, findex, fig)
         
-        Returns:
+        Returns
+        -------
             The created figure
         """
         # TODO: remove field_name from data_to_plot tuple (get from data2d.name)

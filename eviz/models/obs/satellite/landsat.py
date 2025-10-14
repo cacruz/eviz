@@ -17,8 +17,10 @@ warnings.filterwarnings("ignore")
 class Landsat(GenericSource):
     """Define LandSAT data and functions.
 
-    Args:
-        config (Config): Config object associated with this data source
+    Parameters
+    ----------
+        config : Config
+            Config object associated with this data source
     """
     config: Config = None
     source_data: Any = None

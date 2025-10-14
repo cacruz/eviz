@@ -229,11 +229,15 @@ class Crest(GenericSource):
         if it should be processed as observational data (e.g., swath format)
         or as standard gridded data.
         
-        Args:
-            data_array: The xarray DataArray to check
+        Parameters
+        ----------
+            data_array
+                The xarray DataArray to check
             
-        Returns:
-            bool: True if the data should be treated as observational
+        Returns
+        -------
+            bool
+                True if the data should be treated as observational
         """
         if data_array is None:
             return False

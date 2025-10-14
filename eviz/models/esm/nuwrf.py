@@ -239,13 +239,19 @@ class NuWrf(GriddedSource):
     def coord_names(self, source_name, source_data, pid):
         """Get WRF or LIS coord names based on field and plot type.
 
-        Args:
-            source_name (str): Source name
-            source_data (dict): Source data
-            pid (str): Plot type
+        Parameters
+        ----------
+            source_name : str
+                Source name
+            source_data : dict
+                Source data
+            pid : str
+                Plot type
 
-        Returns:
-            list: List of coordinate name tuples
+        Returns
+        -------
+            list
+                List of coordinate name tuples
         """
         coords = []
         if source_name == 'wrf':
@@ -363,12 +369,17 @@ class NuWrf(GriddedSource):
     def find_matching_dimension(self, field_dims, dim_name):
         """Returns the first matching dimension name found in field_dims.
 
-        Args:
-            field_dims (tuple): Tuple of dimension names (e.g., from xarray.DataArray.dims)
-            dim_name (str): Dimension name to search for
+        Parameters
+        ----------
+            field_dims : tuple
+                Tuple of dimension names (e.g., from xarray.DataArray.dims)
+            dim_name : str
+                Dimension name to search for
 
-        Returns:
-            str or None: Matched dimension name or None if not found
+        Returns
+        -------
+            str or None
+                Matched dimension name or None if not found
         """
         for dim in field_dims:
             if dim in self.config_manager.meta_coords[dim_name][self.source_name]['dim']:

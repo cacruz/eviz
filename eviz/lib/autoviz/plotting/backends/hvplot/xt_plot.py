@@ -20,11 +20,15 @@ class HvplotXTPlotter(XTPlotter):
     def plot(self, config, data_to_plot):
         """Create an interactive XT plot using HvPlot.
         
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple containing (data2d, x, y, field_name, plot_type, findex, fig)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple containing (data2d, x, y, field_name, plot_type, findex, fig)
         
-        Returns:
+        Returns
+        -------
             The created HvPlot object
         """
         data2d, _, _, field_name, plot_type, findex, _ = data_to_plot
@@ -196,11 +200,15 @@ class HvplotXTPlotter(XTPlotter):
     def _convert_to_dataframe(self, data2d, time_coords):
         """Convert time series data to pandas DataFrame.
         
-        Args:
-            data2d: Time series data
-            time_coords: Time coordinates
+        Parameters
+        ----------
+            data2d
+                Time series data
+            time_coords
+                Time coordinates
             
-        Returns:
+        Returns
+        -------
             pandas DataFrame with columns 'time', 'value'
         """
         try:

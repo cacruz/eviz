@@ -27,9 +27,12 @@ class HvplotYZPlotter(YZPlotter):
     def plot(self, config_manager, plot_data):
         """Create a YZ (latitude-height) plot using hvplot.
 
-        Args:
-            config_manager: The configuration manager object
-            plot_data: Tuple containing (data_array, x, y, field_name, plot_type, file_index, figure)
+        Parameters
+        ----------
+            config_manager
+                The configuration manager object
+            plot_data
+                Tuple containing (data_array, x, y, field_name, plot_type, file_index, figure)
                 - data_array: xarray.DataArray containing the data to plot
                 - x: x-coordinates (latitude values)
                 - y: y-coordinates (height/pressure levels)
@@ -38,8 +41,10 @@ class HvplotYZPlotter(YZPlotter):
                 - file_index: Index of the file being plotted
                 - figure: Figure object to plot on
 
-        Returns:
-            holoviews.Element: The created plot
+        Returns
+        -------
+            holoviews.Element
+                The created plot
         """
         data_array, x, y, field_name, plot_type, file_index, figure = plot_data
 

@@ -17,12 +17,16 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
     def plot(self, config, data_to_plot):
         """Create a YZ plot using Matplotlib.
         
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple containing (data2d, x, y, field_name, plot_type, findex, fig)
-                         or (data2d, x, y, field_name, plot_type, findex, fig, global_vmin, global_vmax)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple containing (data2d, x, y, field_name, plot_type, findex, fig)
+                or (data2d, x, y, field_name, plot_type, findex, fig, global_vmin, global_vmax)
         
-        Returns:
+        Returns
+        -------
             The created figure
         """
         # Handle both old 7-element and new 9-element tuples (with global min/max for GIF consistency)

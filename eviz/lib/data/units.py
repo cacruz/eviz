@@ -30,11 +30,13 @@ def get_airmass(config, dry_run=False):
     """
     Retrieves airmass field stored in a file or URL
 
-    Parameters:
+    Parameters
+    ----------
         config: eviz config object
         dry_run: bool
 
-    Returns:
+    Returns
+    -------
         airmass field: xArray
     """
     global _airmass_cache
@@ -113,10 +115,12 @@ def download_airmass(url):
     """
     Downloads airmass file
 
-    Parameters:
+    Parameters
+    ----------
         url (str): URL of the file
 
-    Returns:
+    Returns
+    -------
         xArray dataset
     """
     filename = os.path.basename(url)
@@ -133,10 +137,12 @@ def calculate_total_mass(airmass):
     """
     Calculates the total mass given the airmass per square meter field.
 
-    Parameters:
+    Parameters
+    ----------
         airmass (xarray.DataArray): The input data array representing mass per square meter.
 
-    Returns:
+    Returns
+    -------
         float: The total mass in kilograms.
     """
     area_expanded = calculate_total_area(airmass)
@@ -147,10 +153,12 @@ def calculate_total_area(data):
     """
     Calculates the total surface area for a regular lat-lon grid.
 
-    Parameters:
+    Parameters
+    ----------
         data (xarray.DataArray): The input data array.
 
-    Returns:
+    Returns
+    -------
         xarray.DataArray: An array with the same shape as data containing cell areas in m^2.
     """
     dlat = np.deg2rad(data.coords['lat'].diff('lat').mean().item())
@@ -166,11 +174,13 @@ def adjust_units(units):
     Creates a consistent unit string that will be used in the unit
     conversion routines below.
 
-    Parameters:
+    Parameters
+    ----------
         units: str
             Input unit string.
 
-    Returns:
+    Returns
+    -------
         adjusted_units: str
             Output unit string, adjusted to a consistent value.
 
@@ -356,10 +366,12 @@ def kg_to_mol(kg_frac, molar_mass_species):
 def mol_to_molecules_cm2(mol_frac, air_column_density):
     """
     Convert from mol mol⁻¹ to molecules cm⁻².
-    Parameters:
+    Parameters
+    ----------
         mol_frac: molar fraction of the species (mol mol⁻¹)
         air_column_density: air column density (molecules cm⁻²)
-    Returns:
+    Returns
+    -------
         number of molecules per cm²
     """
     return mol_frac * air_column_density
@@ -581,8 +593,8 @@ class Units:
         the units are supported. Otherwise, the conversion specification can be made in eviz's config
         files (APP and SPECS YAML files). Please see user's guide for more information.
 
-    Parameters:
-
+    Parameters
+    ----------
     config (ConfigManager) :
         Representation of the model configuration used to specify data sources and
         user choices for the map generation.
@@ -604,7 +616,8 @@ class Units:
                      airmass=None):
         """ Conversion method for chemical species
 
-        Parameters:
+        Parameters
+        ----------
             data (xArray): data to undergo unit conversion
             to_unit (str): data destination unit
             species_name (str): species name of the data
@@ -759,7 +772,8 @@ class Units:
     def convert(self, data, species_name, to_unit):
         """ Conversion method for non-chemical species (e.g. atmospheric fields)
 
-        Parameters:
+        Parameters
+        ----------
             to_unit (str): data destination unit
             species_name (str): species name of the data
             data (xArray): data to undergo unit conversion

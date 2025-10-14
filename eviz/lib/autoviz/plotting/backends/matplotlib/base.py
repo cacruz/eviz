@@ -30,13 +30,19 @@ class MatplotlibBasePlotter(BasePlotter):
     def _coarsen_for_plotting(self, x, y, data2d, max_size=None):
         """Coarsen high-resolution data for faster plotting.
         
-        Args:
-            x: X coordinate array
-            y: Y coordinate array  
-            data2d: 2D data array
-            max_size: Maximum dimension size (uses coarse_max_size from ax_opts or 2000 default)
+        Parameters
+        ----------
+            x
+                X coordinate array
+            y
+                Y coordinate array  
+            data2d
+                2D data array
+            max_size
+                Maximum dimension size (uses coarse_max_size from ax_opts or 2000 default)
             
-        Returns:
+        Returns
+        -------
             Tuple of (coarsened_x, coarsened_y, coarsened_data2d)
         """
         # Get max_size from ax_opts if not provided
@@ -401,13 +407,19 @@ class MatplotlibBasePlotter(BasePlotter):
     def add_shared_colorbar(self, fig, cfilled_objects, field_name, config):
         """Add a shared colorbar for all plots.
 
-        Args:
-            fig: The figure object
-            cfilled_objects: List of filled contour objects
-            field_name: Name of the field being plotted
-            config: Configuration manager
+        Parameters
+        ----------
+            fig
+                The figure object
+            cfilled_objects
+                List of filled contour objects
+            field_name
+                Name of the field being plotted
+            config
+                Configuration manager
 
-        Returns:
+        Returns
+        -------
             The created colorbar object
         """
         self.logger.debug(f"Adding shared colorbar for {field_name}")
@@ -685,14 +697,18 @@ class MatplotlibBasePlotter(BasePlotter):
     def plot_text(self, config, field_name, pid, level=None, data=None, *args, **kwargs):
         """Add text to a map.
 
-        Args:
-            config (ConfigManager): Configuration object for the plot
-            field_name (str): Name of the field
-            pid (str): Plot type identifier
-            level (int, optional): Vertical level. Defaults to None
-            data (Any, optional): xarray Data for basic stats. Defaults to None
-            *args: Additional positional arguments for customization
-            **kwargs: Additional keyword arguments for customization
+        Parameters
+        ----------
+            config : ConfigManager
+                Configuration object for the plot
+            field_name : str
+                Name of the field
+            pid : str
+                Plot type identifier
+            level : int, optional
+                Vertical level. Defaults to None
+            data : Any, optional
+                xarray Data for basic stats. Defaults to None
         """
         if isinstance(self.ax, list):  # Check if ax is a list
             for single_ax in self.ax:

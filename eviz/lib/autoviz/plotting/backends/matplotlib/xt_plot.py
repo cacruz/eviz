@@ -18,11 +18,15 @@ class MatplotlibXTPlotter(MatplotlibBasePlotter):
     def plot(self, config, data_to_plot):
         """Create an XT plot using Matplotlib.
         
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple containing (data2d, x, y, field_name, plot_type, findex, fig)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple containing (data2d, x, y, field_name, plot_type, findex, fig)
         
-        Returns:
+        Returns
+        -------
             The created figure
         """
         # Handle both 7-element and 9-element tuples (with global min/max for overlay consistency)

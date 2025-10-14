@@ -66,12 +66,17 @@ def mkdir_p(path):
 def get_nested_key_value(dictionary: Dict, keys: List[str]) -> Any:
     """Get the value of a nested key in a dictionary.
 
-    Args:
-        dictionary (Dict): The input dictionary
-        keys (List[str]): A list of keys specifying the path to the nested key
+    Parameters
+    ----------
+        dictionary : Dict
+            The input dictionary
+        keys : List[str]
+            A list of keys specifying the path to the nested key
 
-    Returns:
-        Any: The value of the nested key, or None if the key doesn't exist
+    Returns
+    -------
+        Any
+            The value of the nested key, or None if the key doesn't exist
     """
     current_dict = dictionary
     for key in keys:
@@ -107,12 +112,16 @@ def get_repo_root_dir(repo_path: str) -> str:
 def get_project_root(anchor=".git"):
     """Get the top-level project directory by searching for an anchor name.
 
-    Args:
-        anchor (str): A filename or directory that is unique to the project root (e.g., 'README.md', '.git').
+    Parameters
+    ----------
+        anchor : str
+            A filename or directory that is unique to the project root (e.g., 'README.md', '.git').
             Defaults to '.git'
 
-    Returns:
-        Path: Path to the project root directory, or None if not found
+    Returns
+    -------
+        Path
+            Path to the project root directory, or None if not found
     """
     current_dir = pathlib.Path(__file__).resolve().parent
 
@@ -197,12 +206,17 @@ def get_nested_key(data: Dict, keys: List[str], default=None) -> Any:
     """
     Safely retrieve a nested key from a dictionary.
 
-    Args:
-        data (dict): The dictionary to retrieve the key from.
-        keys (list): A list of keys representing the path to the nested key.
-        default: The default value to return if the key is not found.
+    Parameters
+    ----------
+        data : dict
+            The dictionary to retrieve the key from.
+        keys : list
+            A list of keys representing the path to the nested key.
+        default
+            The default value to return if the key is not found.
 
-    Returns:
+    Returns
+    -------
         The value of the nested key, or the default value if the key is not found.
     """
     try:
@@ -217,12 +231,17 @@ def join_file_path(base_path: str, file_name: str) -> str:
     """
     Join a base path and file name into a full file path.
 
-    Args:
-        base_path (str): The base directory path.
-        file_name (str): The file name.
+    Parameters
+    ----------
+        base_path : str
+            The base directory path.
+        file_name : str
+            The file name.
 
-    Returns:
-        str: The full file path.
+    Returns
+    -------
+        str
+            The full file path.
     """
     return os.path.join(base_path, file_name) if base_path else file_name
 
@@ -231,11 +250,15 @@ def log_method(func):
     """
     Decorator to log the start and end of a method.
 
-    Args:
-        func (callable): The method to decorate.
+    Parameters
+    ----------
+        func : callable
+            The method to decorate.
 
-    Returns:
-        callable: The wrapped method.
+    Returns
+    -------
+        callable
+            The wrapped method.
     """
 
     @wraps(func)

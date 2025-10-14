@@ -133,10 +133,13 @@ class NetCDFDataSource(DataSource):
     def get_dataset(self, file_name: str) -> Optional[xr.Dataset]:
         """Get a specific dataset by file name.
         
-        Args:
-            file_name: Name of the file
+        Parameters
+        ----------
+            file_name
+                Name of the file
             
-        Returns:
+        Returns
+        -------
             The dataset for the specified file, or None if not found
         """
         return self.datasets.get(file_name)
@@ -144,7 +147,8 @@ class NetCDFDataSource(DataSource):
     def get_all_datasets(self) -> Dict[str, xr.Dataset]:
         """Get all loaded datasets.
         
-        Returns:
+        Returns
+        -------
             Dictionary of all loaded datasets
         """
         return self.datasets
@@ -156,10 +160,13 @@ class NetCDFDataSource(DataSource):
         This method renames dimensions to standard names (lon, lat, lev, time)
         regardless of their original names in the source data.
         
-        Args:
-            ds: xarray Dataset to rename dimensions in
+        Parameters
+        ----------
+            ds
+                xarray Dataset to rename dimensions in
             
-        Returns:
+        Returns
+        -------
             xarray Dataset with standardized dimension names
         """
         self.logger.info("Renaming dimensions to standard names")

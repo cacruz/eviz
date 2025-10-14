@@ -19,9 +19,12 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
     def plot(self, config, data_to_plot):
         """Create a correlation map using Matplotlib.
         
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple containing (data2d, x, y, field_name, plot_type, findex, fig)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple containing (data2d, x, y, field_name, plot_type, findex, fig)
                 If data2d is a tuple of two DataArrays, compute correlation between them
                 Otherwise, assume data2d is already a correlation map        
         """
@@ -325,12 +328,17 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
         """
         Calculate the coefficient of determination (R^2) between two datasets.
         
-        Args:
-            data1 (xarray.DataArray): First dataset
-            data2 (xarray.DataArray): Second dataset
+        Parameters
+        ----------
+            data1 : xarray.DataArray
+                First dataset
+            data2 : xarray.DataArray
+                Second dataset
             
-        Returns:
-            float: The R² value
+        Returns
+        -------
+            float
+                The R² value
         """
         flat1 = data1.values.flatten()
         flat2 = data2.values.flatten()
@@ -356,11 +364,15 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
         """
         Estimate R^2 from correlation values.
         
-        Args:
-            corr_data (xarray.DataArray): Correlation data
+        Parameters
+        ----------
+            corr_data : xarray.DataArray
+                Correlation data
             
-        Returns:
-            float: Estimated R^2 value
+        Returns
+        -------
+            float
+                Estimated R^2 value
         """
         corr_values = corr_data.values.flatten()
         corr_values = corr_values[~np.isnan(corr_values)]

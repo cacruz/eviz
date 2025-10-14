@@ -26,7 +26,8 @@ class DataPipeline:
     This design allows for flexible data processing workflows while maintaining separation
     of concerns between different processing stages.
     
-    Attributes:
+    Attributes
+    ----------
         config_manager (ConfigManager): Configuration manager containing application settings
         reader (DataReader): Component for reading data from files
         processor (DataProcessor): Component for processing data
@@ -46,8 +47,10 @@ class DataPipeline:
     def __init__(self, config_manager=None):
         """Initialize a new DataPipeline.
         
-        Args:
-            config_manager: Configuration manager instance
+        Parameters
+        ----------
+            config_manager
+                Configuration manager instance
         """
         self.logger = logging.getLogger(__name__)
         self.reader = DataReader(config_manager)
@@ -65,16 +68,25 @@ class DataPipeline:
                     file_format: Optional[str] = None) -> DataSource:
         """Process a single file through the pipeline.
         
-        Args:
-            file_path: Path to the data file
-            model_name: Optional name of the model this data source belongs to
-            process: Whether to apply data processing
-            transform: Whether to apply data transformation
-            transform_params: Parameters for data transformation
-            metadata: Optional metadata to attach to the data source
-            file_format: Optional format of the file
+        Parameters
+        ----------
+            file_path
+                Path to the data file
+            model_name
+                Optional name of the model this data source belongs to
+            process
+                Whether to apply data processing
+            transform
+                Whether to apply data transformation
+            transform_params
+                Parameters for data transformation
+            metadata
+                Optional metadata to attach to the data source
+            file_format
+                Optional format of the file
             
-        Returns:
+        Returns
+        -------
             A processed data source
         """
         self.logger.debug(f"Processing file: {file_path}")
@@ -101,14 +113,21 @@ class DataPipeline:
                      transform_params: Optional[Dict[str, Any]] = None) -> Dict[str, DataSource]:
         """Process multiple files through the pipeline.
         
-        Args:
-            file_paths: List of paths to data files
-            model_name: Optional name of the model these data sources belong to
-            process: Whether to apply data processing
-            transform: Whether to apply data transformation
-            transform_params: Parameters for data transformation
+        Parameters
+        ----------
+            file_paths
+                List of paths to data files
+            model_name
+                Optional name of the model these data sources belong to
+            process
+                Whether to apply data processing
+            transform
+                Whether to apply data transformation
+            transform_params
+                Parameters for data transformation
             
-        Returns:
+        Returns
+        -------
             A dictionary mapping file paths to processed data sources
         """
         self.logger.debug(f"Processing {len(file_paths)} files")
@@ -127,12 +146,16 @@ class DataPipeline:
                               integration_params: Optional[Dict[str, Any]] = None) -> xr.Dataset:
         """Integrate data sources into a single dataset.
         
-        Args:
-            file_paths: List of paths to data files to integrate. If None, all data sources
-                        will be integrated.
-            integration_params: Parameters for data integration
+        Parameters
+        ----------
+            file_paths
+                List of paths to data files to integrate. If None, all data sources
+                will be integrated.
+            integration_params
+                Parameters for data integration
             
-        Returns:
+        Returns
+        -------
             An integrated dataset
         """
         self.logger.debug("Integrating data sources")
@@ -154,12 +177,17 @@ class DataPipeline:
     def integrate_variables(self, variables: List[str], operation: str, output_name: str) -> xr.Dataset:
         """Integrate multiple variables within the dataset.
         
-        Args:
-            variables: The variables to integrate
-            operation: The operation to apply ('add', 'subtract', 'multiply', 'divide', 'mean', 'max', 'min')
-            output_name: The name of the output variable
+        Parameters
+        ----------
+            variables
+                The variables to integrate
+            operation
+                The operation to apply ('add', 'subtract', 'multiply', 'divide', 'mean', 'max', 'min')
+            output_name
+                The name of the output variable
             
-        Returns:
+        Returns
+        -------
             The dataset with the integrated variable added
         """
         self.logger.debug(f"Integrating variables {variables} with operation '{operation}'")
@@ -175,10 +203,13 @@ class DataPipeline:
     def get_data_source(self, file_path: str) -> Optional[DataSource]:
         """Get a processed data source.
         
-        Args:
-            file_path: Path to the data file
+        Parameters
+        ----------
+            file_path
+                Path to the data file
             
-        Returns:
+        Returns
+        -------
             The processed data source, or None if not found
         """
         return self.data_sources.get(file_path)
@@ -186,7 +217,8 @@ class DataPipeline:
     def get_all_data_sources(self) -> Dict[str, DataSource]:
         """Get all processed data sources.
         
-        Returns:
+        Returns
+        -------
             A dictionary mapping file paths to processed data sources
         """
         return self.data_sources.copy()
@@ -194,7 +226,8 @@ class DataPipeline:
     def get_dataset(self) -> Optional[xr.Dataset]:
         """Get the integrated dataset.
         
-        Returns:
+        Returns
+        -------
             The integrated dataset, or None if not available
         """
         return self.dataset

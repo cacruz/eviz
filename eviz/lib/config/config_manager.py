@@ -27,7 +27,8 @@ class ConfigManager:
     data sources, provides dimension name mapping, and offers runtime configuration updates.
     It also maintains references to key application components like the data processing pipeline.
     
-    Attributes:
+    Attributes
+    ----------
         input_config: Configuration for input data sources and parameters
         output_config: Configuration for output settings and file generation
         system_config: Configuration for system-level settings
@@ -164,14 +165,18 @@ class ConfigManager:
         This method is called only when an attribute is not found through normal lookup.
         It searches for the attribute in the config objects in a specific order.
         
-        Args:
-            name: The name of the attribute to look up
+        Parameters
+        ----------
+            name
+                The name of the attribute to look up
             
-        Returns:
+        Returns
+        -------
             The value of the attribute if found
-            
-        Raises:
-            AttributeError: If the attribute is not found in any config object
+        Raises
+        ------
+            AttributeError
+                If the attribute is not found in any config object
         """
         # Check if the attribute exists in this instance directly
         if name in self.__dict__:
@@ -194,12 +199,17 @@ class ConfigManager:
         """
         Determine if comparison plots for this field should be overlaid on the same axes.
         
-        Args:
-            field_name (str): The name of the field
-            plot_type (str): The type of plot (e.g., 'yz', 'xt')
+        Parameters
+        ----------
+            field_name : str
+                The name of the field
+            plot_type : str
+                The type of plot (e.g., 'yz', 'xt')
             
-        Returns:
-            bool: True if plots should be overlaid, False otherwise
+        Returns
+        -------
+            bool
+                True if plots should be overlaid, False otherwise
         """
         # Only consider overlaying for profile plot, box plots, and time series
         if plot_type not in ['yz', 'xt', 'bo']:
@@ -217,11 +227,15 @@ class ConfigManager:
         """
         Get the format for a specific file.
         
-        Args:
-            file_path (str): The path to the file
+        Parameters
+        ----------
+            file_path : str
+                The path to the file
             
-        Returns:
-            Optional[str]: The format or None if not specified
+        Returns
+        -------
+            Optional[str]
+                The format or None if not specified
         """
         if hasattr(self.input_config, 'get_format_for_file'):
             return self.input_config.get_format_for_file(file_path)
@@ -232,8 +246,10 @@ class ConfigManager:
         """
         Get a dictionary mapping file paths to their formats.
         
-        Returns:
-            Dict[str, str]: Dictionary mapping file paths to formats
+        Returns
+        -------
+            Dict[str, str]
+                Dictionary mapping file paths to formats
         """
         if hasattr(self.input_config, '_file_format_mapping'):
             return self.input_config._file_format_mapping
@@ -244,11 +260,15 @@ class ConfigManager:
         Get model-specific dimension name associated with the source as defined
         in meta_coordinates.yaml.
 
-        Args:
-            dim_name (str): The generic dimension name to look up.
+        Parameters
+        ----------
+            dim_name : str
+                The generic dimension name to look up.
 
-        Returns:
-            str or None: The model-specific dimension name, or None if not found.
+        Returns
+        -------
+            str or None
+                The model-specific dimension name, or None if not found.
         """
         source = self.source_names[self.ds_index]
         # Try with the current ds_index first
@@ -323,12 +343,17 @@ class ConfigManager:
         This method checks which of the possible dimension names actually exists
         in the given data_array.
         
-        Args:
-            dim_name (str): The generic dimension name to look up ('tc', 'zc', etc.)
-            data_array: xarray.DataArray to check dimensions against
+        Parameters
+        ----------
+            dim_name : str
+                The generic dimension name to look up ('tc', 'zc', etc.)
+            data_array
+                xarray.DataArray to check dimensions against
             
-        Returns:
-            str or None: The model-specific dimension name that exists in data_array
+        Returns
+        -------
+            str or None
+                The model-specific dimension name that exists in data_array
         """
         if not hasattr(data_array, 'dims'):
             return None
@@ -359,11 +384,15 @@ class ConfigManager:
         """
         Get the file path for the current file index or source name.
         
-        Args:
-            source (str): The source name to look for if file index is invalid
+        Parameters
+        ----------
+            source : str
+                The source name to look for if file index is invalid
             
-        Returns:
-            str or None: The file path if found, None otherwise
+        Returns
+        -------
+            str or None
+                The file path if found, None otherwise
         """
         try:
             if self.findex is not None and self.findex < len(self.app_data.inputs):
@@ -387,11 +416,15 @@ class ConfigManager:
         """
         Get the data source for a file path.
         
-        Args:
-            file_path (str): The file path to get the data source for
+        Parameters
+        ----------
+            file_path : str
+                The file path to get the data source for
             
-        Returns:
-            object or None: The data source if found, None otherwise
+        Returns
+        -------
+            object or None
+                The data source if found, None otherwise
         """
         if not file_path or not self.pipeline:
             return None
@@ -409,11 +442,15 @@ class ConfigManager:
         """
         Get the available dimensions from a data source.
         
-        Args:
-            data_source (object): The data source to get dimensions from
+        Parameters
+        ----------
+            data_source : object
+                The data source to get dimensions from
             
-        Returns:
-            list or None: The list of available dimensions if found, None otherwise
+        Returns
+        -------
+            list or None
+                The list of available dimensions if found, None otherwise
         """
         if not data_source or not hasattr(data_source,
                                           'dataset') or data_source.dataset is None:
@@ -459,11 +496,15 @@ class ConfigManager:
         """
         Get the file index associated with the filename.
 
-        Args:
-            filename (str): The exact filename to search for
+        Parameters
+        ----------
+            filename : str
+                The exact filename to search for
 
-        Returns:
-            int: Index of the file in app_data.inputs, or 0 if not found
+        Returns
+        -------
+            int
+                Index of the file in app_data.inputs, or 0 if not found
         """
         if not filename:
             self.logger.warning("Empty filename provided, returning 0")
@@ -483,12 +524,17 @@ class ConfigManager:
         """
         Get model levels to plot from YAML specs file.
         
-        Args:
-            to_plot (str): The field to plot
-            plot_type (str): The type of plot
+        Parameters
+        ----------
+            to_plot : str
+                The field to plot
+            plot_type : str
+                The type of plot
             
-        Returns:
-            list: The levels to plot, or an empty list if not found
+        Returns
+        -------
+            list
+                The levels to plot, or an empty list if not found
         """
         levels = u.get_nested_key_value(self.spec_data, [to_plot, plot_type, 'levels'])
         return levels if levels else []
@@ -497,11 +543,15 @@ class ConfigManager:
         """
         Get user-defined file description.
         
-        Args:
-            file (int or str): The file index or name
+        Parameters
+        ----------
+            file : int or str
+                The file index or name
             
-        Returns:
-            str or None: The file description if found, None otherwise
+        Returns
+        -------
+            str or None
+                The file description if found, None otherwise
         """
         try:
             return self.input_config.file_list[file]['description']
@@ -513,11 +563,15 @@ class ConfigManager:
         """
         Get user-defined experiment name associated with the input file.
         
-        Args:
-            i (int): The file index
+        Parameters
+        ----------
+            i : int
+                The file index
             
-        Returns:
-            str or None: The experiment name if found, None otherwise
+        Returns
+        -------
+            str or None
+                The experiment name if found, None otherwise
         """
         try:
             return self.input_config.file_list[i]['exp_name']
@@ -530,11 +584,15 @@ class ConfigManager:
         Get user-defined experiment ID associated with the input file.
         If an expid is set, then it will be used to compare with another expid, as set in compare field.
         
-        Args:
-            i (int): The file index
+        Parameters
+        ----------
+            i : int
+                The file index
             
-        Returns:
-            str or None: The experiment ID if found, None otherwise
+        Returns
+        -------
+            str or None
+                The experiment ID if found, None otherwise
         """
         try:
             return self.input_config.file_list[i]['exp_id']
@@ -546,11 +604,15 @@ class ConfigManager:
         """
         Get dimension names for a specific plot type.
         
-        Args:
-            pid (str): The plot ID
+        Parameters
+        ----------
+            pid : str
+                The plot ID
             
-        Returns:
-            tuple: A tuple of (dim1, dim2) dimension names
+        Returns
+        -------
+            tuple
+                A tuple of (dim1, dim2) dimension names
         """
         dim1, dim2 = None, None
         if 'yz' in pid:
@@ -568,11 +630,15 @@ class ConfigManager:
         Get model-specific attribute name associated with the source as defined
         in meta_attributes.yaml.
         
-        Args:
-            attr_name (str): The attribute name to look up
+        Parameters
+        ----------
+            attr_name : str
+                The attribute name to look up
             
-        Returns:
-            str or None: The model-specific attribute name, or None if not found
+        Returns
+        -------
+            str or None
+                The model-specific attribute name, or None if not found
         """
         if self.ds_index >= len(self.source_names):
             self.logger.debug(
@@ -602,10 +668,13 @@ class ConfigManager:
     def get_file_index_by_filename(self, filename: str) -> int:
         """Return the file_index associated with a filename from map_params.
         
-        Args:
-            filename: The filename to search for
+        Parameters
+        ----------
+            filename
+                The filename to search for
             
-        Returns:
+        Returns
+        -------
             The file_index if found, or -1 if the filename is not found
         """
         for params in self.config.map_params.values():
@@ -897,9 +966,12 @@ class ConfigManager:
         - Grid type and spacing
         - Domain extent
         
-        Args:
-            dataset: xarray.Dataset to analyze
-            filename: Optional filename for caching domain info per file
+        Parameters
+        ----------
+            dataset
+                xarray.Dataset to analyze
+            filename
+                Optional filename for caching domain info per file
         """
         if dataset is None:
             self.logger.warning("Cannot extract domain info from None dataset")
@@ -932,8 +1004,10 @@ class ConfigManager:
         """
         Extract domain characteristics from an xarray Dataset.
         
-        Returns:
-            dict: Dictionary containing domain characteristics
+        Returns
+        -------
+            dict
+                Dictionary containing domain characteristics
         """
         domain_info = {
             'is_regional': False,
@@ -1019,8 +1093,10 @@ class ConfigManager:
         """
         Find longitude and latitude coordinate variables in the dataset.
         
-        Returns:
-            tuple: (lon_coord_name, lat_coord_name) or (None, None) if not found
+        Returns
+        -------
+            tuple
+                (lon_coord_name, lat_coord_name) or (None, None) if not found
         """
         lon_names = ['lon', 'longitude', 'x', 'XLONG', 'LONGITUDE']
         lat_names = ['lat', 'latitude', 'y', 'XLAT', 'LATITUDE']
@@ -1057,11 +1133,15 @@ class ConfigManager:
         """
         Get domain information for a dataset.
         
-        Args:
-            filename: Optional filename to get specific domain info
+        Parameters
+        ----------
+            filename
+                Optional filename to get specific domain info
             
-        Returns:
-            dict: Domain information dictionary
+        Returns
+        -------
+            dict
+                Domain information dictionary
         """
         key = filename if filename else 'default'
         
@@ -1085,8 +1165,10 @@ class ConfigManager:
         """
         Get whether the current dataset is regional.
         
-        Returns:
-            bool: True if the dataset is regional, False if global
+        Returns
+        -------
+            bool
+                True if the dataset is regional, False if global
         """
         domain_info = self.get_domain_info()
         return domain_info.get('is_regional', False)
@@ -1096,8 +1178,10 @@ class ConfigManager:
         """
         Get the domain extent [lon_min, lon_max, lat_min, lat_max].
         
-        Returns:
-            list or None: Domain extent or None if not available
+        Returns
+        -------
+            list or None
+                Domain extent or None if not available
         """
         domain_info = self.get_domain_info()
         return domain_info.get('extent')
@@ -1107,8 +1191,10 @@ class ConfigManager:
         """
         Get the central longitude of the domain.
         
-        Returns:
-            float: Central longitude
+        Returns
+        -------
+            float
+                Central longitude
         """
         domain_info = self.get_domain_info()
         return domain_info.get('central_lon', 0.0)
@@ -1118,8 +1204,10 @@ class ConfigManager:
         """
         Get the central latitude of the domain.
         
-        Returns:
-            float: Central latitude
+        Returns
+        -------
+            float
+                Central latitude
         """
         domain_info = self.get_domain_info()
         return domain_info.get('central_lat', 0.0)
@@ -1129,8 +1217,10 @@ class ConfigManager:
         """
         Get whether the dataset has 2D coordinate arrays.
         
-        Returns:
-            bool: True if coordinates are 2D (curvilinear), False if 1D
+        Returns
+        -------
+            bool
+                True if coordinates are 2D (curvilinear), False if 1D
         """
         domain_info = self.get_domain_info()
         return domain_info.get('has_2d_coords', False)
@@ -1140,8 +1230,10 @@ class ConfigManager:
         """
         Get the grid type ('regular', 'irregular', or 'curvilinear').
         
-        Returns:
-            str: Grid type
+        Returns
+        -------
+            str
+                Grid type
         """
         domain_info = self.get_domain_info()
         return domain_info.get('grid_type', 'regular')
@@ -1151,8 +1243,10 @@ class ConfigManager:
         """
         Get the name of the longitude coordinate variable.
         
-        Returns:
-            str or None: Longitude coordinate name
+        Returns
+        -------
+            str or None
+                Longitude coordinate name
         """
         domain_info = self.get_domain_info()
         return domain_info.get('lon_coords')
@@ -1162,8 +1256,10 @@ class ConfigManager:
         """
         Get the name of the latitude coordinate variable.
         
-        Returns:
-            str or None: Latitude coordinate name
+        Returns
+        -------
+            str or None
+                Latitude coordinate name
         """
         domain_info = self.get_domain_info()
         return domain_info.get('lat_coords')

@@ -138,12 +138,17 @@ class PlotManager:
     def create_plotter(self, field_name: str, plot_type: str, backend=None):
         """Create a plotter for the given field.
         
-        Args:
-            field_name: Name of the field to plot
-            plot_type: Type of plot to create
-            backend: Backend to use (defaults to config_manager.output_backend)
+        Parameters
+        ----------
+            field_name
+                Name of the field to plot
+            plot_type
+                Type of plot to create
+            backend
+                Backend to use (defaults to config_manager.output_backend)
             
-        Returns:
+        Returns
+        -------
             An instance of the appropriate plotter
         """        
         try:
@@ -155,12 +160,17 @@ class PlotManager:
     def create_plot(self, field_name, data_to_plot, plot_type=None):
         """Create a plot using the appropriate plotter.
         
-        Args:
-            field_name: Name of the field to plot
-            data_to_plot: Tuple containing plot data
-            plot_type: Optional plot type to override registry lookup
+        Parameters
+        ----------
+            field_name
+                Name of the field to plot
+            data_to_plot
+                Tuple containing plot data
+            plot_type
+                Optional plot type to override registry lookup
             
-        Returns:
+        Returns
+        -------
             The created plot object
         """
         backend = getattr(self.config_manager, 'output_backend', 'matplotlib')
@@ -237,11 +247,15 @@ class PlotManager:
         if it should be processed as observational data (e.g., swath format)
         or as standard gridded data.
         
-        Args:
-            data_array: The xarray DataArray to check
+        Parameters
+        ----------
+            data_array
+                The xarray DataArray to check
             
-        Returns:
-            bool: True if the data should be treated as observational
+        Returns
+        -------
+            bool
+                True if the data should be treated as observational
         """
         if data_array is None:
             return False
@@ -296,11 +310,15 @@ class PlotManager:
         """
         Get the filename for a given file index.
         
-        Args:
-            file_index: The file index to look up
+        Parameters
+        ----------
+            file_index
+                The file index to look up
             
-        Returns:
-            str: The filename or None if not found
+        Returns
+        -------
+            str
+                The filename or None if not found
         """
         try:
             if file_index is not None and file_index < len(self.config_manager.app_data.inputs):
@@ -329,11 +347,15 @@ class PlotManager:
         This method determines the geographical boundaries using the domain info
         from the ConfigManager or by analyzing the data array directly.
         
-        Args:
-            data_array: The data array to extract extent from
+        Parameters
+        ----------
+            data_array
+                The data array to extract extent from
             
-        Returns:
-            list: The geographical extent as [lon_min, lon_max, lat_min, lat_max]
+        Returns
+        -------
+            list
+                The geographical extent as [lon_min, lon_max, lat_min, lat_max]
         """
         default_extent = [-180, 180, -90, 90]
         

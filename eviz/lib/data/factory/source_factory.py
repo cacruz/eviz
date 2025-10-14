@@ -50,17 +50,24 @@ class DataSourceFactory:
         """ Create a data source instance for the specified file or URL, with optional
             explicit reader_type or format.
         
-        Args:
-            file_path: Path to the data file or URL
-            model_name: Optional name of the model this data source belongs to
-            reader_type: Optional explicit reader type (e.g., 'CSV', 'NetCDF')
-            file_format: Optional explicit file format (e.g., 'netcdf', 'csv', 'grib')
+        Parameters
+        ----------
+            file_path
+                Path to the data file or URL
+            model_name
+                Optional name of the model this data source belongs to
+            reader_type
+                Optional explicit reader type (e.g., 'CSV', 'NetCDF')
+            file_format
+                Optional explicit file format (e.g., 'netcdf', 'csv', 'grib')
             
-        Returns:
+        Returns
+        -------
             A data source instance for the specified file
-            
-        Raises:
-            ValueError: If the file type is not supported
+        Raises
+        ------
+            ValueError
+                If the file type is not supported
         """
         if reader_type is not None:
             reader_type = reader_type.strip().lower()
@@ -144,7 +151,8 @@ class DataSourceFactory:
     def get_supported_extensions(self) -> List[str]:
         """Get the list of supported file extensions.
         
-        Returns:
+        Returns
+        -------
             List of supported file extensions
         """
         return sorted(list(self.registry.get_supported_extensions()))
@@ -152,10 +160,13 @@ class DataSourceFactory:
     def is_supported(self, file_path: str) -> bool:
         """Check if the specified file is supported.
         
-        Args:
-            file_path: Path to the data file
+        Parameters
+        ----------
+            file_path
+                Path to the data file
             
-        Returns:
+        Returns
+        -------
             True if the file is supported, False otherwise
         """
         _, ext = os.path.splitext(file_path)

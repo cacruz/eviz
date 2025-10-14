@@ -16,11 +16,15 @@ class AltairXYPlotter(XYPlotter):
     def plot(self, config, data_to_plot):
         """Create an interactive XY plot using Altair.
         
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple containing (data2d, x, y, field_name, plot_type, findex, fig)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple containing (data2d, x, y, field_name, plot_type, findex, fig)
         
-        Returns:
+        Returns
+        -------
             The created Altair chart object
         """
         data2d, x, y, field_name, plot_type, findex, _ = data_to_plot
@@ -174,12 +178,17 @@ class AltairXYPlotter(XYPlotter):
     def _convert_to_dataframe(self, data2d, x, y):
         """Convert xarray DataArray to pandas DataFrame for Altair.
         
-        Args:
-            data2d: xarray DataArray with 2D data
-            x: x-coordinate values
-            y: y-coordinate values
+        Parameters
+        ----------
+            data2d
+                xarray DataArray with 2D data
+            x
+                x-coordinate values
+            y
+                y-coordinate values
             
-        Returns:
+        Returns
+        -------
             pandas DataFrame with columns 'x', 'y', 'value'
         """
         try:

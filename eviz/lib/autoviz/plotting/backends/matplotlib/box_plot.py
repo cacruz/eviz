@@ -24,11 +24,15 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
         1. Gridded data: (data, categories, values, field_name, plot_type, findex, fig, [original_data_array])
         2. Categorical data: (data, field_name, plot_type, findex, fig, plot_options, plot_params)
 
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple with data and plotting parameters
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple with data and plotting parameters
 
-        Returns:
+        Returns
+        -------
             The created/updated figure
         """
         # Detect data type based on tuple structure
@@ -85,11 +89,15 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
     def _plot_gridded(self, config, data_to_plot):
         """Create box plot for gridded data.
 
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple containing (data, categories, values, field_name, plot_type, findex, fig, [original_data_array])
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple containing (data, categories, values, field_name, plot_type, findex, fig, [original_data_array])
 
-        Returns:
+        Returns
+        -------
             The created figure
         """
         # Handle both 7-element and 8-element tuples for backward compatibility
@@ -429,11 +437,15 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
     def _plot_categorical(self, config, data_to_plot):
         """Create box plot for categorical/CSV data.
 
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple containing (data, field_name, plot_type, findex, fig, plot_options, plot_params)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple containing (data, field_name, plot_type, findex, fig, plot_options, plot_params)
 
-        Returns:
+        Returns
+        -------
             The created/updated figure
         """
         # Unpack data_to_plot with backward compatibility
@@ -472,12 +484,18 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
     def _plot_categorical_box_data(self, config, data, field_name, plot_options, plot_params):
         """Create the actual box plot for categorical data.
 
-        Args:
-            config: Configuration manager
-            data: pandas DataFrame
-            field_name: Name of the field being plotted
-            plot_options: Dictionary of plotting options
-            plot_params: Dictionary of plot parameters (y, by for categorical data)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data
+                pandas DataFrame
+            field_name
+                Name of the field being plotted
+            plot_options
+                Dictionary of plotting options
+            plot_params
+                Dictionary of plot parameters (y, by for categorical data)
         """
         ax = self.ax
 
@@ -581,12 +599,17 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
         """
         Calculate the Root Mean Square Error (RMSE) between two datasets.
 
-        Args:
-            data1 (array-like): First dataset
-            data2 (array-like): Second dataset
+        Parameters
+        ----------
+            data1 : array-like
+                First dataset
+            data2 : array-like
+                Second dataset
 
-        Returns:
-            float: The RMSE value
+        Returns
+        -------
+            float
+                The RMSE value
         """
         # Ensure inputs are numpy arrays
         if isinstance(data1, pd.Series):
@@ -619,11 +642,15 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
         """
         Calculate RMSE of data from its mean value.
 
-        Args:
-            data (array-like): Dataset to evaluate
+        Parameters
+        ----------
+            data : array-like
+                Dataset to evaluate
 
-        Returns:
-            float: The RMSE value
+        Returns
+        -------
+            float
+                The RMSE value
         """
         try:
             if isinstance(data, list):

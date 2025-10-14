@@ -89,7 +89,6 @@ html_theme = 'sphinx_rtd_theme'
 
 # -- Napoleon autodoc options -------------------------------------------------
 napoleon_numpy_docstring = True
-napoleon_google_docstring = True
 napoleon_use_ivar = True
 napoleon_include_init_with_doc = True
 napoleon_include_private_with_doc = False

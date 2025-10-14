@@ -33,10 +33,13 @@ class ObservationalDataSource(GenericDataSource):
         """
         Process raw observational dataset into visualization-ready format.
         
-        Args:
-            dataset: Raw xarray Dataset to process
+        Parameters
+        ----------
+            dataset
+                Raw xarray Dataset to process
             
-        Returns:
+        Returns
+        -------
             Dictionary containing processed data and metadata
         """
         self.logger.debug(f"Processing observational dataset with variables: {list(dataset.data_vars)}")
@@ -64,10 +67,13 @@ class ObservationalDataSource(GenericDataSource):
         """
         Validate that the dataset is compatible with observational data processing.
         
-        Args:
-            dataset: Dataset to validate
+        Parameters
+        ----------
+            dataset
+                Dataset to validate
             
-        Returns:
+        Returns
+        -------
             True if dataset is valid for observational processing
         """
         if not isinstance(dataset, xr.Dataset):
@@ -101,11 +107,15 @@ class ObservationalDataSource(GenericDataSource):
         which is particularly useful for swath data that covers specific regions.
         The extent is returned as [lon_min, lon_max, lat_min, lat_max].
         
-        Args:
-            data_array (xr.DataArray): The data array to extract extent from
+        Parameters
+        ----------
+            data_array : xr.DataArray
+                The data array to extract extent from
             
-        Returns:
-            list: The geographical extent as [lon_min, lon_max, lat_min, lat_max]
+        Returns
+        -------
+            list
+                The geographical extent as [lon_min, lon_max, lat_min, lat_max]
         """
         default_extent = [-180, 180, -90, 90]
         
@@ -192,9 +202,12 @@ class ObservationalDataSource(GenericDataSource):
         updates the configuration manager's ax_opts with the extent information.
         Only applies if there's no pre-configured extent from specs.
         
-        Args:
-            data_array (xr.DataArray): The data array to extract extent from
-            field_name (str, optional): Field name for logging purposes
+        Parameters
+        ----------
+            data_array : xr.DataArray
+                The data array to extract extent from
+            field_name : str, optional
+                Field name for logging purposes
         """
         # Check if there's already a named extent configured (e.g., "conus", "global")
         current_extent = self.config_manager.ax_opts.get('extent')
@@ -278,13 +291,19 @@ class ObservationalDataSource(GenericDataSource):
         This method overrides the parent class method to add automatic
         extent detection for observational data.
         
-        Args:
-            data_array: The data array to process
-            level: Vertical level to extract
-            time_level: Time level to extract
+        Parameters
+        ----------
+            data_array
+                The data array to process
+            level
+                Vertical level to extract
+            time_level
+                Time level to extract
             
-        Returns:
-            xr.DataArray: The processed 2D data array
+        Returns
+        -------
+            xr.DataArray
+                The processed 2D data array
         """
         if np.isnan(data_array).all():
             return None

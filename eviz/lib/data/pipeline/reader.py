@@ -27,12 +27,17 @@ class DataReader:
     def read_file(self, file_path: str, model_name: Optional[str] = None, file_format: Optional[str] = None) -> DataSource:
         """Read data from a file or URL, supporting wildcards.
         
-        Args:
-            file_path: Path to the file or URL
-            model_name: Optional name of the model this data source belongs to
-            file_format: Optional explicit file format (e.g., 'netcdf', 'csv')
+        Parameters
+        ----------
+            file_path
+                Path to the file or URL
+            model_name
+                Optional name of the model this data source belongs to
+            file_format
+                Optional explicit file format (e.g., 'netcdf', 'csv')
             
-        Returns:
+        Returns
+        -------
             A data source for the file
         """
         self.logger.debug(f"Reading file: {file_path}")
@@ -103,10 +108,13 @@ class DataReader:
     def get_data_source(self, file_path: str) -> Optional[DataSource]:
         """Get a data source.
         
-        Args:
-            file_path: Path to the data file
+        Parameters
+        ----------
+            file_path
+                Path to the data file
             
-        Returns:
+        Returns
+        -------
             The data source, or None if not found
         """
         return self.data_sources.get(file_path)
@@ -114,7 +122,8 @@ class DataReader:
     def get_all_data_sources(self) -> Dict[str, DataSource]:
         """Get all data sources.
         
-        Returns:
+        Returns
+        -------
             A dictionary mapping file paths to data sources
         """
         return self.data_sources.copy()
@@ -132,11 +141,15 @@ def get_data_coords(data_array, attribute_name):
     """
     Get coordinates for a data array attribute.
 
-    Args:
-        data_array: The xarray DataArray
-        attribute_name: The name of the attribute to get coordinates for
+    Parameters
+    ----------
+        data_array
+            The xarray DataArray
+        attribute_name
+            The name of the attribute to get coordinates for
 
-    Returns:
+    Returns
+    -------
         The coordinates for the attribute, or a fallback if the attribute is not found
     """
     if attribute_name is None:

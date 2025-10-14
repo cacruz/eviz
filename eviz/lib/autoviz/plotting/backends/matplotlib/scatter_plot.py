@@ -28,11 +28,15 @@ class MatplotlibScatterPlotter(MatplotlibBasePlotter):
         1. Gridded data: (data2d, x, y, field_name, plot_type, findex, fig, [global_vmin, global_vmax])
         2. Categorical data: (data, field_name, plot_type, findex, fig, plot_options, plot_params)
 
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple with data and plotting parameters
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple with data and plotting parameters
 
-        Returns:
+        Returns
+        -------
             The created/updated figure
         """
         # Detect data type based on tuple structure
@@ -76,11 +80,15 @@ class MatplotlibScatterPlotter(MatplotlibBasePlotter):
     def _plot_gridded(self, config, data_to_plot):
         """Create scatter plot for gridded data.
 
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple containing (data2d, x, y, field_name, plot_type, findex, fig, [global_vmin, global_vmax])
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple containing (data2d, x, y, field_name, plot_type, findex, fig, [global_vmin, global_vmax])
 
-        Returns:
+        Returns
+        -------
             The created figure
         """
         # Handle both old 7-element and new 9-element tuples (with global min/max for GIF consistency)
@@ -144,14 +152,22 @@ class MatplotlibScatterPlotter(MatplotlibBasePlotter):
     def _plot_gridded_scatter_data(self, config, fig, x, y, data2d, field_name, findex):
         """Create a scatter plot for gridded data using SPECS data.
 
-        Args:
-            config: Configuration with data source and plotting options
-            fig: Matplotlib figure object
-            x (array-like): X coordinates for scatter points
-            y (array-like): Y coordinates for scatter points
-            data2d (xarray.DataArray or array-like): Data values for coloring
-            field_name (str): The field being plotted
-            findex (int): Index of this field in the comparison sequence
+        Parameters
+        ----------
+            config
+                Configuration with data source and plotting options
+            fig
+                Matplotlib figure object
+            x : array-like
+                X coordinates for scatter points
+            y : array-like
+                Y coordinates for scatter points
+            data2d : xarray.DataArray or array-like
+                Data values for coloring
+            field_name : str
+                The field being plotted
+            findex : int
+                Index of this field in the comparison sequence
         """
         ax = self.ax
         ax_opts = self.ax_opts
@@ -237,11 +253,15 @@ class MatplotlibScatterPlotter(MatplotlibBasePlotter):
     def _plot_categorical(self, config, data_to_plot):
         """Create scatter plot for categorical/CSV data.
 
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple containing (data, field_name, plot_type, findex, fig, plot_options, plot_params)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple containing (data, field_name, plot_type, findex, fig, plot_options, plot_params)
 
-        Returns:
+        Returns
+        -------
             The created/updated figure
         """
         # Unpack data_to_plot with backward compatibility
@@ -296,12 +316,18 @@ class MatplotlibScatterPlotter(MatplotlibBasePlotter):
     def _plot_categorical_scatter_data(self, config, data, field_name, plot_options, plot_params):
         """Create the actual scatter plot for categorical data.
 
-        Args:
-            config: Configuration manager
-            data: pandas DataFrame
-            field_name: Name of the field being plotted
-            plot_options: Dictionary of plotting options
-            plot_params: Dictionary of plot parameters (x, y, color for categorical data)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data
+                pandas DataFrame
+            field_name
+                Name of the field being plotted
+            plot_options
+                Dictionary of plotting options
+            plot_params
+                Dictionary of plot parameters (x, y, color for categorical data)
         """
         ax = self.ax
 

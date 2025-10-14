@@ -20,12 +20,17 @@ class DataExtractor:
         """
         Safely get the size of a dimension, whether it's a coordinate or just a dimension.
         
-        Args:
-            data_array: xarray DataArray
-            dim_name: Name of dimension
+        Parameters
+        ----------
+            data_array
+                xarray DataArray
+            dim_name
+                Name of dimension
             
-        Returns:
-            int: Size of dimension, or 0 if not found
+        Returns
+        -------
+            int
+                Size of dimension, or 0 if not found
         """
         if dim_name is None:
             return 0
@@ -44,8 +49,10 @@ class DataExtractor:
         """
         Extract data for scatter plot.
 
-        Returns:
-            tuple: (values, x, y)
+        Returns
+        -------
+            tuple
+                (values, x, y)
         """
         self.logger.debug(f"Starting scatter data extraction for time_level: {time_level}")
         
@@ -146,7 +153,8 @@ class DataExtractor:
     def _extract_yz_data(self, data_array, time_level):
         """ Extract YZ slice (zonal mean) from a DataArray
 
-        Note:
+        Note
+        ----
             Assume input DataArray is at most 4-dimensional (time, lev, lon, lat)
             and return a 2D (lat, lev) slice
         """
@@ -189,7 +197,8 @@ class DataExtractor:
     def _extract_xy_data(self, data_array, time_level, level=None):
         """ Extract XY slice (latlon) from a DataArray
 
-        Note:
+        Note
+        ----
             Assume input DataArray is at most 4-dimensional (time, lev, lon, lat)
             and return a 2D (lon, lat) slice
         """
@@ -292,7 +301,8 @@ class DataExtractor:
     def _extract_xt_data(self, data_array, time_lev):
         """ Extract time-series from a DataArray
 
-        Note:
+        Note
+        ----
             Assume input DataArray is at most 4-dimensional (time, lev, lon, lat)
             and return a 1D (time) series
         """
@@ -507,13 +517,19 @@ class DataExtractor:
         This method prepares data for box plots by extracting values across a dimension
         (typically spatial) for statistical analysis.
         
-        Args:
-            data_array: xarray.DataArray to extract data from
-            time_lev: Time level to extract (optional)
-            exp_id: Experiment ID for comparison plots (optional)
+        Parameters
+        ----------
+            data_array
+                xarray.DataArray to extract data from
+            time_lev
+                Time level to extract (optional)
+            exp_id
+                Experiment ID for comparison plots (optional)
             
-        Returns:
-            pandas.DataFrame: DataFrame with columns for categories and values
+        Returns
+        -------
+            pandas.DataFrame
+                DataFrame with columns for categories and values
         """
         tc_dim = self.config_manager.get_model_dim_name('tc') or 'time'
         d_temp = data_array.copy()
@@ -701,19 +717,31 @@ class DataExtractor:
         This method prepares data for line plots, typically extracting a time series
         or a spatial transect.
         
-        Args:
-            data_array: xarray.DataArray to extract data from
-            time_lev: Time level to extract (optional)
-            level: Vertical level to extract (optional)
+        Parameters
+        ----------
+            data_array
+                xarray.DataArray to extract data from
+            time_lev
+                Time level to extract (optional)
+            level
+                Vertical level to extract (optional)
             
-        Returns:
-            tuple: (data_df, x_col, y_col, field_name, plot_type, file_index)
-                data_df: pandas DataFrame with x and y columns
-                x_col: Name of the x-axis column
-                y_col: Name of the y-axis column
-                field_name: Name of the field being plotted
-                plot_type: Type of plot ('line')
-                file_index: Index of the file being plotted
+        Returns
+        -------
+            tuple
+                (data_df, x_col, y_col, field_name, plot_type, file_index)
+                data_df
+                    pandas DataFrame with x and y columns
+                x_col
+                    Name of the x-axis column
+                y_col
+                    Name of the y-axis column
+                field_name
+                    Name of the field being plotted
+                plot_type
+                    Type of plot ('line')
+                file_index
+                    Index of the file being plotted
         """        
         tc_dim = self.config_manager.get_model_dim_name('tc') or 'time'
         zc_dim = self.config_manager.get_model_dim_name('zc') or 'lev'
@@ -881,7 +909,8 @@ class DataExtractor:
     def _extract_tx_data(self, data_array, time_lev=0, level=None):
         """ Extract a time-series map from a DataArray
 
-        Note:
+        Note
+        ----
             Assume input DataArray is at most 4-dimensional (time, lev, lon, lat)
             and return a 2D Hovmoller plot field where time is plotted on one axis (default y-axis)
             and the spatial dimension (either lon or lat)) is plotted on the other axis  (default x-axis)
@@ -1032,13 +1061,19 @@ class DataExtractor:
         This method prepares data for Pearson correlation analysis by extracting
         the appropriate slice of data based on level and time specifications.
         
-        Args:
-            data_array: The xarray DataArray to process
-            level: Vertical level to extract (optional)
-            time_lev: Time level to extract (optional)
+        Parameters
+        ----------
+            data_array
+                The xarray DataArray to process
+            level
+                Vertical level to extract (optional)
+            time_lev
+                Time level to extract (optional)
             
-        Returns:
-            xarray.DataArray: The processed data array ready for correlation analysis
+        Returns
+        -------
+            xarray.DataArray
+                The processed data array ready for correlation analysis
         """
         if data_array is None:
             return None

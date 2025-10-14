@@ -17,9 +17,12 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
     def plot(self, config, data_to_plot):
         """Create a bar chart using Matplotlib.
 
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple containing (data, field_name, plot_type, findex, fig, plot_options, plot_params)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple containing (data, field_name, plot_type, findex, fig, plot_options, plot_params)
                 - data: pandas DataFrame or Series with the data to plot
                 - field_name: Name of the field/column being plotted
                 - plot_type: 'bar'
@@ -28,7 +31,8 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
                 - plot_options: Dict of plot-specific options (color, width, etc.)
                 - plot_params: Dict of plot parameters (x, y, agg, etc.)
 
-        Returns:
+        Returns
+        -------
             The created/updated figure
         """
         # Unpack data_to_plot with backward compatibility
@@ -66,12 +70,18 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
     def _plot_bar_data(self, config, data, field_name, plot_options, plot_params):
         """Create the actual bar chart.
 
-        Args:
-            config: Configuration manager
-            data: pandas DataFrame or Series
-            field_name: Name of the field being plotted
-            plot_options: Dictionary of plotting options
-            plot_params: Dictionary of plot parameters (x, y, agg for categorical data)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data
+                pandas DataFrame or Series
+            field_name
+                Name of the field being plotted
+            plot_options
+                Dictionary of plotting options
+            plot_params
+                Dictionary of plot parameters (x, y, agg for categorical data)
         """
         ax = self.ax
 

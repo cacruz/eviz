@@ -18,14 +18,19 @@ import eviz.lib.autoviz.utils as pu
 class Figure(mfigure.Figure):
     """Enhanced Figure class inheriting from Matplotlib's Figure with eViz framework customizations.
 
-    Args:
-        config_manager (ConfigManager): Representation of the model configuration
-        plot_type (str): Type of plot to be created
-        nrows (int, optional): Number of subplot rows. Defaults to None
-        ncols (int, optional): Number of subplot columns. Defaults to None
-        **kwargs: Additional keyword arguments passed to matplotlib.figure.Figure
+    Parameters
+    ----------
+        config_manager : ConfigManager
+            Representation of the model configuration
+        plot_type : str
+            Type of plot to be created
+        nrows : int, optional
+            Number of subplot rows. Defaults to None
+        ncols : int, optional
+            Number of subplot columns. Defaults to None
 
-    See Also:
+    See Also
+    ---
         matplotlib.figure.Figure
     """
     def __init__(self, config_manager, plot_type, 
@@ -124,8 +129,10 @@ class Figure(mfigure.Figure):
         """
         Set figure axes objects based on required subplots.
 
-        Returns:
-            self: The Figure object itself.
+        Returns
+        -------
+            self
+                The Figure object itself.
         """
         if 'tx' in self.plot_type or 'sc' in self.plot_type or 'xy' in self.plot_type:
             self._use_cartopy = True
@@ -161,8 +168,10 @@ class Figure(mfigure.Figure):
         """
         Initialize figure and axes objects for all plots based on plot type.
 
-        Returns:
-            self: The Figure object itself.
+        Returns
+        -------
+            self
+                The Figure object itself.
         """
         if "po" in self.plot_type:
             return self
@@ -208,17 +217,25 @@ class Figure(mfigure.Figure):
         """
         Enhanced factory method to create an eViz Figure instance with improved sizing.
         
-        Args:
-            config_manager (ConfigManager): Configuration manager
-            plot_type (str): Type of plot
-            field_name (str, optional): Name of the field being plotted
-            nrows (int, optional): Number of rows in the subplot grid
-            ncols (int, optional): Number of columns in the subplot grid
-            figsize (tuple, optional): Explicit figure size (width, height)
-            **kwargs: Additional arguments passed to Figure constructor
+        Parameters
+        ----------
+            config_manager : ConfigManager
+                Configuration manager
+            plot_type : str
+                Type of plot
+            field_name : str, optional
+                Name of the field being plotted
+            nrows : int, optional
+                Number of rows in the subplot grid
+            ncols : int, optional
+                Number of columns in the subplot grid
+            figsize : tuple, optional
+                Explicit figure size (width, height)
         
-        Returns:
-            Figure: An instance of the eViz Figure class with optimized sizing
+        Returns
+        -------
+            Figure
+                An instance of the eViz Figure class with optimized sizing
         """
         if field_name is None:
             field_name = config_manager.current_field_name
@@ -411,7 +428,8 @@ class Figure(mfigure.Figure):
     def set_ax_opts_diff_field(self, ax):
         """ Modify axes internal state based on user-defined options
 
-        Note:
+        Note
+        ----
             Only relevant for comparison plots.
         """
         geom = pu.get_subplot_geometry(ax)
@@ -554,14 +572,21 @@ class Figure(mfigure.Figure):
     def update_ax_opts(self, field_name, ax, pid, level=None) -> Dict[str, Any]:
         """Set (or reset) some map options.
 
-        Args:
-            field_name (str): Name of field that needs axes options updated
-            ax (Axes): Axes object
-            pid (str): Plot type identifier
-            level (int, optional): Vertical level. Defaults to None
+        Parameters
+        ----------
+            field_name : str
+                Name of field that needs axes options updated
+            ax : Axes
+                Axes object
+            pid : str
+                Plot type identifier
+            level : int, optional
+                Vertical level. Defaults to None
 
-        Returns:
-            Dict[str, Any]: Updated axes internal state
+        Returns
+        -------
+            Dict[str, Any]
+                Updated axes internal state
         """
         if not self.config_manager.compare or not self.config_manager.compare_diff:
             return self._update_single_plot(field_name, pid, level)
@@ -629,8 +654,10 @@ class Figure(mfigure.Figure):
     def apply_rc_params(self, default_params=None):
         """Apply matplotlib rcParams from a config dictionary.
 
-        Args:
-            default_params (dict, optional): Base set of rcParams to start with. Defaults to None
+        Parameters
+        ----------
+            default_params : dict, optional
+                Base set of rcParams to start with. Defaults to None
         """
         if default_params is None:
             default_params = {
@@ -666,8 +693,10 @@ class Figure(mfigure.Figure):
         """
         Return default matplotlib plot parameters.
 
-        Returns:
-            dict: Default plot parameters.
+        Returns
+        -------
+            dict
+                Default plot parameters.
         """
         return {
             'image.origin': 'lower',

@@ -68,10 +68,13 @@ class GenericSource(BaseSource):
         """
         Process raw dataset into visualization-ready format.
         
-        Args:
-            dataset: Raw xarray Dataset to process
+        Parameters
+        ----------
+            dataset
+                Raw xarray Dataset to process
             
-        Returns:
+        Returns
+        -------
             Dictionary containing processed data and metadata
         """
         self.logger.debug(f"Processing dataset with variables: {list(dataset.data_vars) if dataset else 'None'}")
@@ -95,10 +98,13 @@ class GenericSource(BaseSource):
         """
         Validate that the dataset is compatible with this data source.
         
-        Args:
-            dataset: Dataset to validate
+        Parameters
+        ----------
+            dataset
+                Dataset to validate
             
-        Returns:
+        Returns
+        -------
             True if dataset is valid (GenericSource accepts any dataset)
         """
         if dataset is None:
@@ -124,8 +130,10 @@ class GenericSource(BaseSource):
     def set_map_params(self, map_params):
         """Set the map parameters for plotting.
 
-        Args:
-            map_params: Dictionary of map parameters from YAML parser
+        Parameters
+        ----------
+            map_params
+                Dictionary of map parameters from YAML parser
         """
         pass
 

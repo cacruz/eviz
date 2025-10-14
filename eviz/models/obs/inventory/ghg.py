@@ -20,7 +20,8 @@ class Ghg(ObsSource):
     It supports annual or monthly data with uncertainty values and can generate various
     time series visualizations.
     
-    Attributes:
+    Attributes
+    ----------
         source_data: The loaded data
         _ds_attrs: Dataset attributes
         _maps_params: Mapping parameters
@@ -60,12 +61,17 @@ class Ghg(ObsSource):
         """
         Process CSV data for a specific field from a file.
         
-        Args:
-            filename: The name of the file
-            field_name: The name of the field (column in CSV)
+        Parameters
+        ----------
+            filename
+                The name of the file
+            field_name
+                The name of the field (column in CSV)
             
-        Returns:
-            xr.Dataset: The processed data as an xarray Dataset
+        Returns
+        -------
+            xr.Dataset
+                The processed data as an xarray Dataset
         """
         data_source = self.config_manager.pipeline.get_data_source(filename)
         if not data_source or not hasattr(data_source, 'dataset'):
@@ -115,11 +121,15 @@ class Ghg(ObsSource):
         """
         Infer units from column name.
         
-        Args:
-            column_name: The name of the column
+        Parameters
+        ----------
+            column_name
+                The name of the column
             
-        Returns:
-            str: The inferred units
+        Returns
+        -------
+            str
+                The inferred units
         """
         # Add more mappings as needed
         unit_mappings = {
@@ -143,8 +153,10 @@ class Ghg(ObsSource):
         """
         Generate simple plots for all fields in the dataset when no SPECS file is provided.
         
-        Args:
-            plotter: The plotter object to use for generating plots
+        Parameters
+        ----------
+            plotter
+                The plotter object to use for generating plots
         """
         map_params = self.config_manager.map_params
         field_num = 0
@@ -175,12 +187,17 @@ class Ghg(ObsSource):
         """
         Prepare data for simple plots without SPECS file.
         
-        Args:
-            field_name: The name of the field
-            plot_type: The type of plot to generate
+        Parameters
+        ----------
+            field_name
+                The name of the field
+            plot_type
+                The type of plot to generate
             
-        Returns:
-            tuple: A tuple containing the data, coordinates, field name, and plot type
+        Returns
+        -------
+            tuple
+                A tuple containing the data, coordinates, field name, and plot type
         """
         if self.source_data is None or field_name not in self.source_data:
             self.logger.error(f"Field {field_name} not found in source data")
@@ -263,13 +280,20 @@ class Ghg(ObsSource):
         """
         Process a single plot type for a given field.
         
-        Args:
-            data_array: The data array to process
-            field_name: The name of the field
-            file_index: The index of the file
-            plot_type: The type of plot to generate
-            plotter: The plotter object to use for generating plots
-            full_dataset: The full dataset (for accessing uncertainty data)
+        Parameters
+        ----------
+            data_array
+                The data array to process
+            field_name
+                The name of the field
+            file_index
+                The index of the file
+            plot_type
+                The type of plot to generate
+            plotter
+                The plotter object to use for generating plots
+            full_dataset
+                The full dataset (for accessing uncertainty data)
         """
         self.logger.info(f"Plotting {field_name}, {plot_type} plot")
         figure = Figure.create_eviz_figure(self.config_manager, plot_type)
@@ -285,17 +309,27 @@ class Ghg(ObsSource):
         """
         Prepare the data array and coordinates for plotting.
         
-        Args:
-            data_array: The data array to process
-            field_name: The name of the field
-            file_index: The index of the file
-            plot_type: The type of plot to generate
-            figure: The figure object
-            time_level: The time level to use (not typically used for GHG data)
-            full_dataset: The full dataset (for accessing uncertainty data)
+        Parameters
+        ----------
+            data_array
+                The data array to process
+            field_name
+                The name of the field
+            file_index
+                The index of the file
+            plot_type
+                The type of plot to generate
+            figure
+                The figure object
+            time_level
+                The time level to use (not typically used for GHG data)
+            full_dataset
+                The full dataset (for accessing uncertainty data)
             
-        Returns:
-            tuple: A tuple containing the data, coordinates, field name, plot type, file index, and figure
+        Returns
+        -------
+            tuple
+                A tuple containing the data, coordinates, field name, plot type, file index, and figure
         """
         if data_array is None:
             self.logger.error(f"No data array provided for field {field_name}")
@@ -340,8 +374,10 @@ class Ghg(ObsSource):
         """
         Generate comparison plots for paired data sources.
         
-        Args:
-            plotter: The plotter object to use for generating plots
+        Parameters
+        ----------
+            plotter
+                The plotter object to use for generating plots
         """
         self.logger.info("Generating comparison plots for GHG data")
         
@@ -430,8 +466,10 @@ class Ghg(ObsSource):
         """
         Generate side-by-side comparison plots for paired data sources.
         
-        Args:
-            plotter: The plotter object to use for generating plots
+        Parameters
+        ----------
+            plotter
+                The plotter object to use for generating plots
         """
         self.logger.info("Generating side-by-side plots for GHG data")
         

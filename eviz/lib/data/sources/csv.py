@@ -14,9 +14,12 @@ class CSVDataSource(DataSource):
     def __init__(self, model_name: str = None, config_manager=None):
         """Initialize a new CSVDataSource.
 
-        Args:
-            model_name: Name of the model this data source belongs to
-            config_manager: Configuration manager instance
+        Parameters
+        ----------
+            model_name
+                Name of the model this data source belongs to
+            config_manager
+                Configuration manager instance
         """
         super().__init__(model_name, config_manager)
 
@@ -55,10 +58,13 @@ class CSVDataSource(DataSource):
     def _read_file(self, file_path: str) -> pd.DataFrame:
         """Read a single CSV or JSON file.
 
-        Args:
-            file_path: Path to the file
+        Parameters
+        ----------
+            file_path
+                Path to the file
 
-        Returns:
+        Returns
+        -------
             DataFrame containing the file data
         """
         _, ext = os.path.splitext(file_path.lower())
@@ -90,10 +96,13 @@ class CSVDataSource(DataSource):
     def _normalize_nested_dicts(self, df: pd.DataFrame) -> pd.DataFrame:
         """Normalize nested dictionaries in DataFrame columns.
 
-        Args:
-            df: Input DataFrame
+        Parameters
+        ----------
+            df
+                Input DataFrame
 
-        Returns:
+        Returns
+        -------
             DataFrame with nested dictionaries expanded into columns
         """
         if df.empty:
@@ -133,10 +142,13 @@ class CSVDataSource(DataSource):
     def _process_data(self, dataset: xr.Dataset) -> xr.Dataset:
         """Process the loaded CSV data.
         
-        Args:
-            dataset: The dataset to process
+        Parameters
+        ----------
+            dataset
+                The dataset to process
             
-        Returns:
+        Returns
+        -------
             The processed dataset
         """
         self.logger.debug("Processing CSV data")
@@ -174,8 +186,10 @@ class CSVDataSource(DataSource):
     def _extract_metadata(self, dataset: xr.Dataset) -> None:
         """Extract metadata from the dataset.
         
-        Args:
-            dataset: The dataset to extract metadata from
+        Parameters
+        ----------
+            dataset
+                The dataset to extract metadata from
         """
         if dataset is None:
             return

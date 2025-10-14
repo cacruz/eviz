@@ -35,10 +35,13 @@ class Giss(GriddedSource):
     def post_process_dataset(self, dataset: xr.Dataset) -> xr.Dataset:
         """Post-process GISS dataset to add missing coordinate arrays.
         
-        Args:
-            dataset: Raw GISS dataset
+        Parameters
+        ----------
+            dataset
+                Raw GISS dataset
             
-        Returns:
+        Returns
+        -------
             Dataset with synthetic coordinate arrays added
         """
         self.logger.info("Post-processing GISS dataset to add coordinate arrays")
@@ -94,10 +97,13 @@ class Giss(GriddedSource):
         For GISS data, some variables like 't' are 3D (lm, jm, im) but represent
         a single time slice. For plotting purposes, we may need to add a time dimension.
         
-        Args:
-            dataset: Dataset to process
+        Parameters
+        ----------
+            dataset
+                Dataset to process
             
-        Returns:
+        Returns
+        -------
             Dataset with time dimensions added where appropriate
         """
         variables_to_process = []
@@ -121,10 +127,13 @@ class Giss(GriddedSource):
     def preprocess_data(self, data_array: xr.DataArray) -> xr.DataArray:
         """Preprocess individual data arrays for GISS-specific handling.
         
-        Args:
-            data_array: Input data array
+        Parameters
+        ----------
+            data_array
+                Input data array
             
-        Returns:
+        Returns
+        -------
             Processed data array
         """
         # If the data array has no time dimension but plotting expects one,

@@ -24,7 +24,8 @@ class DataSource(ABC):
     methods to access and manipulate it. It also implements delegation patterns to allow
     direct access to the underlying dataset's attributes and items.
     
-    Attributes:
+    Attributes
+    ----------
         model_name (str, optional): Name of the model or data source type.
         config_manager (object, optional): Configuration manager providing access to settings.
         dataset (xarray.Dataset): The loaded dataset (initialized to None).
@@ -50,26 +51,28 @@ class DataSource(ABC):
         """
         Load data from the specified file path into an xarray dataset.
         
-        Args:
-            file_path (str): Path to the data file.
+        Parameters
+        ----------
+            file_path : str
+                Path to the data file.
             
-        Returns:
-            xarray.Dataset: An xarray dataset containing the loaded data.
-            
+        Returns
+        -------
+            xarray.Dataset
+                An xarray dataset containing the loaded data.
         This abstract method must be implemented by all concrete data source classes.
         The implementation should handle opening the specified file, loading its contents
         into an xarray Dataset, and performing any necessary preprocessing or validation.
-        
         The method should handle format-specific details while ensuring the returned
         dataset conforms to the expected structure for the eViz application.
-        
         """
         raise NotImplementedError("Subclasses must implement the load_data method.")
     
     def validate_data(self) -> bool:
         """Validate the loaded data.
         
-        Returns:
+        Returns
+        -------
             True if the data is valid, False otherwise
         """
         self.logger.debug("Validating data")
@@ -81,12 +84,14 @@ class DataSource(ABC):
     def get_field(self, field_name: str) -> Optional[xr.DataArray]:
         """Get a specific field from the dataset.
         
-        Args:
-            field_name: Name of the field to retrieve
+        Parameters
+        ----------
+            field_name
+                Name of the field to retrieve
             
-        Returns:
+        Returns
+        -------
             DataArray containing the field data, or None if the field doesn't exist
-
         Subclasses may override this method to implement more specific validation
         logic appropriate for their data format or structure.
         """
@@ -103,7 +108,8 @@ class DataSource(ABC):
     def get_metadata(self) -> Dict[str, Any]:
         """Get metadata about the dataset.
         
-        Returns:
+        Returns
+        -------
             Dictionary containing metadata
         """
         return self.metadata
@@ -111,7 +117,8 @@ class DataSource(ABC):
     def get_dimensions(self) -> List[str]:
         """Get the dimensions of the dataset.
         
-        Returns:
+        Returns
+        -------
             List of dimension names
         """
         if self.dataset is None:
@@ -121,7 +128,8 @@ class DataSource(ABC):
     def get_variables(self) -> List[str]:
         """Get the variables in the dataset.
         
-        Returns:
+        Returns
+        -------
             List of variable names
         """
         if self.dataset is None:
@@ -139,20 +147,25 @@ class DataSource(ABC):
         This allows users to call xarray.Dataset methods directly on DataSource objects
         without having to access the .dataset attribute explicitly.
         
-        Args:
-            name: Name of the attribute to access
+        Parameters
+        ----------
+            name
+                Name of the attribute to access
             
-        Returns:
+        Returns
+        -------
             The attribute from the underlying dataset
-            
-        Raises:
-            AttributeError: If the attribute doesn't exist in the dataset
+        Raises
+        ------
+            AttributeError
+                If the attribute doesn't exist in the dataset
 
         This method allows users to call xarray.Dataset methods directly on DataSource
         objects without having to access the .dataset attribute explicitly, providing
         a more convenient API.
         
-        Example:
+        Example
+        -------
             # Instead of:
             result = data_source.dataset.mean()
             
@@ -173,21 +186,27 @@ class DataSource(ABC):
         This allows users to access variables using square brackets directly on DataSource objects
         without having to access the .dataset attribute explicitly.
         
-        Args:
-            key: Key to access (usually a variable name)
+        Parameters
+        ----------
+            key
+                Key to access (usually a variable name)
             
-        Returns:
+        Returns
+        -------
             The item from the underlying dataset
-            
-        Raises:
-            KeyError: If the key doesn't exist in the dataset
-            TypeError: If no dataset is loaded
+        Raises
+        ------
+            KeyError
+                If the key doesn't exist in the dataset
+            TypeError
+                If no dataset is loaded
             
         This method allows users to access variables using square brackets directly
         on DataSource objects without having to access the .dataset attribute explicitly,
         providing a more convenient API.
         
-        Example:
+        Example
+        -------
             # Instead of:
             temperature = data_source.dataset['temperature']
             
@@ -203,22 +222,24 @@ class DataSource(ABC):
         """
         Get the model-specific dimension name for a gridded dimension.
         
-        Args:
-            gridded_dim_name (str): GriddedSource dimension name (e.g., 'xc', 'yc', 'zc', 'tc')
-            available_dims (list, optional): List of available dimensions in the dataset
+        Parameters
+        ----------
+            gridded_dim_name : str
+                GriddedSource dimension name (e.g., 'xc', 'yc', 'zc', 'tc')
+            available_dims : list, optional
+                List of available dimensions in the dataset
             
-        Returns:
-            str or None: The model-specific dimension name if found, otherwise None
-            
+        Returns
+        -------
+            str or None
+                The model-specific dimension name if found, otherwise None
         This method maps standard dimension names ('xc', 'yc', 'zc', 'tc') to their
         model-specific equivalents using the configuration's meta_coords mapping.
         It handles various formats of dimension specifications including strings,
         lists, and dictionaries.
-        
         The method supports fallback to default mappings when model-specific mappings
         are not available, and can filter the results based on available dimensions
         in the dataset.
-        
         This is a key utility for working with datasets from different models that
         may use different naming conventions for the same conceptual dimensions.
         """

@@ -20,12 +20,16 @@ class AltairScatterPlotter(ScatterPlotter):
     def plot(self, config, data_to_plot):
         """Create an interactive scatter plot using Altair.
         
-        Args:
-            config: Configuration manager
-            data_to_plot: Tuple containing (x_data, y_data, z_data, field_name, plot_type, findex, fig)
+        Parameters
+        ----------
+            config
+                Configuration manager
+            data_to_plot
+                Tuple containing (x_data, y_data, z_data, field_name, plot_type, findex, fig)
                 where z_data is optional and can be used for coloring points
         
-        Returns:
+        Returns
+        -------
             The created Altair chart object
         """
         x_data, y_data, z_data, field_name, plot_type, findex, _ = data_to_plot
@@ -143,12 +147,17 @@ class AltairScatterPlotter(ScatterPlotter):
     def _convert_to_dataframe(self, x_data, y_data, z_data=None):
         """Convert data to pandas DataFrame for Altair.
         
-        Args:
-            x_data: X-coordinate values
-            y_data: Y-coordinate values
-            z_data: Optional Z values for coloring points
+        Parameters
+        ----------
+            x_data
+                X-coordinate values
+            y_data
+                Y-coordinate values
+            z_data
+                Optional Z values for coloring points
             
-        Returns:
+        Returns
+        -------
             pandas DataFrame with columns 'x', 'y', and optionally 'z'
         """
         try:

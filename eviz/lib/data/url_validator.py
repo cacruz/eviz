@@ -6,11 +6,15 @@ def is_url(path):
     """
     Check if a path is a URL.
     
-    Args:
-        path (str): The path to check
+    Parameters
+    ----------
+        path : str
+            The path to check
         
-    Returns:
-        bool: True if the path is a URL, False otherwise
+    Returns
+    -------
+        bool
+            True if the path is a URL, False otherwise
     """
     try:
         result = urlparse(path)
@@ -23,11 +27,15 @@ def is_opendap_url(url):
     """
     Check if a URL is an OpenDAP endpoint.
     
-    Args:
-        url (str): The URL to check
+    Parameters
+    ----------
+        url : str
+            The URL to check
         
-    Returns:
-        bool: True if the URL is an OpenDAP endpoint, False otherwise
+    Returns
+    -------
+        bool
+            True if the URL is an OpenDAP endpoint, False otherwise
     """
     if not is_url(url):
         return False

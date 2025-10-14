@@ -25,7 +25,8 @@ class GenericDataSource(ABC):
     to work with the EViz visualization system. It provides common
     functionality for data processing, plotting, and configuration management.
     
-    Attributes:
+    Attributes
+    ----------
         config_manager: Configuration manager instance
         plot_manager: Plot manager for handling visualization
         data_extractor: Data extraction utilities
@@ -53,10 +54,13 @@ class GenericDataSource(ABC):
         """
         Process raw dataset into visualization-ready format.
         
-        Args:
-            dataset: Input xarray Dataset
+        Parameters
+        ----------
+            dataset
+                Input xarray Dataset
             
-        Returns:
+        Returns
+        -------
             Dictionary containing processed data
         """
         pass
@@ -66,10 +70,13 @@ class GenericDataSource(ABC):
         """
         Validate that the dataset is compatible with this data source.
         
-        Args:
-            dataset: Input xarray Dataset
+        Parameters
+        ----------
+            dataset
+                Input xarray Dataset
             
-        Returns:
+        Returns
+        -------
             True if dataset is valid, False otherwise
         """
         pass
@@ -78,10 +85,14 @@ class GenericDataSource(ABC):
         """
         Create plots for the specified field and plot type.
         
-        Args:
-            dataset: Input xarray Dataset
-            field_name: Name of the field to plot
-            plot_type: Type of plot to create (xy, xt, tx, etc.)
+        Parameters
+        ----------
+            dataset
+                Input xarray Dataset
+            field_name
+                Name of the field to plot
+            plot_type
+                Type of plot to create (xy, xt, tx, etc.)
         """
         if field_name not in dataset.data_vars:
             raise ValueError(f"Field '{field_name}' not found in dataset")
@@ -93,7 +104,8 @@ class GenericDataSource(ABC):
         """
         Get list of plot types supported by this data source.
         
-        Returns:
+        Returns
+        -------
             List of supported plot type strings
         """
         return ['xy', 'xt', 'tx', 'yz', 'scatter', 'box', 'polar']
