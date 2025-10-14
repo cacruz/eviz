@@ -21,6 +21,7 @@ class Landsat(GenericSource):
         config : Config
             Config object associated with this data source
     """
+
     config: Config = None
     source_data: Any = None
     _ds_attrs: dict = field(default_factory=dict)
@@ -38,11 +39,11 @@ class Landsat(GenericSource):
 
     def prepare_data(self) -> None:
         ds = xr.Dataset()
-        fid = self.config.readers[0].read_data(self.config._file_list[0]['filename'])
+        fid = self.config.readers[0].read_data(self.config._file_list[0]["filename"])
         self.model_data = self.config.readers[0].process_file(fid, ds)
         self.config.readers[0].datasets.append(self.model_data)
 
-        self.field_name = 'toa_band6'
+        self.field_name = "toa_band6"
         self.toa_band6 = self.model_data[self.field_name][0, :, :]
 
     def plot(self):
@@ -50,11 +51,12 @@ class Landsat(GenericSource):
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 
         # plot
-        units = self.toa_band6.attrs['units']
+        units = self.toa_band6.attrs["units"]
         lon = self.toa_band6.lon.values
         lat = self.toa_band6.lat.values
         c = ax.contourf(lon, lat, self.toa_band6)
         ax.set_title(self.field_name, fontsize=12)
-        _ = fig.colorbar(c, ax=ax, orientation='vertical', pad=0.05, fraction=0.05, label=units)
+        _ = fig.colorbar(
+            c, ax=ax, orientation="vertical", pad=0.05, fraction=0.05, label=units
+        )
         plt.show()
-

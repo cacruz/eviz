@@ -11,8 +11,8 @@ from .gridded import GriddedDataSource
 from .observational import ObservationalDataSource
 
 __all__ = [
-    'GenericDataSource',
-    'GriddedDataSource', 
-    'ObservationalDataSource',
-    'DataSourceFactory'
+    "GenericDataSource",
+    "GriddedDataSource",
+    "ObservationalDataSource",
+    "DataSourceFactory",
 ]

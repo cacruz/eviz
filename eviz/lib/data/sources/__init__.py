@@ -10,10 +10,10 @@ from .netcdf import NetCDFDataSource
 from .zarr import ZARRDataSource
 
 __all__ = [
-    'DataSource',
-    'NetCDFDataSource',
-    'HDF5DataSource',
-    'CSVDataSource',
-    'GRIBDataSource',
-    'ZARRDataSource'
+    "DataSource",
+    "NetCDFDataSource",
+    "HDF5DataSource",
+    "CSVDataSource",
+    "GRIBDataSource",
+    "ZARRDataSource",
 ]

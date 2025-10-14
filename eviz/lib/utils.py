@@ -18,12 +18,13 @@ from yaml import SafeLoader
 from eviz.lib.config.paths_config import PathsConfig
 
 logger = logging.getLogger(__name__)
-path_matcher = re.compile(r'\$\{([^}^{]+)\}')
+path_matcher = re.compile(r"\$\{([^}^{]+)\}")
 
 
 # ------------------------------
 # General Utility Functions
 # ------------------------------
+
 
 def logger_setup(logger_name, log=1, verbose=1):
     """Set up the application logger."""
@@ -47,7 +48,8 @@ def logger_setup(logger_name, log=1, verbose=1):
     stdout_log = logging.StreamHandler(sys.stdout)
     stdout_log.setLevel(verbose_level)
     formatter = logging.Formatter(
-        "%(levelname)s :: %(module)s (%(funcName)s:%(lineno)d) : %(message)s")
+        "%(levelname)s :: %(module)s (%(funcName)s:%(lineno)d) : %(message)s"
+    )
     stdout_log.setFormatter(formatter)
     root = logging.getLogger()
     root.addHandler(stdout_log)
@@ -86,8 +88,8 @@ def get_nested_key_value(dictionary: Dict, keys: List[str]) -> Any:
             current_dict = current_dict[key]
         else:
             return None
-    if isinstance(current_dict, str) and ',' in current_dict:
-        current_dict = current_dict.split(',')
+    if isinstance(current_dict, str) and "," in current_dict:
+        current_dict = current_dict.split(",")
     return current_dict
 
 
@@ -137,14 +139,15 @@ def get_project_root(anchor=".git"):
 # YAML Utility Functions
 # ------------------------------
 
+
 def validate_yaml(file_content):
     """Validate a YAML file."""
     try:
-        with open(file_content, 'r') as file:
+        with open(file_content, "r") as file:
             yaml.safe_load(file)
         return True
     except FileNotFoundError:
-        logger.error(f'{file_content} does not exist')
+        logger.error(f"{file_content} does not exist")
         return None
     except yaml.YAMLError as exc:
         logger.error(f"yaml.YAMLError: {exc}")
@@ -156,14 +159,14 @@ def yaml_path_constructor(loader, node):
     value = node.value
     match = path_matcher.match(value)
     env_var = match.group()[2:-1]
-    return os.environ.get(env_var) + value[match.end():]
+    return os.environ.get(env_var) + value[match.end() :]
 
 
 def load_yaml_simple(file_path: str) -> Dict[str, Any]:
     """Load a YAML file."""
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"YAML file not found: {file_path}")
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         config = yaml.safe_load(file)
         config = expand_env_vars(config)
         return config
@@ -184,25 +187,26 @@ def load_yaml(yaml_filename):
     """Load a YAML file."""
     my_yaml = os.path.abspath(yaml_filename)
     if not validate_yaml(my_yaml):
-        logger.error(f'Error loading yaml file: {my_yaml}')
+        logger.error(f"Error loading yaml file: {my_yaml}")
         sys.exit("YAML validation failure!")
     try:
-        yaml.add_implicit_resolver('!path', path_matcher, None, SafeLoader)
-        yaml.add_constructor('!path', yaml_path_constructor, SafeLoader)
+        yaml.add_implicit_resolver("!path", path_matcher, None, SafeLoader)
+        yaml.add_constructor("!path", yaml_path_constructor, SafeLoader)
 
-        logger.debug('loading yaml %s' % my_yaml)
+        logger.debug("loading yaml %s" % my_yaml)
         with open(my_yaml) as f:
             yaml_config = yaml.safe_load(f)
-            logger.debug(f'{my_yaml} yaml loaded successfully')
+            logger.debug(f"{my_yaml} yaml loaded successfully")
         return yaml_config
     except FileNotFoundError:
-        logger.error(f'{my_yaml} does not exist')
+        logger.error(f"{my_yaml} does not exist")
         return None
 
 
 # ------------------------------
 # Configuration-Specific Utilities
 # ------------------------------
+
 
 def get_nested_key(data: Dict, keys: List[str], default=None) -> Any:
     """
@@ -266,8 +270,8 @@ def log_method(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         # Extract the file name from the module path
-        module_parts = func.__module__.split('.')
-        file_name = module_parts[-1] + '.py'
+        module_parts = func.__module__.split(".")
+        file_name = module_parts[-1] + ".py"
         logger.debug(f"Starting {func.__name__} in {file_name}")
         result = func(*args, **kwargs)
         logger.debug(f"Finished {func.__name__} in {file_name}")
@@ -280,21 +284,21 @@ def log_method(func):
 # Domain-Specific Utilities
 # ------------------------------
 def read_meta_coords(paths=None) -> dict:
-    """ Read meta coordinates YAML file and load into data structure"""
+    """Read meta coordinates YAML file and load into data structure"""
     if paths is None:
         paths = PathsConfig()
     coord_file_path = paths.meta_coords_path
-    root_path = os.path.dirname(os.path.abspath('const.py'))
+    root_path = os.path.dirname(os.path.abspath("const.py"))
     if not os.path.exists(coord_file_path):
         coord_file_path = os.path.join(root_path, paths.meta_coords_path)
     return load_yaml(coord_file_path)
 
 
 def read_meta_attrs(paths=None) -> dict:
-    """ Read meta attributes YAML file and load into data structure"""
+    """Read meta attributes YAML file and load into data structure"""
     if paths is None:
         paths = PathsConfig()
-    root_path = os.path.dirname(os.path.abspath('const.py'))
+    root_path = os.path.dirname(os.path.abspath("const.py"))
     attr_file_path = paths.meta_attrs_path
     if not os.path.exists(attr_file_path):
         attr_file_path = os.path.join(root_path, paths.meta_attrs_path)
@@ -302,10 +306,10 @@ def read_meta_attrs(paths=None) -> dict:
 
 
 def read_species_db(paths=None) -> dict:
-    """ Read species database YAML file and load into data structure"""
+    """Read species database YAML file and load into data structure"""
     if paths is None:
         paths = PathsConfig()
-    root_path = os.path.dirname(os.path.abspath('const.py'))
+    root_path = os.path.dirname(os.path.abspath("const.py"))
     db_path = paths.species_db_path
     if not os.path.exists(db_path):
         db_path = os.path.join(root_path, paths.species_db_path)
@@ -313,13 +317,13 @@ def read_species_db(paths=None) -> dict:
 
 
 def get_reader_from_name(name):
-    """ Get reader name (as defined in BaseSourceFactory) from a given source name """
-    if name in ['gridded', 'geos', 'ccm', 'cf', 'wrf', 'lis']:
-        return 'gridded'
-    elif name in ['airnow', 'fluxnet']:
-        return 'csv'
-    elif name in ['omi', 'mopitt', 'landsat']:
-        return 'hdf5'
+    """Get reader name (as defined in BaseSourceFactory) from a given source name"""
+    if name in ["gridded", "geos", "ccm", "cf", "wrf", "lis"]:
+        return "gridded"
+    elif name in ["airnow", "fluxnet"]:
+        return "csv"
+    elif name in ["omi", "mopitt", "landsat"]:
+        return "hdf5"
 
 
 def get_season_from_file(file_name):
@@ -337,19 +341,18 @@ def get_season_from_file(file_name):
         return None
 
 
-def squeeze_fig_aspect(fig, preserve='h'):
+def squeeze_fig_aspect(fig, preserve="h"):
     # https://github.com/matplotlib/matplotlib/issues/5463
     preserve = preserve.lower()
     bb = bbase.union([ax.bbox for ax in fig.axes])
 
     w, h = fig.get_size_inches()
-    if preserve == 'h':
+    if preserve == "h":
         new_size = (h * bb.width / bb.height, h)
-    elif preserve == 'w':
+    elif preserve == "w":
         new_size = (w, w * bb.height / bb.width)
     else:
-        raise ValueError(
-            'preserve must be "h" or "w", not {}'.format(preserve))
+        raise ValueError('preserve must be "h" or "w", not {}'.format(preserve))
     fig.set_size_inches(new_size, forward=True)
 
 
@@ -358,12 +361,15 @@ def load_style(style_name, context="notebook", palette="deep"):
     if style_name == "default":
         return
 
-    style_file = os.path.join(os.path.dirname(__file__), "styles", f"{style_name}.mplstyle")
+    style_file = os.path.join(
+        os.path.dirname(__file__), "styles", f"{style_name}.mplstyle"
+    )
     if not os.path.exists(style_file):
-        logger.error(f"Style '{style_name}' not found at {style_file}. Using default style.")
-        return    
-        
+        logger.error(
+            f"Style '{style_name}' not found at {style_file}. Using default style."
+        )
+        return
+
     plt.style.use(style_file)
     sns.set_context(context)
     sns.set_palette(palette)
-

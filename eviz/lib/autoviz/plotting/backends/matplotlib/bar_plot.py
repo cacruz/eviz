@@ -40,7 +40,9 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
         # Unpack data_to_plot with backward compatibility
         plot_params = {}
         if len(data_to_plot) >= 7:
-            data, field_name, plot_type, findex, fig, plot_options, plot_params = data_to_plot[:7]
+            data, field_name, plot_type, findex, fig, plot_options, plot_params = (
+                data_to_plot[:7]
+            )
         elif len(data_to_plot) == 6:
             data, field_name, plot_type, findex, fig, plot_options = data_to_plot
         else:
@@ -53,7 +55,7 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
             return fig
 
         self.fig = fig
-        self.ax_opts = config.ax_opts if hasattr(config, 'ax_opts') else {}
+        self.ax_opts = config.ax_opts if hasattr(config, "ax_opts") else {}
 
         if not config.compare and not config.compare_diff:
             if fig.get_axes() is None or len(fig.get_axes()) == 0:
@@ -88,32 +90,36 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
         ax = self.ax
 
         # Extract plot options with defaults
-        color = plot_options.get('color', 'steelblue')
-        width = plot_options.get('width', 0.8)
-        alpha = plot_options.get('alpha', 1.0)
-        edgecolor = plot_options.get('edgecolor', 'black')
-        linewidth = plot_options.get('linewidth', 0.5)
-        orientation = plot_options.get('orientation', 'vertical')  # 'vertical' or 'horizontal'
+        color = plot_options.get("color", "steelblue")
+        width = plot_options.get("width", 0.8)
+        alpha = plot_options.get("alpha", 1.0)
+        edgecolor = plot_options.get("edgecolor", "black")
+        linewidth = plot_options.get("linewidth", 0.5)
+        orientation = plot_options.get(
+            "orientation", "vertical"
+        )  # 'vertical' or 'horizontal'
 
-        with mpl.rc_context(rc=self.ax_opts.get('rc_params', {})):
+        with mpl.rc_context(rc=self.ax_opts.get("rc_params", {})):
             # Handle categorical data with plot_params (x, y, agg)
-            if plot_params and 'x' in plot_params and 'y' in plot_params:
-                x_col = plot_params['x']
-                y_col = plot_params['y']
-                agg_func = plot_params.get('agg', 'mean')
+            if plot_params and "x" in plot_params and "y" in plot_params:
+                x_col = plot_params["x"]
+                y_col = plot_params["y"]
+                agg_func = plot_params.get("agg", "mean")
 
                 if x_col not in data.columns or y_col not in data.columns:
-                    self.logger.error(f"Columns {x_col} or {y_col} not found in DataFrame")
+                    self.logger.error(
+                        f"Columns {x_col} or {y_col} not found in DataFrame"
+                    )
                     return
 
                 # Aggregate data by x column
-                if agg_func == 'mean':
+                if agg_func == "mean":
                     agg_data = data.groupby(x_col)[y_col].mean()
-                elif agg_func == 'sum':
+                elif agg_func == "sum":
                     agg_data = data.groupby(x_col)[y_col].sum()
-                elif agg_func == 'count':
+                elif agg_func == "count":
                     agg_data = data.groupby(x_col)[y_col].count()
-                elif agg_func == 'median':
+                elif agg_func == "median":
                     agg_data = data.groupby(x_col)[y_col].median()
                 else:
                     self.logger.warning(f"Unknown aggregation '{agg_func}', using mean")
@@ -129,7 +135,7 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
                 x_labels = data.index
                 y_values = data.values
                 ylabel = field_name
-                xlabel = 'Index'
+                xlabel = "Index"
             elif isinstance(data, pd.DataFrame):
                 # DataFrame - check if field_name is a column
                 if field_name in data.columns:
@@ -142,10 +148,12 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
                         xlabel = x_col
                     else:
                         x_labels = data.index
-                        xlabel = 'Index'
+                        xlabel = "Index"
                     ylabel = field_name
                 else:
-                    self.logger.error(f"Field {field_name} not found in DataFrame columns")
+                    self.logger.error(
+                        f"Field {field_name} not found in DataFrame columns"
+                    )
                     return
             else:
                 self.logger.error(f"Unsupported data type: {type(data)}")
@@ -153,7 +161,7 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
 
             x_pos = np.arange(len(x_labels))
 
-            if orientation == 'horizontal':
+            if orientation == "horizontal":
                 bars = ax.barh(
                     x_pos,
                     y_values,
@@ -161,7 +169,7 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
                     color=color,
                     alpha=alpha,
                     edgecolor=edgecolor,
-                    linewidth=linewidth
+                    linewidth=linewidth,
                 )
                 ax.set_yticks(x_pos)
                 ax.set_yticklabels(x_labels, rotation=0)
@@ -175,40 +183,48 @@ class MatplotlibCSVBarPlotter(MatplotlibBasePlotter):
                     color=color,
                     alpha=alpha,
                     edgecolor=edgecolor,
-                    linewidth=linewidth
+                    linewidth=linewidth,
                 )
                 ax.set_xticks(x_pos)
-                ax.set_xticklabels(x_labels, rotation=plot_options.get('rotation', 45), ha='right')
+                ax.set_xticklabels(
+                    x_labels, rotation=plot_options.get("rotation", 45), ha="right"
+                )
                 ax.set_xlabel(xlabel)
                 ax.set_ylabel(ylabel)
 
             # Add value labels on bars if requested
-            if plot_options.get('show_values', False):
-                label_format = plot_options.get('value_format', '%.1f')
+            if plot_options.get("show_values", False):
+                label_format = plot_options.get("value_format", "%.1f")
                 for i, (bar, value) in enumerate(zip(bars, y_values)):
-                    if orientation == 'horizontal':
+                    if orientation == "horizontal":
                         label_x = value
                         label_y = bar.get_y() + bar.get_height() / 2
-                        ha, va = 'left', 'center'
+                        ha, va = "left", "center"
                     else:
                         label_x = bar.get_x() + bar.get_width() / 2
                         label_y = value
-                        ha, va = 'center', 'bottom'
+                        ha, va = "center", "bottom"
 
-                    ax.text(label_x, label_y, label_format % value,
-                           ha=ha, va=va, fontsize=8)
+                    ax.text(
+                        label_x, label_y, label_format % value, ha=ha, va=va, fontsize=8
+                    )
 
-            title = plot_options.get('title', f'{field_name}')
-            ax.set_title(title, fontsize=plot_options.get('title_fontsize', 12))
+            title = plot_options.get("title", f"{field_name}")
+            ax.set_title(title, fontsize=plot_options.get("title_fontsize", 12))
 
-            if plot_options.get('grid', True):
-                ax.grid(axis='y' if orientation == 'vertical' else 'x',
-                       alpha=0.3, linestyle='--')
+            if plot_options.get("grid", True):
+                ax.grid(
+                    axis="y" if orientation == "vertical" else "x",
+                    alpha=0.3,
+                    linestyle="--",
+                )
 
-            if 'ylim' in plot_options:
-                if orientation == 'vertical':
-                    ax.set_ylim(plot_options['ylim'])
+            if "ylim" in plot_options:
+                if orientation == "vertical":
+                    ax.set_ylim(plot_options["ylim"])
                 else:
-                    ax.set_xlim(plot_options['ylim'])
+                    ax.set_xlim(plot_options["ylim"])
 
-            self.logger.info(f"Created bar chart for {field_name} with {len(x_labels)} bars")
+            self.logger.info(
+                f"Created bar chart for {field_name} with {len(x_labels)} bars"
+            )

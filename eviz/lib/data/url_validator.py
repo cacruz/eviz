@@ -5,12 +5,12 @@ from urllib.parse import urlparse
 def is_url(path):
     """
     Check if a path is a URL.
-    
+
     Parameters
     ----------
         path : str
             The path to check
-        
+
     Returns
     -------
         bool
@@ -26,12 +26,12 @@ def is_url(path):
 def is_opendap_url(url):
     """
     Check if a URL is an OpenDAP endpoint.
-    
+
     Parameters
     ----------
         url : str
             The URL to check
-        
+
     Returns
     -------
         bool
@@ -42,13 +42,13 @@ def is_opendap_url(url):
 
     # Common OpenDAP URL patterns
     opendap_patterns = [
-        r'thredds/dodsC',  # THREDDS Data Server
-        r'opendap',  # Generic OpenDAP
-        r'dods',  # Generic DODS
-        r'dap',  # Generic DAP
-        r'\.nc$',  # NetCDF file extension
-        r'\.nc\?',  # NetCDF with query parameters
-        r'\.nc#',  # NetCDF with fragment
+        r"thredds/dodsC",  # THREDDS Data Server
+        r"opendap",  # Generic OpenDAP
+        r"dods",  # Generic DODS
+        r"dap",  # Generic DAP
+        r"\.nc$",  # NetCDF file extension
+        r"\.nc\?",  # NetCDF with query parameters
+        r"\.nc#",  # NetCDF with fragment
     ]
 
     for pattern in opendap_patterns:

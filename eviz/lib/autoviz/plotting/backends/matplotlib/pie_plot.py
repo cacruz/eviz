@@ -40,7 +40,9 @@ class MatplotlibCSVPiePlotter(MatplotlibBasePlotter):
         # Unpack data_to_plot with backward compatibility
         plot_params = {}
         if len(data_to_plot) >= 7:
-            data, field_name, plot_type, findex, fig, plot_options, plot_params = data_to_plot[:7]
+            data, field_name, plot_type, findex, fig, plot_options, plot_params = (
+                data_to_plot[:7]
+            )
         elif len(data_to_plot) == 6:
             data, field_name, plot_type, findex, fig, plot_options = data_to_plot
         else:
@@ -53,7 +55,7 @@ class MatplotlibCSVPiePlotter(MatplotlibBasePlotter):
             return fig
 
         self.fig = fig
-        self.ax_opts = config.ax_opts if hasattr(config, 'ax_opts') else {}
+        self.ax_opts = config.ax_opts if hasattr(config, "ax_opts") else {}
 
         if not config.compare and not config.compare_diff:
             if fig.get_axes() is None or len(fig.get_axes()) == 0:
@@ -87,15 +89,17 @@ class MatplotlibCSVPiePlotter(MatplotlibBasePlotter):
         """
         ax = self.ax
 
-        with mpl.rc_context(rc=self.ax_opts.get('rc_params', {})):
+        with mpl.rc_context(rc=self.ax_opts.get("rc_params", {})):
             # Handle categorical data with plot_params (labels, values)
-            if plot_params and 'labels' in plot_params and 'values' in plot_params:
-                labels_col = plot_params['labels']
-                values_col = plot_params['values']
+            if plot_params and "labels" in plot_params and "values" in plot_params:
+                labels_col = plot_params["labels"]
+                values_col = plot_params["values"]
 
                 if isinstance(data, pd.DataFrame):
                     if labels_col not in data.columns or values_col not in data.columns:
-                        self.logger.error(f"Columns {labels_col} or {values_col} not found in DataFrame")
+                        self.logger.error(
+                            f"Columns {labels_col} or {values_col} not found in DataFrame"
+                        )
                         return
 
                     # Group by labels column and sum values
@@ -103,7 +107,9 @@ class MatplotlibCSVPiePlotter(MatplotlibBasePlotter):
                     labels = grouped.index.astype(str).values
                     values = grouped.values
                 else:
-                    self.logger.error("plot_params with 'labels' and 'values' requires DataFrame")
+                    self.logger.error(
+                        "plot_params with 'labels' and 'values' requires DataFrame"
+                    )
                     return
 
             elif isinstance(data, pd.Series):
@@ -117,12 +123,16 @@ class MatplotlibCSVPiePlotter(MatplotlibBasePlotter):
                     # Try to find an appropriate label column (first column or index)
                     if len(data.columns) > 1:
                         # Use first column that's not the field being plotted
-                        label_col = [col for col in data.columns if col != field_name][0]
+                        label_col = [col for col in data.columns if col != field_name][
+                            0
+                        ]
                         labels = data[label_col].astype(str).values
                     else:
                         labels = data.index.astype(str)
                 else:
-                    self.logger.error(f"Field {field_name} not found in DataFrame columns")
+                    self.logger.error(
+                        f"Field {field_name} not found in DataFrame columns"
+                    )
                     return
             else:
                 self.logger.error(f"Unsupported data type: {type(data)}")
@@ -132,22 +142,28 @@ class MatplotlibCSVPiePlotter(MatplotlibBasePlotter):
             valid_mask = values > 0
             if not np.any(valid_mask):
                 self.logger.warning(f"No positive values found for {field_name}")
-                ax.text(0.5, 0.5, 'No positive values',
-                       ha='center', va='center', transform=ax.transAxes)
+                ax.text(
+                    0.5,
+                    0.5,
+                    "No positive values",
+                    ha="center",
+                    va="center",
+                    transform=ax.transAxes,
+                )
                 return
 
             values = values[valid_mask]
             labels = labels[valid_mask]
 
             # Extract plot options with defaults
-            colors = plot_options.get('colors', None)
-            explode = plot_options.get('explode', None)
-            autopct = plot_options.get('autopct', '%1.1f%%')
-            startangle = plot_options.get('startangle', 0)
-            shadow = plot_options.get('shadow', False)
-            labeldistance = plot_options.get('labeldistance', 1.1)
-            pctdistance = plot_options.get('pctdistance', 0.6)
-            counterclock = plot_options.get('counterclock', False)
+            colors = plot_options.get("colors", None)
+            explode = plot_options.get("explode", None)
+            autopct = plot_options.get("autopct", "%1.1f%%")
+            startangle = plot_options.get("startangle", 0)
+            shadow = plot_options.get("shadow", False)
+            labeldistance = plot_options.get("labeldistance", 1.1)
+            pctdistance = plot_options.get("pctdistance", 0.6)
+            counterclock = plot_options.get("counterclock", False)
 
             # Validate explode parameter
             if explode is not None:
@@ -167,29 +183,31 @@ class MatplotlibCSVPiePlotter(MatplotlibBasePlotter):
                 shadow=shadow,
                 labeldistance=labeldistance,
                 pctdistance=pctdistance,
-                counterclock=counterclock
+                counterclock=counterclock,
             )
 
             # Customize text properties
-            label_fontsize = plot_options.get('label_fontsize', 10)
-            pct_fontsize = plot_options.get('pct_fontsize', 9)
+            label_fontsize = plot_options.get("label_fontsize", 10)
+            pct_fontsize = plot_options.get("pct_fontsize", 9)
 
             for text in texts:
                 text.set_fontsize(label_fontsize)
 
             for autotext in autotexts:
-                autotext.set_color('white')
+                autotext.set_color("white")
                 autotext.set_fontsize(pct_fontsize)
-                autotext.set_weight('bold')
+                autotext.set_weight("bold")
 
             # Equal aspect ratio ensures that pie is drawn as a circle
-            ax.axis('equal')
+            ax.axis("equal")
 
-            title = plot_options.get('title', f'{field_name}')
-            ax.set_title(title, fontsize=plot_options.get('title_fontsize', 12))
+            title = plot_options.get("title", f"{field_name}")
+            ax.set_title(title, fontsize=plot_options.get("title_fontsize", 12))
 
-            if plot_options.get('legend', False):
-                legend_loc = plot_options.get('legend_loc', 'best')
+            if plot_options.get("legend", False):
+                legend_loc = plot_options.get("legend_loc", "best")
                 ax.legend(wedges, labels, loc=legend_loc, fontsize=8)
 
-            self.logger.info(f"Created pie chart for {field_name} with {len(values)} slices")
+            self.logger.info(
+                f"Created pie chart for {field_name} with {len(values)} slices"
+            )

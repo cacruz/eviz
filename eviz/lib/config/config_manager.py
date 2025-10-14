@@ -19,16 +19,16 @@ from eviz.lib.data.pipeline.pipeline import DataPipeline
 class ConfigManager:
     """
     Enhanced configuration manager for the eViz application.
-    
+
     This class extends the base Config class to provide additional functionality specific
     to the eViz application's needs. It serves as the primary interface between the application
     and its configuration system, offering simplified access to configuration parameters and
     adding application-specific features.
-    
+
     The ConfigManager integrates with command-line arguments, manages comparison modes between
     data sources, provides dimension name mapping, and offers runtime configuration updates.
     It also maintains references to key application components like the data processing pipeline.
-    
+
     Attributes
     ----------
         input_config: Configuration for input data sources and parameters
@@ -44,6 +44,7 @@ class ConfigManager:
         _integrator: Reference to the data integrator (lazy loaded)
         _pipeline: Reference to the data processing pipeline (lazy loaded)
     """
+
     # Required fields first
     input_config: InputConfig
     output_config: OutputConfig
@@ -62,7 +63,7 @@ class ConfigManager:
     _units: Optional[object] = field(default=None, init=False)
     _integrator: Optional[DataIntegrator] = field(default=None, init=False)
     _pipeline: Optional[DataPipeline] = field(default=None, init=False)
-    
+
     # Domain information (extracted from datasets)
     _domain_info: Dict[str, Any] = field(default_factory=dict, init=False)
 
@@ -106,7 +107,7 @@ class ConfigManager:
         """Set the data source index and update config if needed."""
         self._ds_index = value
         # Also update config if it has the attribute
-        if hasattr(self.config, '_ds_index'):
+        if hasattr(self.config, "_ds_index"):
             self.config._ds_index = value
 
     @property
@@ -119,7 +120,7 @@ class ConfigManager:
         """Set the file index and update config if needed."""
         self._findex = value
         # Also update config if it has the attribute
-        if hasattr(self.config, '_findex'):
+        if hasattr(self.config, "_findex"):
             self.config._findex = value
 
     @property
@@ -135,6 +136,7 @@ class ConfigManager:
         if self._units is None:
             try:
                 from eviz.lib.data.units import Units
+
                 self._units = Units(self)
             except Exception as e:
                 self.logger.error(f"Error initializing Units: {e}")
@@ -163,15 +165,15 @@ class ConfigManager:
     def __getattr__(self, name):
         """
         Dynamically access attributes from the underlying config objects.
-        
+
         This method is called only when an attribute is not found through normal lookup.
         It searches for the attribute in the config objects in a specific order.
-        
+
         Parameters
         ----------
             name
                 The name of the attribute to look up
-            
+
         Returns
         -------
             The value of the attribute if found
@@ -189,57 +191,62 @@ class ConfigManager:
             return getattr(self.config, name)
 
         # Then check in other config objects
-        for config in [self.input_config, self.output_config, self.system_config,
-                       self.history_config]:
+        for config in [
+            self.input_config,
+            self.output_config,
+            self.system_config,
+            self.history_config,
+        ]:
             if hasattr(config, name):
                 return getattr(config, name)
 
         raise AttributeError(
-            f"'{self.__class__.__name__}' object has no attribute '{name}'")
+            f"'{self.__class__.__name__}' object has no attribute '{name}'"
+        )
 
     def should_overlay_plots(self, field_name, plot_type):
         """
         Determine if comparison plots for this field should be overlaid on the same axes.
-        
+
         Parameters
         ----------
             field_name : str
                 The name of the field
             plot_type : str
                 The type of plot (e.g., 'yz', 'xt')
-            
+
         Returns
         -------
             bool
                 True if plots should be overlaid, False otherwise
         """
         # Only consider overlaying for profile plot, box plots, and time series
-        if plot_type not in ['yz', 'xt', 'bo']:
+        if plot_type not in ["yz", "xt", "bo"]:
             return False
-            
+
         # Sanity check
         is_profile = False
-        if plot_type == 'yz' and field_name in self.spec_data:
-            is_profile = 'profile_dim' in self.spec_data[field_name].get('yzplot', {})
-        
+        if plot_type == "yz" and field_name in self.spec_data:
+            is_profile = "profile_dim" in self.spec_data[field_name].get("yzplot", {})
+
         # Return True if this is a profile or time series and overlay is requested
-        return (is_profile or plot_type == 'xt' or plot_type == 'bo') and self.overlay
+        return (is_profile or plot_type == "xt" or plot_type == "bo") and self.overlay
 
     def get_file_format(self, file_path: str) -> Optional[str]:
         """
         Get the format for a specific file.
-        
+
         Parameters
         ----------
             file_path : str
                 The path to the file
-            
+
         Returns
         -------
             Optional[str]
                 The format or None if not specified
         """
-        if hasattr(self.input_config, 'get_format_for_file'):
+        if hasattr(self.input_config, "get_format_for_file"):
             return self.input_config.get_format_for_file(file_path)
         return None
 
@@ -247,13 +254,13 @@ class ConfigManager:
     def file_formats(self) -> Dict[str, str]:
         """
         Get a dictionary mapping file paths to their formats.
-        
+
         Returns
         -------
             Dict[str, str]
                 Dictionary mapping file paths to formats
         """
-        if hasattr(self.input_config, '_file_format_mapping'):
+        if hasattr(self.input_config, "_file_format_mapping"):
             return self.input_config._file_format_mapping
         return {}
 
@@ -277,32 +284,32 @@ class ConfigManager:
         result = self._get_model_dim_name_for_source(dim_name, source)
         if result:
             return result
-        
+
         # If that fails, try with all sources
         for i, src in enumerate(self.source_names):
             if i != self.ds_index:  # Skip the one we already tried
                 result = self._get_model_dim_name_for_source(dim_name, src)
                 if result:
                     return result
-        
+
         # If all else fails, try some common dimension names
         common_dims = {
-            'xc': ['lon', 'longitude', 'x'],
-            'yc': ['lat', 'latitude', 'y'],
-            'zc': ['lev', 'level', 'z', 'altitude', 'height', 'plev'],
-            'tc': ['time', 't']
+            "xc": ["lon", "longitude", "x"],
+            "yc": ["lat", "latitude", "y"],
+            "zc": ["lev", "level", "z", "altitude", "height", "plev"],
+            "tc": ["time", "t"],
         }
-        
+
         if dim_name in common_dims:
             # Get all data sources
             all_sources = self.pipeline.get_all_data_sources()
             for source in all_sources.values():
-                if hasattr(source, 'dataset') and source.dataset is not None:
+                if hasattr(source, "dataset") and source.dataset is not None:
                     dims = list(source.dataset.dims)
                     for common_dim in common_dims[dim_name]:
                         if common_dim in dims:
                             return common_dim
-        
+
         return None
 
     def _get_model_dim_name_for_source(self, dim_name, source):
@@ -324,13 +331,13 @@ class ConfigManager:
         if source not in self.meta_coords[dim_name]:
             return None
 
-        if source in ['wrf', 'lis']:
-            coords = self.meta_coords[dim_name][source].get('dim', '')
+        if source in ["wrf", "lis"]:
+            coords = self.meta_coords[dim_name][source].get("dim", "")
         else:
             coords = self.meta_coords[dim_name][source]
 
-        if ',' in coords:
-            coords_list = [c.strip() for c in coords.split(',')]
+        if "," in coords:
+            coords_list = [c.strip() for c in coords.split(",")]
             for item in coords_list:
                 if item in dims:
                     return item
@@ -344,36 +351,36 @@ class ConfigManager:
         Get model-specific dimension name for a specific data array.
         This method checks which of the possible dimension names actually exists
         in the given data_array.
-        
+
         Parameters
         ----------
             dim_name : str
                 The generic dimension name to look up ('tc', 'zc', etc.)
             data_array
                 xarray.DataArray to check dimensions against
-            
+
         Returns
         -------
             str or None
                 The model-specific dimension name that exists in data_array
         """
-        if not hasattr(data_array, 'dims'):
+        if not hasattr(data_array, "dims"):
             return None
-            
-        source = self.source_names[self.ds_index] if self.source_names else 'gridded'
-        
+
+        source = self.source_names[self.ds_index] if self.source_names else "gridded"
+
         if dim_name not in self.meta_coords:
             return None
         if source not in self.meta_coords[dim_name]:
             return None
 
-        if source in ['wrf', 'lis']:
-            coords = self.meta_coords[dim_name][source].get('dim', '')
+        if source in ["wrf", "lis"]:
+            coords = self.meta_coords[dim_name][source].get("dim", "")
         else:
             coords = self.meta_coords[dim_name][source]
 
-        if ',' in coords:
-            coords_list = [c.strip() for c in coords.split(',')]
+        if "," in coords:
+            coords_list = [c.strip() for c in coords.split(",")]
             for item in coords_list:
                 if item in data_array.dims:
                     return item
@@ -385,12 +392,12 @@ class ConfigManager:
     def _get_current_file_path(self, source):
         """
         Get the file path for the current file index or source name.
-        
+
         Parameters
         ----------
             source : str
                 The source name to look for if file index is invalid
-            
+
         Returns
         -------
             str or None
@@ -399,30 +406,33 @@ class ConfigManager:
         try:
             if self.findex is not None and self.findex < len(self.app_data.inputs):
                 file_entry = self.app_data.inputs[self.findex]
-                return os.path.join(file_entry.get('location', ''),
-                                    file_entry.get('name', ''))
+                return os.path.join(
+                    file_entry.get("location", ""), file_entry.get("name", "")
+                )
         except Exception as e:
             self.logger.debug(
-                f"Could not get file path for ds_index {self.ds_index}, findex {self.findex}: {e}")
+                f"Could not get file path for ds_index {self.ds_index}, findex {self.findex}: {e}"
+            )
 
         # Fallback to searching by source name
         for entry in self.app_data.inputs:
-            if entry.get('source_name') == source:
-                return os.path.join(entry.get('location', ''), entry.get('name', ''))
+            if entry.get("source_name") == source:
+                return os.path.join(entry.get("location", ""), entry.get("name", ""))
 
         self.logger.debug(
-            f"Could not determine file path for source '{source}' and findex {self.findex}")
+            f"Could not determine file path for source '{source}' and findex {self.findex}"
+        )
         return None
 
     def _get_data_source_for_file(self, file_path):
         """
         Get the data source for a file path.
-        
+
         Parameters
         ----------
             file_path : str
                 The file path to get the data source for
-            
+
         Returns
         -------
             object or None
@@ -432,8 +442,11 @@ class ConfigManager:
             return None
 
         data_source = self.pipeline.get_data_source(file_path)
-        if not data_source or not hasattr(data_source,
-                                          'dataset') or data_source.dataset is None:
+        if (
+            not data_source
+            or not hasattr(data_source, "dataset")
+            or data_source.dataset is None
+        ):
             self.logger.debug(f"No data source or dataset loaded for file: {file_path}")
             return None
 
@@ -443,19 +456,22 @@ class ConfigManager:
     def _get_available_dimensions(data_source):
         """
         Get the available dimensions from a data source.
-        
+
         Parameters
         ----------
             data_source : object
                 The data source to get dimensions from
-            
+
         Returns
         -------
             list or None
                 The list of available dimensions if found, None otherwise
         """
-        if not data_source or not hasattr(data_source,
-                                          'dataset') or data_source.dataset is None:
+        if (
+            not data_source
+            or not hasattr(data_source, "dataset")
+            or data_source.dataset is None
+        ):
             return None
 
         available_dims = list(data_source.dataset.dims.keys())
@@ -469,19 +485,25 @@ class ConfigManager:
         self.a_list = []
         self.b_list = []
 
-        if not (self.input_config.compare or self.input_config.compare_diff or self.input_config.overlay):
+        if not (
+            self.input_config.compare
+            or self.input_config.compare_diff
+            or self.input_config.overlay
+        ):
             self.logger.debug("Comparison not enabled")
             return
 
-        compare_ids = self.input_config.compare_exp_ids or self.input_config.overlay_exp_ids or []
+        compare_ids = (
+            self.input_config.compare_exp_ids or self.input_config.overlay_exp_ids or []
+        )
         if not compare_ids:
             return
 
         # Create a mapping of exp_ids to their indices
         exp_id_indices = {}
         for i, entry in enumerate(self.app_data.inputs):
-            if 'exp_id' in entry:
-                exp_id_indices[entry['exp_id']] = i
+            if "exp_id" in entry:
+                exp_id_indices[entry["exp_id"]] = i
 
         # Process all comparison IDs
         for i, exp_id in enumerate(compare_ids):
@@ -514,129 +536,132 @@ class ConfigManager:
 
         for i, entry in enumerate(self.app_data.inputs):
             # Check if 'filename' key exists before accessing
-            if 'filename' in entry and (filename == entry['filename'] or
-                                        os.path.basename(filename) == os.path.basename(
-                        entry['filename'])):
+            if "filename" in entry and (
+                filename == entry["filename"]
+                or os.path.basename(filename) == os.path.basename(entry["filename"])
+            ):
                 return i
 
-        self.logger.warning(f"File index not found for filename: {filename}, returning 0")
+        self.logger.warning(
+            f"File index not found for filename: {filename}, returning 0"
+        )
         return 0
 
     def get_levels(self, to_plot, plot_type):
         """
         Get model levels to plot from YAML specs file.
-        
+
         Parameters
         ----------
             to_plot : str
                 The field to plot
             plot_type : str
                 The type of plot
-            
+
         Returns
         -------
             list
                 The levels to plot, or an empty list if not found
         """
-        levels = u.get_nested_key_value(self.spec_data, [to_plot, plot_type, 'levels'])
+        levels = u.get_nested_key_value(self.spec_data, [to_plot, plot_type, "levels"])
         return levels if levels else []
 
     def get_file_description(self, file):
         """
         Get user-defined file description.
-        
+
         Parameters
         ----------
             file : int or str
                 The file index or name
-            
+
         Returns
         -------
             str or None
                 The file description if found, None otherwise
         """
         try:
-            return self.input_config.file_list[file]['description']
+            return self.input_config.file_list[file]["description"]
         except (KeyError, IndexError, TypeError) as e:
-            self.logger.debug(f'Unable to get file description: {e}')
+            self.logger.debug(f"Unable to get file description: {e}")
             return None
 
     def get_file_exp_name(self, i):
         """
         Get user-defined experiment name associated with the input file.
-        
+
         Parameters
         ----------
             i : int
                 The file index
-            
+
         Returns
         -------
             str or None
                 The experiment name if found, None otherwise
         """
         try:
-            return self.input_config.file_list[i]['exp_name']
+            return self.input_config.file_list[i]["exp_name"]
         except Exception as e:
-            self.logger.debug(f'Key error {e}, returning default')
+            self.logger.debug(f"Key error {e}, returning default")
             return None
 
     def get_file_exp_id(self, i):
         """
         Get user-defined experiment ID associated with the input file.
         If an expid is set, then it will be used to compare with another expid, as set in compare field.
-        
+
         Parameters
         ----------
             i : int
                 The file index
-            
+
         Returns
         -------
             str or None
                 The experiment ID if found, None otherwise
         """
         try:
-            return self.input_config.file_list[i]['exp_id']
+            return self.input_config.file_list[i]["exp_id"]
         except Exception as e:
-            self.logger.debug(f'Key error {e}, returning default')
+            self.logger.debug(f"Key error {e}, returning default")
             return None
 
     def get_dim_names(self, pid):
         """
         Get dimension names for a specific plot type.
-        
+
         Parameters
         ----------
             pid : str
                 The plot ID
-            
+
         Returns
         -------
             tuple
                 A tuple of (dim1, dim2) dimension names
         """
         dim1, dim2 = None, None
-        if 'yz' in pid:
-            dim1, dim2 =  self.get_model_dim_name('yc'), self.get_model_dim_name('zc')
-        elif 'xt' in pid:
-            dim1, dim2 = self.get_model_dim_name('tc'), None
-        elif 'tx' in pid:
-            dim1, dim2 = self.get_model_dim_name('xc'), self.get_model_dim_name('tc')
+        if "yz" in pid:
+            dim1, dim2 = self.get_model_dim_name("yc"), self.get_model_dim_name("zc")
+        elif "xt" in pid:
+            dim1, dim2 = self.get_model_dim_name("tc"), None
+        elif "tx" in pid:
+            dim1, dim2 = self.get_model_dim_name("xc"), self.get_model_dim_name("tc")
         else:
-            dim1, dim2 = self.get_model_dim_name('xc'), self.get_model_dim_name('yc')
+            dim1, dim2 = self.get_model_dim_name("xc"), self.get_model_dim_name("yc")
         return dim1, dim2
 
     def get_model_attr_name(self, attr_name):
         """
         Get model-specific attribute name associated with the source as defined
         in meta_attributes.yaml.
-        
+
         Parameters
         ----------
             attr_name : str
                 The attribute name to look up
-            
+
         Returns
         -------
             str or None
@@ -644,7 +669,8 @@ class ConfigManager:
         """
         if self.ds_index >= len(self.source_names):
             self.logger.debug(
-                f"ds_index {self.ds_index} out of bounds for source_names {self.source_names}")
+                f"ds_index {self.ds_index} out of bounds for source_names {self.source_names}"
+            )
             return None
 
         source = self.source_names[self.ds_index]
@@ -652,36 +678,40 @@ class ConfigManager:
             return self.meta_attrs[attr_name][source]
         else:
             self.logger.debug(
-                f"No meta_attrs mapping for attribute '{attr_name}' and source '{source}'")
+                f"No meta_attrs mapping for attribute '{attr_name}' and source '{source}'"
+            )
             return None
 
     def register_plot_type(self, field_name, plot_type):
         """Register the plot type for a field."""
-        if not hasattr(self, '_plot_type_registry'):
+        if not hasattr(self, "_plot_type_registry"):
             self._plot_type_registry = {}
         self._plot_type_registry[field_name] = plot_type
-    
-    def get_plot_type(self, field_name, default='xy'):
+
+    def get_plot_type(self, field_name, default="xy"):
         """Get the plot type for a field."""
-        if hasattr(self, '_plot_type_registry') and field_name in self._plot_type_registry:
+        if (
+            hasattr(self, "_plot_type_registry")
+            and field_name in self._plot_type_registry
+        ):
             return self._plot_type_registry[field_name]
         return default
 
     def get_file_index_by_filename(self, filename: str) -> int:
         """Return the file_index associated with a filename from map_params.
-        
+
         Parameters
         ----------
             filename
                 The filename to search for
-            
+
         Returns
         -------
             The file_index if found, or -1 if the filename is not found
         """
         for params in self.config.map_params.values():
-            if params['filename'] == filename:
-                return params['file_index']
+            if params["filename"] == filename:
+                return params["file_index"]
         return -1
 
     # Properties that delegate to config objects
@@ -901,7 +931,7 @@ class ConfigManager:
     @property
     def pindex(self):
         """The current plot index."""
-        return getattr(self.config, '_pindex', 0)
+        return getattr(self.config, "_pindex", 0)
 
     @pindex.setter
     def pindex(self, value):
@@ -911,7 +941,7 @@ class ConfigManager:
     @property
     def axindex(self):
         """The current axis index."""
-        return getattr(self.config, '_axindex', 0)
+        return getattr(self.config, "_axindex", 0)
 
     @axindex.setter
     def axindex(self, value):
@@ -921,7 +951,7 @@ class ConfigManager:
     @property
     def ax_opts(self):
         """The current axis options."""
-        return getattr(self.config, '_ax_opts', {})
+        return getattr(self.config, "_ax_opts", {})
 
     @ax_opts.setter
     def ax_opts(self, value):
@@ -931,7 +961,7 @@ class ConfigManager:
     @property
     def level(self):
         """The current vertical level."""
-        return getattr(self.config, '_level', None)
+        return getattr(self.config, "_level", None)
 
     @level.setter
     def level(self, value):
@@ -941,7 +971,7 @@ class ConfigManager:
     @property
     def time_level(self):
         """The current time level."""
-        return getattr(self.config, '_time_level', 0)
+        return getattr(self.config, "_time_level", 0)
 
     @time_level.setter
     def time_level(self, value):
@@ -951,7 +981,7 @@ class ConfigManager:
     @property
     def real_time(self):
         """The human-readable representation of the current time."""
-        return getattr(self.config, '_real_time', None)
+        return getattr(self.config, "_real_time", None)
 
     @real_time.setter
     def real_time(self, value):
@@ -961,13 +991,13 @@ class ConfigManager:
     def set_domain_info(self, dataset, filename: str = None):
         """
         Extract and store generic domain information from an xarray.Dataset.
-        
+
         This method analyzes the dataset to determine domain characteristics such as:
         - Whether the data is regional vs global
         - Coordinate information (lon/lat ranges, central points)
         - Grid type and spacing
         - Domain extent
-        
+
         Parameters
         ----------
             dataset
@@ -978,134 +1008,138 @@ class ConfigManager:
         if dataset is None:
             self.logger.warning("Cannot extract domain info from None dataset")
             return
-        
+
         self.logger.debug(f"set_domain_info called with dataset type: {type(dataset)}")
-            
+
         # Use filename as key if provided, otherwise use a generic key
-        key = filename if filename else 'default'
-        
+        key = filename if filename else "default"
+
         try:
             domain_info = self._extract_domain_characteristics(dataset)
             self._domain_info[key] = domain_info
-            
+
             self.logger.debug(f"Extracted domain info for {key}: {domain_info}")
-            
+
         except Exception as e:
             self.logger.error(f"Error extracting domain info: {e}")
             # Set safe defaults
             self._domain_info[key] = {
-                'is_regional': False,
-                'extent': None,
-                'central_lon': 0.0,
-                'central_lat': 0.0,
-                'grid_type': 'regular',
-                'has_2d_coords': False
+                "is_regional": False,
+                "extent": None,
+                "central_lon": 0.0,
+                "central_lat": 0.0,
+                "grid_type": "regular",
+                "has_2d_coords": False,
             }
 
     def _extract_domain_characteristics(self, dataset):
         """
         Extract domain characteristics from an xarray Dataset.
-        
+
         Returns
         -------
             dict
                 Dictionary containing domain characteristics
         """
         domain_info = {
-            'is_regional': False,
-            'extent': None,
-            'central_lon': 0.0,
-            'central_lat': 0.0,
-            'grid_type': 'regular',
-            'has_2d_coords': False,
-            'lon_coords': None,
-            'lat_coords': None
+            "is_regional": False,
+            "extent": None,
+            "central_lon": 0.0,
+            "central_lat": 0.0,
+            "grid_type": "regular",
+            "has_2d_coords": False,
+            "lon_coords": None,
+            "lat_coords": None,
         }
-        
+
         # Find longitude and latitude coordinates
         lon_coords, lat_coords = self._find_coordinate_variables(dataset)
-        
+
         self.logger.debug(f"Dataset coords: {list(dataset.coords.keys())}")
-        #self.logger.debug(f"Dataset data_vars: {list(dataset.data_vars.keys()) if hasattr(dataset, 'data_vars') else 'N/A'}")
+        # self.logger.debug(f"Dataset data_vars: {list(dataset.data_vars.keys()) if hasattr(dataset, 'data_vars') else 'N/A'}")
         self.logger.debug(f"Found lon_coords: {lon_coords}, lat_coords: {lat_coords}")
-        
+
         if lon_coords is None or lat_coords is None:
-            self.logger.warning("Could not find longitude/latitude coordinates in dataset")
+            self.logger.warning(
+                "Could not find longitude/latitude coordinates in dataset"
+            )
             return domain_info
-            
-        domain_info['lon_coords'] = lon_coords
-        domain_info['lat_coords'] = lat_coords
-        
+
+        domain_info["lon_coords"] = lon_coords
+        domain_info["lat_coords"] = lat_coords
+
         # Get coordinate data
         lon_data = dataset[lon_coords].values
         lat_data = dataset[lat_coords].values
-        
+
         # Check if coordinates are 2D (common in regional/curvilinear grids)
         has_2d_coords = len(lon_data.shape) == 2 and len(lat_data.shape) == 2
-        domain_info['has_2d_coords'] = has_2d_coords
-        
+        domain_info["has_2d_coords"] = has_2d_coords
+
         if has_2d_coords:
             # For 2D coordinates, flatten to get extents
             lon_min, lon_max = np.nanmin(lon_data), np.nanmax(lon_data)
             lat_min, lat_max = np.nanmin(lat_data), np.nanmax(lat_data)
-            domain_info['grid_type'] = 'curvilinear'
+            domain_info["grid_type"] = "curvilinear"
         else:
             # For 1D coordinates
             lon_min, lon_max = np.nanmin(lon_data), np.nanmax(lon_data)
             lat_min, lat_max = np.nanmin(lat_data), np.nanmax(lat_data)
-            
+
             # Check if grid spacing is regular
             if len(lon_data) > 2 and len(lat_data) > 2:
                 lon_diffs = np.diff(lon_data)
                 lat_diffs = np.diff(lat_data)
-                
+
                 # If spacing is not regular, mark as irregular
-                if not (np.allclose(lon_diffs, lon_diffs[0], rtol=1e-3) and 
-                        np.allclose(lat_diffs, lat_diffs[0], rtol=1e-3)):
-                    domain_info['grid_type'] = 'irregular'
-        
+                if not (
+                    np.allclose(lon_diffs, lon_diffs[0], rtol=1e-3)
+                    and np.allclose(lat_diffs, lat_diffs[0], rtol=1e-3)
+                ):
+                    domain_info["grid_type"] = "irregular"
+
         # Determine if regional based on coverage
         lon_range = lon_max - lon_min
         lat_range = lat_max - lat_min
-        
+
         # Heuristics for regional vs global:
         # - Global data typically spans close to 360° in longitude and ~180° in latitude
         # - Regional data has more limited coverage
         is_regional = (lon_range < 300) or (lat_range < 150)
-        
+
         # Additional checks for regional data
         if not is_regional:
             # Check if data covers poles (typical of global data)
             covers_poles = lat_min < -80 and lat_max > 80
             # Check if data wraps around longitude (typical of global data)
             wraps_longitude = lon_range > 350
-            
+
             is_regional = not (covers_poles or wraps_longitude)
-        
-        domain_info['is_regional'] = is_regional
-        
+
+        domain_info["is_regional"] = is_regional
+
         # Calculate extent and central points
-        domain_info['extent'] = [lon_min, lon_max, lat_min, lat_max]
-        domain_info['central_lon'] = (lon_min + lon_max) / 2.0
-        domain_info['central_lat'] = (lat_min + lat_max) / 2.0
-        
+        domain_info["extent"] = [lon_min, lon_max, lat_min, lat_max]
+        domain_info["central_lon"] = (lon_min + lon_max) / 2.0
+        domain_info["central_lat"] = (lat_min + lat_max) / 2.0
+
         return domain_info
 
     def _find_coordinate_variables(self, dataset):
         """
         Find longitude and latitude coordinate variables in the dataset.
-        
+
         Returns
         -------
             tuple
                 (lon_coord_name, lat_coord_name) or (None, None) if not found
         """
-        lon_names = ['lon', 'longitude', 'x', 'XLONG', 'LONGITUDE']
-        lat_names = ['lat', 'latitude', 'y', 'XLAT', 'LATITUDE']
-        
+        lon_names = ["lon", "longitude", "x", "XLONG", "LONGITUDE"]
+        lat_names = ["lat", "latitude", "y", "XLAT", "LATITUDE"]
+
         lon_coord = None
         lat_coord = None
-        
+
         # Check coordinates first - use exact matching to avoid false positives
         for coord_name in dataset.coords:
             coord_lower = coord_name.lower()
@@ -1113,155 +1147,159 @@ class ConfigManager:
                 lon_coord = coord_name
             elif any(coord_lower == ln.lower() for ln in lat_names):
                 lat_coord = coord_name
-        
+
         # If not found in coordinates, check data variables (important for WRF)
         if lon_coord is None or lat_coord is None:
             for var_name in dataset.data_vars:
                 var_lower = var_name.lower()
-                if lon_coord is None and any(ln.lower() == var_lower for ln in lon_names):
+                if lon_coord is None and any(
+                    ln.lower() == var_lower for ln in lon_names
+                ):
                     lon_coord = var_name
-                elif lat_coord is None and any(ln.lower() == var_lower for ln in lat_names):
+                elif lat_coord is None and any(
+                    ln.lower() == var_lower for ln in lat_names
+                ):
                     lat_coord = var_name
-        
+
         # Additional check for exact WRF coordinate names if still not found
-        if lon_coord is None and 'XLONG' in dataset.data_vars:
-            lon_coord = 'XLONG'
-        if lat_coord is None and 'XLAT' in dataset.data_vars:
-            lat_coord = 'XLAT'
-        
+        if lon_coord is None and "XLONG" in dataset.data_vars:
+            lon_coord = "XLONG"
+        if lat_coord is None and "XLAT" in dataset.data_vars:
+            lat_coord = "XLAT"
+
         return lon_coord, lat_coord
 
     def get_domain_info(self, filename: str = None) -> Dict[str, Any]:
         """
         Get domain information for a dataset.
-        
+
         Parameters
         ----------
             filename
                 Optional filename to get specific domain info
-            
+
         Returns
         -------
             dict
                 Domain information dictionary
         """
-        key = filename if filename else 'default'
-        
+        key = filename if filename else "default"
+
         if key in self._domain_info:
             return self._domain_info[key]
-        
+
         # Return safe defaults if no domain info is available
         return {
-            'is_regional': False,
-            'extent': None,
-            'central_lon': 0.0,
-            'central_lat': 0.0,
-            'grid_type': 'regular',
-            'has_2d_coords': False,
-            'lon_coords': None,
-            'lat_coords': None
+            "is_regional": False,
+            "extent": None,
+            "central_lon": 0.0,
+            "central_lat": 0.0,
+            "grid_type": "regular",
+            "has_2d_coords": False,
+            "lon_coords": None,
+            "lat_coords": None,
         }
 
     @property
     def is_regional(self) -> bool:
         """
         Get whether the current dataset is regional.
-        
+
         Returns
         -------
             bool
                 True if the dataset is regional, False if global
         """
         domain_info = self.get_domain_info()
-        return domain_info.get('is_regional', False)
+        return domain_info.get("is_regional", False)
 
     @property
     def domain_extent(self) -> Optional[List[float]]:
         """
         Get the domain extent [lon_min, lon_max, lat_min, lat_max].
-        
+
         Returns
         -------
             list or None
                 Domain extent or None if not available
         """
         domain_info = self.get_domain_info()
-        return domain_info.get('extent')
+        return domain_info.get("extent")
 
     @property
     def central_longitude(self) -> float:
         """
         Get the central longitude of the domain.
-        
+
         Returns
         -------
             float
                 Central longitude
         """
         domain_info = self.get_domain_info()
-        return domain_info.get('central_lon', 0.0)
+        return domain_info.get("central_lon", 0.0)
 
     @property
     def central_latitude(self) -> float:
         """
         Get the central latitude of the domain.
-        
+
         Returns
         -------
             float
                 Central latitude
         """
         domain_info = self.get_domain_info()
-        return domain_info.get('central_lat', 0.0)
+        return domain_info.get("central_lat", 0.0)
 
     @property
     def has_2d_coordinates(self) -> bool:
         """
         Get whether the dataset has 2D coordinate arrays.
-        
+
         Returns
         -------
             bool
                 True if coordinates are 2D (curvilinear), False if 1D
         """
         domain_info = self.get_domain_info()
-        return domain_info.get('has_2d_coords', False)
+        return domain_info.get("has_2d_coords", False)
 
     @property
     def grid_type(self) -> str:
         """
         Get the grid type ('regular', 'irregular', or 'curvilinear').
-        
+
         Returns
         -------
             str
                 Grid type
         """
         domain_info = self.get_domain_info()
-        return domain_info.get('grid_type', 'regular')
+        return domain_info.get("grid_type", "regular")
 
     @property
     def longitude_coordinate_name(self) -> Optional[str]:
         """
         Get the name of the longitude coordinate variable.
-        
+
         Returns
         -------
             str or None
                 Longitude coordinate name
         """
         domain_info = self.get_domain_info()
-        return domain_info.get('lon_coords')
+        return domain_info.get("lon_coords")
 
     @property
     def latitude_coordinate_name(self) -> Optional[str]:
         """
         Get the name of the latitude coordinate variable.
-        
+
         Returns
         -------
             str or None
                 Latitude coordinate name
         """
         domain_info = self.get_domain_info()
-        return domain_info.get('lat_coords')
+        return domain_info.get("lat_coords")

@@ -17,6 +17,7 @@ class NetCDFDataSource(DataSource):
 
     This class handles loading and processing data from NetCDF files and OpenDAP URLs.
     """
+
     model_name: Optional[str] = None
     config_manager: Optional[object] = None
     datasets: Dict = field(default_factory=dict, init=False)
@@ -45,6 +46,7 @@ class NetCDFDataSource(DataSource):
                 files = file_path
             elif "*" in file_path or "?" in file_path or "[" in file_path:
                 import glob
+
                 files = sorted(glob.glob(file_path))
             else:
                 files = [file_path]
@@ -53,7 +55,7 @@ class NetCDFDataSource(DataSource):
                 self.logger.debug(f"Loading remote data from URL: {file_path}")
                 if is_opendap:
                     self.logger.debug(f"Detected OpenDAP URL: {file_path}")
-                dataset = xr.open_dataset(file_path, decode_cf=True, engine='netcdf4')
+                dataset = xr.open_dataset(file_path, decode_cf=True, engine="netcdf4")
                 self.logger.debug(f"Loaded remote NetCDF data: {file_path}")
             elif len(files) == 1:
                 dataset = xr.open_dataset(files[0], decode_cf=True)
@@ -64,8 +66,8 @@ class NetCDFDataSource(DataSource):
                 # Possible optimization for large datasets:
                 vars_to_keep = set()
                 for entry in self.config_manager.app_data.inputs:
-                    if 'to_plot' in entry:
-                        vars_to_keep.update(entry['to_plot'].keys())
+                    if "to_plot" in entry:
+                        vars_to_keep.update(entry["to_plot"].keys())
                 self.logger.debug(f"Variables to keep: {vars_to_keep}")
 
                 def drop_unneeded_vars(ds):
@@ -80,10 +82,12 @@ class NetCDFDataSource(DataSource):
                         decode_cf=True,
                         combine="by_coords",
                         parallel=True,
-                        preprocess=drop_unneeded_vars
+                        preprocess=drop_unneeded_vars,
                     )
                 except (ValueError, xr.MergeError) as e:
-                    self.logger.warning(f"Combining with 'by_coords' failed with error: {e}")
+                    self.logger.warning(
+                        f"Combining with 'by_coords' failed with error: {e}"
+                    )
                     self.logger.warning("Retrying with 'nested' + concat_dim='time'...")
 
                     dataset = xr.open_mfdataset(
@@ -92,7 +96,7 @@ class NetCDFDataSource(DataSource):
                         combine="nested",
                         concat_dim="time",  # assumes 'time' is the dimension to concatenate, but...
                         parallel=True,
-                        preprocess=drop_unneeded_vars
+                        preprocess=drop_unneeded_vars,
                     )
 
                 # No-op:
@@ -107,7 +111,8 @@ class NetCDFDataSource(DataSource):
             # For URLs, use the last part of the path as the file name
             if is_remote:
                 file_name = os.path.basename(
-                    file_path.split('?')[0])  # Remove query parameters
+                    file_path.split("?")[0]
+                )  # Remove query parameters
             else:
                 file_name = os.path.basename(files[0])
 
@@ -116,10 +121,14 @@ class NetCDFDataSource(DataSource):
             return dataset
 
         except FileNotFoundError as exc:
-            self.logger.error(f"Error loading NetCDF file: {file_path}. Exception: {exc}")
+            self.logger.error(
+                f"Error loading NetCDF file: {file_path}. Exception: {exc}"
+            )
             raise
         except Exception as exc:
-            self.logger.error(f"Error loading NetCDF data: {file_path}. Exception: {exc}")
+            self.logger.error(
+                f"Error loading NetCDF data: {file_path}. Exception: {exc}"
+            )
             raise
 
     def _setup_dask_client(self) -> None:
@@ -131,16 +140,17 @@ class NetCDFDataSource(DataSource):
             self.logger.info(f"Using {n_workers} workers for parallel computation")
         except Exception as exc:
             self.logger.warning(
-                f"Failed to set up Dask client: {exc}. Continuing without parallel computation.")
+                f"Failed to set up Dask client: {exc}. Continuing without parallel computation."
+            )
 
     def get_dataset(self, file_name: str) -> Optional[xr.Dataset]:
         """Get a specific dataset by file name.
-        
+
         Parameters
         ----------
             file_name
                 Name of the file
-            
+
         Returns
         -------
             The dataset for the specified file, or None if not found
@@ -149,7 +159,7 @@ class NetCDFDataSource(DataSource):
 
     def get_all_datasets(self) -> Dict[str, xr.Dataset]:
         """Get all loaded datasets.
-        
+
         Returns
         -------
             Dictionary of all loaded datasets
@@ -159,46 +169,46 @@ class NetCDFDataSource(DataSource):
     def _rename_dims(self, ds):
         """
         Standardize dimension names in the dataset.
-        
+
         This method renames dimensions to standard names (lon, lat, lev, time)
         regardless of their original names in the source data.
-        
+
         Parameters
         ----------
             ds
                 xarray Dataset to rename dimensions in
-            
+
         Returns
         -------
             xarray Dataset with standardized dimension names
         """
         self.logger.info("Renaming dimensions to standard names")
 
-        if self.model_name in ['wrf', 'lis']:
+        if self.model_name in ["wrf", "lis"]:
             # Skip renaming for these special models
             return ds
 
         available_dims = list(ds.dims)
 
-        xc = self._get_model_dim_name('xc', available_dims)
-        yc = self._get_model_dim_name('yc', available_dims)
-        zc = self._get_model_dim_name('zc', available_dims)
-        tc = self._get_model_dim_name('tc', available_dims)
+        xc = self._get_model_dim_name("xc", available_dims)
+        yc = self._get_model_dim_name("yc", available_dims)
+        zc = self._get_model_dim_name("zc", available_dims)
+        tc = self._get_model_dim_name("tc", available_dims)
 
         rename_dict = {}
 
         # Add mappings only for dimensions that exist and need renaming
-        if xc and xc != 'lon' and xc in available_dims:
-            rename_dict[xc] = 'lon'
+        if xc and xc != "lon" and xc in available_dims:
+            rename_dict[xc] = "lon"
 
-        if yc and yc != 'lat' and yc in available_dims:
-            rename_dict[yc] = 'lat'
+        if yc and yc != "lat" and yc in available_dims:
+            rename_dict[yc] = "lat"
 
-        if zc and zc != 'lev' and zc in available_dims:
-            rename_dict[zc] = 'lev'
+        if zc and zc != "lev" and zc in available_dims:
+            rename_dict[zc] = "lev"
 
-        if tc and tc != 'time' and tc in available_dims:
-            rename_dict[tc] = 'time'
+        if tc and tc != "time" and tc in available_dims:
+            rename_dict[tc] = "time"
 
         if rename_dict:
             self.logger.debug(f"Renaming dimensions: {rename_dict}")
@@ -213,6 +223,6 @@ class NetCDFDataSource(DataSource):
         """Close all datasets and free resources."""
         super().close()
         for dataset in self.datasets.values():
-            if hasattr(dataset, 'close'):
+            if hasattr(dataset, "close"):
                 dataset.close()
         self.datasets.clear()

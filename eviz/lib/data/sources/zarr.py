@@ -5,12 +5,13 @@ from .base import DataSource
 
 class ZARRDataSource(DataSource):
     """Data source implementation for Zarr files.
-    
+
     This class handles loading and processing data from Zarr stores.
     """
+
     def __init__(self, model_name: str = None, config_manager=None):
         """Initialize a new ZARR DataSource.
-        
+
         Parameters
         ----------
             model_name
@@ -19,15 +20,15 @@ class ZARRDataSource(DataSource):
                 Configuration manager instance
         """
         super().__init__(model_name, config_manager)
-    
+
     def load_data(self, file_path: str) -> xr.Dataset:
         """Load data from a Zarr store into an Xarray dataset.
-        
+
         Parameters
         ----------
             file_path
                 Path to the Zarr store
-            
+
         Returns
         -------
             The loaded dataset
@@ -44,7 +45,7 @@ class ZARRDataSource(DataSource):
                     # Use the store engine instead of zarr directly
                     ds = xr.open_dataset(f, engine="zarr")
                     datasets.append(ds)
-                
+
                 # Combine all datasets
                 if datasets:
                     dataset = xr.merge(datasets)
@@ -55,39 +56,41 @@ class ZARRDataSource(DataSource):
                 self.logger.debug(f"Reading Zarr store: {file_path}")
                 # Use the store engine instead of zarr directly
                 dataset = xr.open_dataset(file_path, engine="zarr")
-            
+
             dataset = self._process_data(dataset)
             self.dataset = dataset
             self._extract_metadata(dataset)
-            
+
             return dataset
-            
+
         except Exception as exc:
-            self.logger.error(f"Error loading Zarr store: {file_path}. Exception: {exc}")
+            self.logger.error(
+                f"Error loading Zarr store: {file_path}. Exception: {exc}"
+            )
             raise
-    
+
     def _process_data(self, dataset: xr.Dataset) -> xr.Dataset:
         """Process the loaded Zarr data.
-        
+
         Parameters
         ----------
             dataset
                 The dataset to process
-            
+
         Returns
         -------
             The processed dataset
         """
         self.logger.debug("Processing Zarr data")
-        
+
         # Zarr files typically already have well-defined coordinates,
         # but we can add additional processing if needed
-        
+
         return dataset
-    
+
     def _extract_metadata(self, dataset: xr.Dataset) -> None:
         """Extract metadata from the dataset.
-        
+
         Parameters
         ----------
             dataset
@@ -95,26 +98,26 @@ class ZARRDataSource(DataSource):
         """
         if dataset is None:
             return
-        
+
         self.metadata["global_attrs"] = dict(dataset.attrs)
         self.metadata["dimensions"] = {dim: dataset.dims[dim] for dim in dataset.dims}
         self.metadata["variables"] = {}
-        
+
         for var_name, var in dataset.data_vars.items():
             self.metadata["variables"][var_name] = {
                 "dims": var.dims,
                 "attrs": dict(var.attrs),
                 "dtype": str(var.dtype),
-                "shape": var.shape
+                "shape": var.shape,
             }
-            
+
             # Add some basic statistics
             try:
                 self.metadata["variables"][var_name]["stats"] = {
                     "min": float(var.min().values),
                     "max": float(var.max().values),
                     "mean": float(var.mean().values),
-                    "std": float(var.std().values)
+                    "std": float(var.std().values),
                 }
             except Exception:
                 # Skip statistics if they can't be computed

@@ -20,9 +20,11 @@ class HvplotYZPlotter(YZPlotter):
         """Initialize the YZ Plotter."""
         super().__init__()
         try:
-            hv.extension('bokeh')
+            hv.extension("bokeh")
         except Exception as e:
-            self.logger.warning(f"Could not initialize HoloViews/hvplot extensions: {e}")   
+            self.logger.warning(
+                f"Could not initialize HoloViews/hvplot extensions: {e}"
+            )
 
     def plot(self, config_manager, plot_data):
         """Create a YZ (latitude-height) plot using hvplot.

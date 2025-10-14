@@ -29,84 +29,89 @@ class MatplotlibBasePlotter(BasePlotter):
 
     def _coarsen_for_plotting(self, x, y, data2d, max_size=None):
         """Coarsen high-resolution data for faster plotting.
-        
+
         Parameters
         ----------
             x
                 X coordinate array
             y
-                Y coordinate array  
+                Y coordinate array
             data2d
                 2D data array
             max_size
                 Maximum dimension size (uses coarse_max_size from ax_opts or 2000 default)
-            
+
         Returns
         -------
             Tuple of (coarsened_x, coarsened_y, coarsened_data2d)
         """
         # Get max_size from ax_opts if not provided
         if max_size is None:
-            max_size = getattr(self.ax_opts, 'coarse_max_size', None) or self.ax_opts.get('coarse_max_size', 2000)
+            max_size = getattr(
+                self.ax_opts, "coarse_max_size", None
+            ) or self.ax_opts.get("coarse_max_size", 2000)
         # Check if coarsening is needed
         ny, nx = data2d.shape
         if nx <= max_size and ny <= max_size:
             return x, y, data2d
-            
+
         # Calculate coarsening factors
         x_factor = max(1, nx // max_size)
         y_factor = max(1, ny // max_size)
-        
-        self.logger.info(f"Coarsening data from {nx}×{ny} by factors {x_factor}×{y_factor} for faster plotting")
-        
+
+        self.logger.info(
+            f"Coarsening data from {nx}×{ny} by factors {x_factor}×{y_factor} for faster plotting"
+        )
+
         # Coarsen data using block averaging to preserve features
-        if hasattr(data2d, 'values'):
+        if hasattr(data2d, "values"):
             data_values = data2d.values
         else:
             data_values = data2d
-            
+
         # Use block averaging for better quality than simple subsampling
         ny_coarse = ny // y_factor
         nx_coarse = nx // x_factor
-        
+
         # Reshape and average
-        data_reshaped = data_values[:ny_coarse*y_factor, :nx_coarse*x_factor].reshape(
-            ny_coarse, y_factor, nx_coarse, x_factor
-        )
+        data_reshaped = data_values[
+            : ny_coarse * y_factor, : nx_coarse * x_factor
+        ].reshape(ny_coarse, y_factor, nx_coarse, x_factor)
         data_coarse = np.nanmean(data_reshaped, axis=(1, 3))
-        
+
         # Coarsen coordinate arrays to match data dimensions
-        if hasattr(x, 'values'):
+        if hasattr(x, "values"):
             x_values = x.values
         else:
             x_values = x
-            
-        if hasattr(y, 'values'):
+
+        if hasattr(y, "values"):
             y_values = y.values
         else:
             y_values = y
-        
+
         # Take coordinates that align with coarsened data centers
-        x_coarse = x_values[:nx_coarse*x_factor:x_factor]
-        y_coarse = y_values[:ny_coarse*y_factor:y_factor]
-        
+        x_coarse = x_values[: nx_coarse * x_factor : x_factor]
+        y_coarse = y_values[: ny_coarse * y_factor : y_factor]
+
         # Ensure coordinate arrays match data dimensions
         if len(x_coarse) != nx_coarse:
             x_coarse = x_coarse[:nx_coarse]
         if len(y_coarse) != ny_coarse:
             y_coarse = y_coarse[:ny_coarse]
-        
+
         # Preserve xarray DataArray attributes if input was xarray
-        if hasattr(data2d, 'attrs'):
+        if hasattr(data2d, "attrs"):
             import xarray as xr
+
             data_coarse = xr.DataArray(
                 data_coarse,
-                dims=['y', 'x'],
-                coords={'y': y_coarse, 'x': x_coarse},
+                dims=["y", "x"],
+                coords={"y": y_coarse, "x": x_coarse},
                 attrs=data2d.attrs,
-                name=data2d.name
+                name=data2d.name,
             )
-        
+
         return x_coarse, y_coarse, data_coarse
 
     def filled_contours(
@@ -115,7 +120,7 @@ class MatplotlibBasePlotter(BasePlotter):
         """Plot filled contours."""
         # Coarsen data for faster plotting if needed
         x, y, data2d = self._coarsen_for_plotting(x, y, data2d)
-        
+
         # Check if data is all NaN
         if np.isnan(data2d).all():
             self.logger.warning(
@@ -166,10 +171,10 @@ class MatplotlibBasePlotter(BasePlotter):
             cmap_str = self.ax_opts["use_cmap"]
 
         # Get plotting method from ax_opts (default: contourf)
-        plotting_method = self.ax_opts.get('plotting_method', 'contourf')
-        
+        plotting_method = self.ax_opts.get("plotting_method", "contourf")
+
         try:
-            if plotting_method == 'pcolormesh':
+            if plotting_method == "pcolormesh":
                 # Use pcolormesh for faster plotting of large datasets
                 cfilled = ax.pcolormesh(
                     x,
@@ -178,9 +183,11 @@ class MatplotlibBasePlotter(BasePlotter):
                     cmap=cmap_str,
                     norm=colors.Normalize(vmin=vmin, vmax=vmax),
                     transform=transform,
-                    shading='auto'
+                    shading="auto",
                 )
-                self.logger.debug(f"Using pcolormesh plotting method for faster rendering")
+                self.logger.debug(
+                    f"Using pcolormesh plotting method for faster rendering"
+                )
             else:
                 # Use contourf (default)
                 if np.all(np.diff(self.ax_opts["clevs"]) > 0):
@@ -196,9 +203,9 @@ class MatplotlibBasePlotter(BasePlotter):
                     )
                 else:
                     raise ValueError("Contour levels must be increasing")
-            
+
             # Set under/over colors if specified (works for both methods)
-            if hasattr(cfilled, 'cmap'):
+            if hasattr(cfilled, "cmap"):
                 if self.ax_opts["cmap_set_under"]:
                     cfilled.cmap.set_under(self.ax_opts["cmap_set_under"])
                 if self.ax_opts["cmap_set_over"]:
@@ -206,7 +213,7 @@ class MatplotlibBasePlotter(BasePlotter):
 
             ax.set_aspect("auto")
             return cfilled
-            
+
         except ValueError as e:
             self.logger.error(f"Error with {plotting_method}: {e}")
             # Fallback to basic contourf
@@ -249,11 +256,12 @@ class MatplotlibBasePlotter(BasePlotter):
         if is_constant:
             center = (dmin + dmax) / 2
             clevs = np.array(
-                [center - variation_threshold, center, center + variation_threshold])
+                [center - variation_threshold, center, center + variation_threshold]
+            )
             self.ax_opts.update(
                 is_constant_field=True,
                 clevs=clevs,
-                clevs_prec=max(0, int(-np.floor(np.log10(variation_threshold))))
+                clevs_prec=max(0, int(-np.floor(np.log10(variation_threshold)))),
             )
             return
 
@@ -341,9 +349,7 @@ class MatplotlibBasePlotter(BasePlotter):
             except Exception as e:
                 self.logger.error(f"Error adding contour lines: {e}")
 
-    def set_colorbar(
-        self, config, cfilled, fig, ax, findex, field_name, data2d
-    ):
+    def set_colorbar(self, config, cfilled, fig, ax, findex, field_name, data2d):
         """Add a colorbar to the plot."""
         self.logger.debug(f"Create colorbar for {field_name}")
         try:
@@ -365,7 +371,11 @@ class MatplotlibBasePlotter(BasePlotter):
                 cbar = fig.colorbar(
                     cfilled,
                     ax=ax,
-                    orientation="vertical" if config.compare or config.compare_diff else "horizontal",
+                    orientation=(
+                        "vertical"
+                        if config.compare or config.compare_diff
+                        else "horizontal"
+                    ),
                     pad=pu.cbar_pad(fig.subplots),
                     fraction=pu.cbar_fraction(fig.subplots),
                     format=fmt,
@@ -375,9 +385,11 @@ class MatplotlibBasePlotter(BasePlotter):
                 cbar = fig.colorbar(
                     cfilled,
                     ax=ax,
-                    orientation="vertical"
-                    if config.compare or config.compare_diff
-                    else "horizontal",
+                    orientation=(
+                        "vertical"
+                        if config.compare or config.compare_diff
+                        else "horizontal"
+                    ),
                     pad=pu.cbar_pad(fig.subplots),
                     fraction=pu.cbar_fraction(fig.subplots),
                     ticks=self.ax_opts.get("clevs", None),
@@ -389,9 +401,7 @@ class MatplotlibBasePlotter(BasePlotter):
                 cbar_label = self.units
             else:
                 cbar_label = self.ax_opts["clabel"]
-            self.style_colorbar(
-                cbar, data2d, fmt=fmt, fontsize=8, label=cbar_label
-            )
+            self.style_colorbar(cbar, data2d, fmt=fmt, fontsize=8, label=cbar_label)
 
             for t in cbar.ax.get_xticklabels():
                 t.set_fontsize(pu.contour_tick_font_size(fig.subplots))
@@ -475,22 +485,26 @@ class MatplotlibBasePlotter(BasePlotter):
         try:
             # User-provided name
             user_spec = config.spec_data.get(data2d.name, {})
-            if 'name' in user_spec:
+            if "name" in user_spec:
                 self.logger.debug(f"Using user-provided name for {data2d.name}")
-                return user_spec['name']
+                return user_spec["name"]
 
             # Attribute names
-            for attr_key in ['long_name', 'standard_name', 'description']:
-                if attr_key in getattr(data2d, 'attrs', {}):
+            for attr_key in ["long_name", "standard_name", "description"]:
+                if attr_key in getattr(data2d, "attrs", {}):
                     self.logger.debug(f"Using {attr_key} from attrs for {data2d.name}")
                     return data2d.attrs[attr_key]
 
             # Fallback: use variable name
-            self.logger.debug(f"No descriptive name found; using variable name {data2d.name}")
+            self.logger.debug(
+                f"No descriptive name found; using variable name {data2d.name}"
+            )
             return data2d.name
 
         except Exception as e:
-            self.logger.error(f"Error getting long name for {getattr(data2d, 'name', 'unknown')}: {e}")
+            self.logger.error(
+                f"Error getting long name for {getattr(data2d, 'name', 'unknown')}: {e}"
+            )
             return None
 
     def get_units(self, config, field_name, data2d, findex):
@@ -694,7 +708,9 @@ class MatplotlibBasePlotter(BasePlotter):
                 fontsize=8,
             )
 
-    def plot_text(self, config, field_name, pid, level=None, data=None, *args, **kwargs):
+    def plot_text(
+        self, config, field_name, pid, level=None, data=None, *args, **kwargs
+    ):
         """Add text to a map.
 
         Parameters
@@ -722,22 +738,26 @@ class MatplotlibBasePlotter(BasePlotter):
         title_size = None
 
         ax = self.ax
-        if pid == 'tx':
+        if pid == "tx":
             ax = self.ax[0]
-            
+
         # Extract properties from rc_params
-        if 'rc_params' in self.ax_opts:
-            font_size = self.ax_opts['rc_params'].get('font.size', None)
-            title_size = self.ax_opts['rc_params'].get('axes.titlesize', None)
+        if "rc_params" in self.ax_opts:
+            font_size = self.ax_opts["rc_params"].get("font.size", None)
+            title_size = self.ax_opts["rc_params"].get("axes.titlesize", None)
         else:
-            self.ax_opts['rc_params'] = {}
+            self.ax_opts["rc_params"] = {}
         fontsize = font_size or pu.subplot_title_font_size(self.fig.subplots)
         title_fontsize = title_size or fontsize
-        loc = kwargs.get('location', 'left')
+        loc = kwargs.get("location", "left")
 
         findex = config.findex
-        sname = config.config.map_params[findex]['source_name']
-        geom = pu.get_subplot_geometry(ax) if config.compare or config.compare_diff else None
+        sname = config.config.map_params[findex]["source_name"]
+        geom = (
+            pu.get_subplot_geometry(ax)
+            if config.compare or config.compare_diff
+            else None
+        )
 
         # Handle plot titles for comparison cases
         if config.compare_diff or config.compare:
@@ -757,9 +777,10 @@ class MatplotlibBasePlotter(BasePlotter):
                             "ratio": ("Ratio Diff", "ratio"),
                         }
                         diff_type = config.extra_diff_plot
-                        title_string, self.ax_opts['clabel'] = diff_labels.get(
-                            diff_type, ("Difference (left - right)", None))
-                        self.ax_opts['line_contours'] = False
+                        title_string, self.ax_opts["clabel"] = diff_labels.get(
+                            diff_type, ("Difference (left - right)", None)
+                        )
+                        self.ax_opts["line_contours"] = False
                     else:  # Default case
                         title_string = self._set_axes_title(config, findex)
             elif config.compare:
@@ -773,7 +794,9 @@ class MatplotlibBasePlotter(BasePlotter):
             # Non-comparison case
             level_text = self._format_level_text(config, level)
             # For box plots, data is a DataFrame and doesn't have the same attributes as xarray
-            if data is not None and hasattr(data, 'name'):  # Check if it's an xarray-like object
+            if data is not None and hasattr(
+                data, "name"
+            ):  # Check if it's an xarray-like object
                 long_name = self.get_long_name(config, data, findex)
             else:
                 long_name = None
@@ -785,103 +808,140 @@ class MatplotlibBasePlotter(BasePlotter):
         right = left + width
         top = bottom + height
         title_string = self._set_axes_title(config, findex)
-        if 'yz' in pid:
+        if "yz" in pid:
             if config.print_basic_stats:
                 # plt.rc('text', usetex=True)
                 fmt = self._basic_stats(data)
-                ax.text(right, top, fmt, transform=ax.transAxes,
-                        ha='right', va='bottom', fontsize=10)
+                ax.text(
+                    right,
+                    top,
+                    fmt,
+                    transform=ax.transAxes,
+                    ha="right",
+                    va="bottom",
+                    fontsize=10,
+                )
 
             if config.use_history:
                 ax.set_title(config.history_expid + " (" + config.history_expdsc + ")")
             else:
                 ax.set_title(title_string, loc=loc, fontsize=10)
 
-            ax.text(0.5 * (left + right), bottom + top + 0.1,
-                    long_name, fontweight='bold',
-                    fontstyle='italic',
-                    horizontalalignment='center',
-                    verticalalignment='center',
-                    fontsize=14,
-                    transform=ax.transAxes)
+            ax.text(
+                0.5 * (left + right),
+                bottom + top + 0.1,
+                long_name,
+                fontweight="bold",
+                fontstyle="italic",
+                horizontalalignment="center",
+                verticalalignment="center",
+                fontsize=14,
+                transform=ax.transAxes,
+            )
 
-        elif 'xy' in pid or 'sc' in pid:
+        elif "xy" in pid or "sc" in pid:
             if config.print_basic_stats:
                 fmt = self._basic_stats(data)
-                ax.text(right, top, fmt, transform=ax.transAxes,
-                        ha='right', va='bottom', fontsize=10)
-                loc = 'left'
+                ax.text(
+                    right,
+                    top,
+                    fmt,
+                    transform=ax.transAxes,
+                    ha="right",
+                    va="bottom",
+                    fontsize=10,
+                )
+                loc = "left"
 
             if config.real_time and not config.print_basic_stats:
-                ax.text(right, top, config.real_time,
-                        ha='right', va='bottom', fontsize=10,
-                        transform=ax.transAxes)
+                ax.text(
+                    right,
+                    top,
+                    config.real_time,
+                    ha="right",
+                    va="bottom",
+                    fontsize=10,
+                    transform=ax.transAxes,
+                )
             if config.use_history:
                 ax.set_title(
                     config.history_expid + " (" + config.history_expdsc + ")",
-                    fontsize=title_fontsize
+                    fontsize=title_fontsize,
                 )
             else:
                 ax.set_title(title_string, loc=loc, fontsize=10)
 
-            ax.text(0.5 * (left + right), bottom + top + 0.1,
-                    long_name + level_text, 
-                    fontweight=kwargs.get('fontweight', 'bold'),
-                    fontstyle=kwargs.get('fontstyle', 'italic'),
-                    fontsize=kwargs.get('fontsize', 14),
-                    horizontalalignment=kwargs.get('ha', 'center'),
-                    verticalalignment=kwargs.get('va', 'center'),
-                    transform=ax.transAxes)
+            ax.text(
+                0.5 * (left + right),
+                bottom + top + 0.1,
+                long_name + level_text,
+                fontweight=kwargs.get("fontweight", "bold"),
+                fontstyle=kwargs.get("fontstyle", "italic"),
+                fontsize=kwargs.get("fontsize", 14),
+                horizontalalignment=kwargs.get("ha", "center"),
+                verticalalignment=kwargs.get("va", "center"),
+                transform=ax.transAxes,
+            )
 
-        elif 'tx' in pid:
+        elif "tx" in pid:
             if config.use_history:
                 ax.set_title(
                     config.history_expid + " (" + config.history_expdsc + ")",
-                    fontsize=10
+                    fontsize=10,
                 )
             else:
                 ax.set_title(
-                    title_string, loc=kwargs.get('loc', 'right'),
-                    fontsize=kwargs.get('fontsize', 10)
+                    title_string,
+                    loc=kwargs.get("loc", "right"),
+                    fontsize=kwargs.get("fontsize", 10),
                 )
 
-            ax.text(0.5 * (left + right), bottom + top + 0.5,
-                    long_name,
-                    fontweight=kwargs.get('fontweight', 'bold'),
-                    fontstyle=kwargs.get('fontstyle', 'normal'),
-                    fontsize=kwargs.get('fontsize', 12),
-                    horizontalalignment=kwargs.get('ha', 'center'),
-                    verticalalignment=kwargs.get('va', 'center'),
-                    transform=ax.transAxes)
-        elif 'po' in pid:
+            ax.text(
+                0.5 * (left + right),
+                bottom + top + 0.5,
+                long_name,
+                fontweight=kwargs.get("fontweight", "bold"),
+                fontstyle=kwargs.get("fontstyle", "normal"),
+                fontsize=kwargs.get("fontsize", 12),
+                horizontalalignment=kwargs.get("ha", "center"),
+                verticalalignment=kwargs.get("va", "center"),
+                transform=ax.transAxes,
+            )
+        elif "po" in pid:
             pass
-        elif 'corr' in pid:
-            ax.text(0.5 * (left + right), bottom + top + 0.1,
-                    long_name + level_text, 
-                    fontweight=kwargs.get('fontweight', 'bold'),
-                    fontstyle=kwargs.get('fontstyle', 'italic'),
-                    fontsize=kwargs.get('fontsize', 12),
-                    horizontalalignment=kwargs.get('ha', 'center'),
-                    verticalalignment=kwargs.get('va', 'center'),
-                    transform=ax.transAxes)
+        elif "corr" in pid:
+            ax.text(
+                0.5 * (left + right),
+                bottom + top + 0.1,
+                long_name + level_text,
+                fontweight=kwargs.get("fontweight", "bold"),
+                fontstyle=kwargs.get("fontstyle", "italic"),
+                fontsize=kwargs.get("fontsize", 12),
+                horizontalalignment=kwargs.get("ha", "center"),
+                verticalalignment=kwargs.get("va", "center"),
+                transform=ax.transAxes,
+            )
         else:  # 'xt' and others
             if config.use_history:
                 ax.set_title(config.history_expid + " (" + config.history_expdsc + ")")
             else:
                 ax.set_title(title_string, loc=loc, fontsize=10)
 
-            if self.ax_opts['custom_title']:
-                long_name = self.ax_opts['custom_title']
+            if self.ax_opts["custom_title"]:
+                long_name = self.ax_opts["custom_title"]
 
-            ax.text(0.5 * (left + right), bottom + top + 0.1,
-                    long_name,
-                    fontweight=kwargs.get('fontweight', 'bold'),
-                    fontstyle=kwargs.get('fontstyle', 'italic'),
-                    fontsize=fontsize,
-                    horizontalalignment=kwargs.get('ha', 'center'),
-                    verticalalignment=kwargs.get('va', 'center'),
-                    transform=ax.transAxes)
-        
+            ax.text(
+                0.5 * (left + right),
+                bottom + top + 0.1,
+                long_name,
+                fontweight=kwargs.get("fontweight", "bold"),
+                fontstyle=kwargs.get("fontstyle", "italic"),
+                fontsize=fontsize,
+                horizontalalignment=kwargs.get("ha", "center"),
+                verticalalignment=kwargs.get("va", "center"),
+                transform=ax.transAxes,
+            )
+
     def _set_axes_title(self, config, findex):
         if config.overlay:
             return None
@@ -893,10 +953,10 @@ class MatplotlibBasePlotter(BasePlotter):
             return config.get_file_exp_id(findex)
 
         return None
-        
+
     @staticmethod
     def _basic_stats(data):
-        """ Basic stats for a given field """
+        """Basic stats for a given field"""
         # datamin = data.min().values
         # datamax = data.max().values
         datamean = data.mean().values
@@ -905,10 +965,10 @@ class MatplotlibBasePlotter(BasePlotter):
 
     def _format_level_text(self, config, level):
         """Format level annotation text based on level value."""
-        if self.ax_opts.get('zave'):
-            return ' (Column Mean)'
-        if self.ax_opts.get('zsum'):
-            return ' (Total Column)'
-        if level is None or str(level) == '0':
-            return ''
+        if self.ax_opts.get("zave"):
+            return " (Column Mean)"
+        if self.ax_opts.get("zsum"):
+            return " (Total Column)"
+        if level is None or str(level) == "0":
+            return ""
         return f"@ {level} {'Pa' if level > 10000 else 'mb'}"

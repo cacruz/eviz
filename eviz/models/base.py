@@ -13,10 +13,10 @@ from eviz.lib.models.base import GenericDataSource
 warnings.warn(
     "eviz.models.base is deprecated. Use eviz.lib.models.base instead.",
     DeprecationWarning,
-    stacklevel=2
+    stacklevel=2,
 )
 
 # Compatibility alias
 BaseSource = GenericDataSource
 
-__all__ = ['BaseSource']
+__all__ = ["BaseSource"]

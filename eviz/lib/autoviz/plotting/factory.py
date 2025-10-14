@@ -26,18 +26,18 @@ from .backends.matplotlib.yz_plot import MatplotlibYZPlotter
 
 class PlotterFactory:
     """Factory for creating appropriate plotters."""
-    
+
     @staticmethod
     def create_plotter(plot_type, backend="matplotlib"):
         """Create a plotter for the given plot type and backend.
-        
+
         Parameters
         ----------
             plot_type
                 Type of plot ('xy', 'yz', 'xt', 'sc', etc.)
             backend
                 Backend to use ('matplotlib', 'hvplot', 'altair')
-            
+
         Returns
         -------
             An instance of the appropriate plotter
@@ -59,12 +59,17 @@ class PlotterFactory:
             ("bar", "matplotlib"): MatplotlibCSVBarPlotter,
             ("pie", "matplotlib"): MatplotlibCSVPiePlotter,
             ("hist", "matplotlib"): MatplotlibCSVHistPlotter,
-            ("scatter", "matplotlib"): MatplotlibScatterPlotter,  # Unified plotter handles both gridded and categorical
-            ("box", "matplotlib"): MatplotlibBoxPlotter,  # Unified plotter handles both gridded and categorical
+            (
+                "scatter",
+                "matplotlib",
+            ): MatplotlibScatterPlotter,  # Unified plotter handles both gridded and categorical
+            (
+                "box",
+                "matplotlib",
+            ): MatplotlibBoxPlotter,  # Unified plotter handles both gridded and categorical
             ("line", "matplotlib"): MatplotlibCSVLinePlotter,
             # Gridded box plot also available via 'boxplot' key if needed
             ("boxplot", "matplotlib"): MatplotlibBoxPlotter,
-
             ("xy", "hvplot"): HvplotXYPlotter,
             ("xt", "hvplot"): HvplotXTPlotter,
             ("sc", "hvplot"): HvplotScatterPlotter,
@@ -72,18 +77,18 @@ class PlotterFactory:
             ("corr", "hvplot"): HvplotMetricPlotter,
             ("box", "hvplot"): HvplotBoxPlotter,
             ("line", "hvplot"): HvplotLinePlotter,
-
             ("xy", "altair"): AltairXYPlotter,
             ("xt", "altair"): AltairXTPlotter,
             ("sc", "altair"): AltairScatterPlotter,
             ("yz", "altair"): AltairYZPlotter,
             ("corr", "altair"): AltairMetricPlotter,
-
             # Add other combinations as they are implemented
         }
-        
+
         key = (plot_type, backend)
         if key in plotters:
             return plotters[key]()
         else:
-            raise ValueError(f"No plotter available for plot_type={plot_type}, backend={backend}")
+            raise ValueError(
+                f"No plotter available for plot_type={plot_type}, backend={backend}"
+            )

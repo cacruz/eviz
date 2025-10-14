@@ -9,9 +9,9 @@ from .reader import DataReader
 from .transformer import DataTransformer
 
 __all__ = [
-    'DataReader',
-    'DataProcessor',
-    'DataTransformer',
-    'DataIntegrator',
-    'DataPipeline'
+    "DataReader",
+    "DataProcessor",
+    "DataTransformer",
+    "DataIntegrator",
+    "DataPipeline",
 ]

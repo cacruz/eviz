@@ -10,20 +10,32 @@ from eviz.lib.config.config import Config
 from eviz.lib.config.config_manager import ConfigManager
 from eviz.lib.config.configuration_adapter import ConfigurationAdapter
 from eviz.lib.config.paths_config import PathsConfig
+
 # New architecture imports
 from eviz.lib.models.factory import DataSourceFactory
 from eviz.lib.utils import load_style
+
 # Model-specific factories remain in legacy location
-from eviz.models.source_factory import (AirnowFactory, CategoricalFactory,
-                                        CrestFactory, FluxnetFactory,
-                                        GeosFactory, GhgFactory, GissFactory,
-                                        GribFactory, GriddedSourceFactory,
-                                        LandsatFactory, LisFactory,
-                                        MopittFactory, ObsSourceFactory,
-                                        OmiFactory, WrfFactory)
+from eviz.models.source_factory import (
+    AirnowFactory,
+    CategoricalFactory,
+    CrestFactory,
+    FluxnetFactory,
+    GeosFactory,
+    GhgFactory,
+    GissFactory,
+    GribFactory,
+    GriddedSourceFactory,
+    LandsatFactory,
+    LisFactory,
+    MopittFactory,
+    ObsSourceFactory,
+    OmiFactory,
+    WrfFactory,
+)
 
 # Suppress matplotlib debug messages
-logging.getLogger('matplotlib').setLevel(logging.WARNING)
+logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 
 def get_config_path_from_env() -> Optional[str]:
@@ -38,7 +50,7 @@ def get_config_path_from_env() -> Optional[str]:
 def create_config(args) -> ConfigManager:
     """
     Create a ConfigManager instance from command-line arguments.
-    
+
     Parameters
     ----------
         args : argparse.Namespace
@@ -47,7 +59,7 @@ def create_config(args) -> ConfigManager:
             - sources: List of source names (e.g., 'gridded', 'wrf')
             - config: Optional path to configuration directory
             - configfile: Optional path to specific configuration file
-    
+
     Returns
     -------
         ConfigManager
@@ -57,7 +69,7 @@ def create_config(args) -> ConfigManager:
     environment variable. If that is not set, it falls back to the default path defined
     in constants.config_path.
     """
-    source_names = args.sources[0].split(',')
+    source_names = args.sources[0].split(",")
     config_dir = args.config
     config_file = args.configfile
 
@@ -68,15 +80,18 @@ def create_config(args) -> ConfigManager:
     else:
         if config_dir:
             config_files = [
-                os.path.join(config_dir[0], source_name, f"{source_name}.yaml") for
-                source_name in source_names]
+                os.path.join(config_dir[0], source_name, f"{source_name}.yaml")
+                for source_name in source_names
+            ]
         else:
             config_dir = get_config_path_from_env()
             if not config_dir:
                 # No configuration directory specified. Using eviz default.
                 config_dir = paths.config_path
-            config_files = [os.path.join(config_dir, source_name, f"{source_name}.yaml")
-                            for source_name in source_names]
+            config_files = [
+                os.path.join(config_dir, source_name, f"{source_name}.yaml")
+                for source_name in source_names
+            ]
         config = Config(source_names=source_names, config_files=config_files)
 
     # Initialize sub-configurations
@@ -85,19 +100,20 @@ def create_config(args) -> ConfigManager:
     system_config = config.system_config
     history_config = config.history_config
 
-    return ConfigManager(input_config, output_config, system_config, history_config,
-                         config=config)
+    return ConfigManager(
+        input_config, output_config, system_config, history_config, config=config
+    )
 
 
 def get_factory_from_user_input(inputs) -> list:
     """
     Return factory classes associated with user input sources.
-    
+
     Parameters
     ----------
         inputs : list
             List of source names (e.g., 'gridded', 'wrf', 'omi')
-    
+
     Returns
     -------
         list
@@ -139,24 +155,24 @@ def get_factory_from_user_input(inputs) -> list:
         LandsatFactory (for Landsat HDF4 data)
     """
     mappings = {
-        "test": GriddedSourceFactory(),       # for unit tests
-        "gridded": GriddedSourceFactory(),    # default for all gridded data such as NetCDF
+        "test": GriddedSourceFactory(),  # for unit tests
+        "gridded": GriddedSourceFactory(),  # default for all gridded data such as NetCDF
         "categorical": CategoricalFactory(),  # for categorical/tabular CSV data
-        "geos": GeosFactory(),                # special alias for GEOS datasets such as MERRA
-        "giss": GissFactory(),                # GISS ModelE NetCDF with unique dimension structure
-        "ccm": GriddedSourceFactory(),        # special alias for GEOS datasets CCM
-        "cf": GriddedSourceFactory(),         # and CF
-        "crest": CrestFactory(),              # and CREST
-        "obs": ObsSourceFactory(),            # for all observation data such
-        "lis": LisFactory(),                  # LIS and WRF are gridded but require special
-        "wrf": WrfFactory(),                  # "treatment" due to the "regional" nature of the data
-        "grib": GribFactory(),                #  Grib data sources like ERA5, GFS, etc.
-        "airnow": AirnowFactory(),            # CSV
-        "ghg": GhgFactory(),                  # CSV
-        "fluxnet": FluxnetFactory(),          # CSV
-        "omi": OmiFactory(),                  # HDF5
-        "mopitt": MopittFactory(),            # HDF5
-        "landsat": LandsatFactory(),          # HDF4
+        "geos": GeosFactory(),  # special alias for GEOS datasets such as MERRA
+        "giss": GissFactory(),  # GISS ModelE NetCDF with unique dimension structure
+        "ccm": GriddedSourceFactory(),  # special alias for GEOS datasets CCM
+        "cf": GriddedSourceFactory(),  # and CF
+        "crest": CrestFactory(),  # and CREST
+        "obs": ObsSourceFactory(),  # for all observation data such
+        "lis": LisFactory(),  # LIS and WRF are gridded but require special
+        "wrf": WrfFactory(),  # "treatment" due to the "regional" nature of the data
+        "grib": GribFactory(),  #  Grib data sources like ERA5, GFS, etc.
+        "airnow": AirnowFactory(),  # CSV
+        "ghg": GhgFactory(),  # CSV
+        "fluxnet": FluxnetFactory(),  # CSV
+        "omi": OmiFactory(),  # HDF5
+        "mopitt": MopittFactory(),  # HDF5
+        "landsat": LandsatFactory(),  # HDF4
         # Add other mappings for other subclasses
         # Need MODIS, CEDS, EDGAR
     }
@@ -164,8 +180,10 @@ def get_factory_from_user_input(inputs) -> list:
     for i in inputs:
         if i not in mappings:
             print(
-                f"\nERROR: '{i}' is not a valid source name. Valid options are: {list(mappings.keys())}\n")
+                f"\nERROR: '{i}' is not a valid source name. Valid options are: {list(mappings.keys())}\n"
+            )
             import sys
+
             sys.exit(1)
         factories.append(mappings[i])
     return factories
@@ -175,15 +193,15 @@ def get_factory_from_user_input(inputs) -> list:
 class Autoviz:
     """
     Main class for automatic visualization of Earth System Model and observational data.
-    
+
     The Autoviz class orchestrates the entire visualization process, from configuration
     loading to data processing and plot generation. It serves as the primary entry point
     for the eViz visualization system.
-    
+
     This class takes source names as input, creates appropriate factory instances for those
     sources, initializes configuration, and manages the visualization workflow. It supports
     various data sources including gridded data, regional models, and observational datasets.
-    
+
     Attributes
     ----------
 
@@ -194,7 +212,7 @@ class Autoviz:
         model_name (str, optional): Name of the current model being processed.
         _config_manager (ConfigManager): Configuration manager instance.
         factory_sources (list): List of factory instances for the specified sources.
-    
+
     Methods:
 
         run(): Execute the visualization process.
@@ -204,10 +222,11 @@ class Autoviz:
 
         # Create an Autoviz instance with gridded data source
         viz = Autoviz(['gridded'])
-        
+
         # Run the visualization process
         viz.run()
     """
+
     source_names: list
     args: Namespace = None
     model_info: dict = field(default_factory=dict)
@@ -246,7 +265,8 @@ class Autoviz:
         if not self.factory_sources:
             raise ValueError(f"No factories found for sources: {self.source_names}")
         self._config_manager = create_config(
-            self.args)  # Use ConfigManager instead of Config
+            self.args
+        )  # Use ConfigManager instead of Config
 
     def run(self):
         _start_time = time.time()
@@ -257,7 +277,7 @@ class Autoviz:
 
         self.config_adapter = ConfigurationAdapter(self._config_manager)
 
-        if hasattr(self.args, 'integrate') and self.args.integrate:
+        if hasattr(self.args, "integrate") and self.args.integrate:
             self.logger.info("Data integration mode enabled")
             self._config_manager.input_config._enable_integration = True
 
@@ -266,33 +286,41 @@ class Autoviz:
 
             # Load custom MPL style used for figures
             self.logger.debug(f"Loading style: {self._config_manager.fig_style}")
-            load_style(self._config_manager.fig_style)  
+            load_style(self._config_manager.fig_style)
 
             all_data_sources = {}
             try:
-                if hasattr(self._config_manager,
-                           '_pipeline') and self._config_manager._pipeline is not None:
-                    all_data_sources = self._config_manager._pipeline.get_all_data_sources()
+                if (
+                    hasattr(self._config_manager, "_pipeline")
+                    and self._config_manager._pipeline is not None
+                ):
+                    all_data_sources = (
+                        self._config_manager._pipeline.get_all_data_sources()
+                    )
                 else:
                     self.logger.error("Pipeline not initialized properly")
             except Exception as e:
                 self.logger.error(f"Error accessing pipeline: {e}")
 
             if not all_data_sources:
-                self.logger.error("No data sources were loaded. "
-                                  "Check if the input files exist and are accessible.")
+                self.logger.error(
+                    "No data sources were loaded. "
+                    "Check if the input files exist and are accessible."
+                )
                 for i, entry in enumerate(self._config_manager.app_data.inputs):
-                    file_path = os.path.join(entry.get('location', ''),
-                                             entry.get('name', ''))
+                    file_path = os.path.join(
+                        entry.get("location", ""), entry.get("name", "")
+                    )
                     self.logger.debug(f"  {i + 1}. {file_path}")
                 return
 
-            if hasattr(self.args, 'composite') and self.args.composite:
-                composite_args = self.args.composite[0].split(',')
+            if hasattr(self.args, "composite") and self.args.composite:
+                composite_args = self.args.composite[0].split(",")
                 if len(composite_args) >= 3:
                     field1, field2, operation = composite_args[:3]
                     self.logger.info(
-                        f"Creating composite field: {field1} {operation} {field2}")
+                        f"Creating composite field: {field1} {operation} {field2}"
+                    )
                     for factory in self.factory_sources:
                         model = factory.create_root_instance(self._config_manager)
                         model.plot_composite_field(field1, field2, operation)
@@ -301,13 +329,15 @@ class Autoviz:
             for factory in self.factory_sources:
                 model = factory.create_root_instance(self._config_manager)
 
-                if hasattr(model, 'set_map_params') and self._config_manager.map_params:
+                if hasattr(model, "set_map_params") and self._config_manager.map_params:
                     self.logger.debug(
-                        f"Setting map_params with {len(self._config_manager.map_params)} entries")
+                        f"Setting map_params with {len(self._config_manager.map_params)} entries"
+                    )
                     model.set_map_params(self._config_manager.map_params)
                 else:
                     self.logger.warning(
-                        "No map_params available or model doesn't support set_map_params")
+                        "No map_params available or model doesn't support set_map_params"
+                    )
 
                 model()
 
@@ -317,7 +347,7 @@ class Autoviz:
     def set_data(self, input_files) -> None:
         """
         Assign model input files as specified in model config file.
-        
+
         Parameters
         ----------
             input_files : list
@@ -338,16 +368,17 @@ class Autoviz:
         The application will attempt to continue execution even if some files
         are missing, but plotting operations may fail if required data is unavailable.
         """
-        if not hasattr(self._config_manager, 'app_data') or not hasattr(
-                self._config_manager.app_data, 'inputs'):
+        if not hasattr(self._config_manager, "app_data") or not hasattr(
+            self._config_manager.app_data, "inputs"
+        ):
             self.logger.warning("No input files specified in configuration.")
             return
 
         missing_files = []
         for i, entry in enumerate(self._config_manager.app_data.inputs):
-            file_path = os.path.join(entry.get('location', ''), entry.get('name', ''))
+            file_path = os.path.join(entry.get("location", ""), entry.get("name", ""))
 
-            if '*' in file_path or '?' in file_path or '[' in file_path:
+            if "*" in file_path or "?" in file_path or "[" in file_path:
                 matched_files = glob.glob(file_path)
                 if not matched_files:
                     missing_files.append((i, file_path))
@@ -367,7 +398,7 @@ class Autoviz:
     def set_output(self, output_dir):
         """
         Assign model output directory as specified in model config file.
-        
+
         Parameters
         ----------
             output_dir : str

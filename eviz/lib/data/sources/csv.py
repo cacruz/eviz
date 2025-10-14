@@ -13,6 +13,7 @@ class CSVDataSource(DataSource):
     This class handles loading and processing data from CSV and JSON files.
     JSON files are expected to be in line-delimited JSON format (newline-delimited JSON).
     """
+
     def __init__(self, model_name: str = None, config_manager=None):
         """Initialize a new CSVDataSource.
 
@@ -37,7 +38,9 @@ class CSVDataSource(DataSource):
                 for f in file_path:
                     self.logger.debug(f"Reading file: {f}")
                     this_data = self._read_file(f)
-                    combined_data = pd.concat([combined_data, this_data], ignore_index=True)
+                    combined_data = pd.concat(
+                        [combined_data, this_data], ignore_index=True
+                    )
             else:
                 # Handle a single file
                 self.logger.debug(f"Reading file: {file_path}")
@@ -71,7 +74,7 @@ class CSVDataSource(DataSource):
         """
         _, ext = os.path.splitext(file_path.lower())
 
-        if ext == '.json':
+        if ext == ".json":
             self.logger.debug(f"Reading JSON file: {file_path}")
             try:
                 # Try reading as line-delimited JSON first
@@ -79,10 +82,12 @@ class CSVDataSource(DataSource):
                 self.logger.debug(f"Successfully read JSON file with {len(df)} records")
                 return df
             except Exception as e:
-                self.logger.warning(f"Failed to read as line-delimited JSON, trying standard JSON: {e}")
+                self.logger.warning(
+                    f"Failed to read as line-delimited JSON, trying standard JSON: {e}"
+                )
                 # Fallback to standard JSON
                 try:
-                    with open(file_path, 'r') as f:
+                    with open(file_path, "r") as f:
                         data = json.load(f)
                     if isinstance(data, list):
                         return pd.DataFrame(data)
@@ -131,11 +136,15 @@ class CSVDataSource(DataSource):
             try:
                 normalized = df[col].apply(pd.Series)
                 # Prefix the new column names with the original column name
-                normalized.columns = [f"{col}_{subcol}" if subcol else col
-                                     for subcol in normalized.columns]
+                normalized.columns = [
+                    f"{col}_{subcol}" if subcol else col
+                    for subcol in normalized.columns
+                ]
                 # Drop the original dict column and concat the normalized columns
                 df = pd.concat([df.drop(columns=[col]), normalized], axis=1)
-                self.logger.debug(f"Expanded {col} into {len(normalized.columns)} columns")
+                self.logger.debug(
+                    f"Expanded {col} into {len(normalized.columns)} columns"
+                )
             except Exception as e:
                 self.logger.warning(f"Failed to normalize column {col}: {e}")
 
@@ -143,38 +152,40 @@ class CSVDataSource(DataSource):
 
     def _process_data(self, dataset: xr.Dataset) -> xr.Dataset:
         """Process the loaded CSV data.
-        
+
         Parameters
         ----------
             dataset
                 The dataset to process
-            
+
         Returns
         -------
             The processed dataset
         """
         self.logger.debug("Processing CSV data")
-        
+
         for var_name in dataset.variables:
             # Skip coordinate variables
             if var_name in dataset.dims:
                 continue
-                
+
             var = dataset[var_name]
             # Is this a date/time column?
-            if var_name.lower() in ['date', 'time', 'datetime', 'timestamp']:
+            if var_name.lower() in ["date", "time", "datetime", "timestamp"]:
                 try:
                     # Convert to datetime and set as a coordinate
                     dates = pd.to_datetime(var.values)
                     dataset = dataset.assign_coords(time=dates)
                     self.logger.debug(f"Converted {var_name} to datetime coordinate")
                 except Exception as e:
-                    self.logger.warning(f"Failed to convert {var_name} to datetime: {e}")
-        
+                    self.logger.warning(
+                        f"Failed to convert {var_name} to datetime: {e}"
+                    )
+
         # Check for lat/lon columns and set as coordinates
-        lat_names = ['lat', 'latitude', 'y']
-        lon_names = ['lon', 'longitude', 'x']
-        
+        lat_names = ["lat", "latitude", "y"]
+        lon_names = ["lon", "longitude", "x"]
+
         for var_name in dataset.variables:
             if var_name.lower() in lat_names:
                 dataset = dataset.assign_coords(lat=dataset[var_name])
@@ -182,12 +193,12 @@ class CSVDataSource(DataSource):
             elif var_name.lower() in lon_names:
                 dataset = dataset.assign_coords(lon=dataset[var_name])
                 self.logger.debug(f"Set {var_name} as longitude coordinate")
-        
+
         return dataset
-    
+
     def _extract_metadata(self, dataset: xr.Dataset) -> None:
         """Extract metadata from the dataset.
-        
+
         Parameters
         ----------
             dataset
@@ -195,7 +206,7 @@ class CSVDataSource(DataSource):
         """
         if dataset is None:
             return
-        
+
         self.metadata["global_attrs"] = dict(dataset.attrs)
         self.metadata["dimensions"] = {dim: dataset.dims[dim] for dim in dataset.dims}
         self.metadata["variables"] = {}
@@ -204,16 +215,16 @@ class CSVDataSource(DataSource):
                 "dims": var.dims,
                 "attrs": dict(var.attrs),
                 "dtype": str(var.dtype),
-                "shape": var.shape
+                "shape": var.shape,
             }
-            
+
             # Add some basic statistics
             try:
                 self.metadata["variables"][var_name]["stats"] = {
                     "min": float(var.min().values),
                     "max": float(var.max().values),
                     "mean": float(var.mean().values),
-                    "std": float(var.std().values)
+                    "std": float(var.std().values),
                 }
             except Exception:
                 # Skip statistics if they can't be computed

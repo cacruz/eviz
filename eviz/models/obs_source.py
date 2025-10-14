@@ -13,10 +13,10 @@ from eviz.lib.models.observational import ObservationalDataSource
 warnings.warn(
     "eviz.models.obs_source is deprecated. Use eviz.lib.models.observational instead.",
     DeprecationWarning,
-    stacklevel=2
+    stacklevel=2,
 )
 
 # Compatibility alias
 ObsSource = ObservationalDataSource
 
-__all__ = ['ObsSource']
+__all__ = ["ObsSource"]

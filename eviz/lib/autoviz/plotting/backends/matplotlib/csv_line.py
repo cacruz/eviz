@@ -40,7 +40,9 @@ class MatplotlibCSVLinePlotter(MatplotlibBasePlotter):
         # Unpack data_to_plot with backward compatibility
         plot_params = {}
         if len(data_to_plot) >= 7:
-            data, field_name, plot_type, findex, fig, plot_options, plot_params = data_to_plot[:7]
+            data, field_name, plot_type, findex, fig, plot_options, plot_params = (
+                data_to_plot[:7]
+            )
         elif len(data_to_plot) == 6:
             data, field_name, plot_type, findex, fig, plot_options = data_to_plot
         else:
@@ -53,21 +55,23 @@ class MatplotlibCSVLinePlotter(MatplotlibBasePlotter):
             return fig
 
         self.fig = fig
-        self.ax_opts = config.ax_opts if hasattr(config, 'ax_opts') else {}
+        self.ax_opts = config.ax_opts if hasattr(config, "ax_opts") else {}
 
         # Set up axes - for categorical line plots, use regular axes (no map projection)
         if not config.compare and not config.compare_diff:
             if fig.get_axes() is None or len(fig.get_axes()) == 0:
                 # Temporarily disable projection for categorical plots
-                original_ax_opts = config.ax_opts.copy() if hasattr(config, 'ax_opts') else {}
-                if hasattr(config, 'ax_opts'):
-                    config.ax_opts['projection'] = None
+                original_ax_opts = (
+                    config.ax_opts.copy() if hasattr(config, "ax_opts") else {}
+                )
+                if hasattr(config, "ax_opts"):
+                    config.ax_opts["projection"] = None
 
                 # Create axes on the EViz figure without projection
                 self.ax = fig.figure.add_subplot(111)
 
                 # Restore original ax_opts
-                if hasattr(config, 'ax_opts'):
+                if hasattr(config, "ax_opts"):
                     config.ax_opts = original_ax_opts
             else:
                 ax_temp = fig.get_axes()
@@ -104,13 +108,15 @@ class MatplotlibCSVLinePlotter(MatplotlibBasePlotter):
         """
         ax = self.ax
 
-        with mpl.rc_context(rc=self.ax_opts.get('rc_params', {})):
+        with mpl.rc_context(rc=self.ax_opts.get("rc_params", {})):
             # Handle categorical data with plot_params (x, y, color)
-            if plot_params and 'x' in plot_params and 'y' in plot_params:
-                x_col = plot_params['x']
-                y_col = plot_params['y']
-                color_col = plot_params.get('color', None)
-                style_col = plot_params.get('style', None)  # Optional line style grouping
+            if plot_params and "x" in plot_params and "y" in plot_params:
+                x_col = plot_params["x"]
+                y_col = plot_params["y"]
+                color_col = plot_params.get("color", None)
+                style_col = plot_params.get(
+                    "style", None
+                )  # Optional line style grouping
 
                 if x_col not in data.columns:
                     self.logger.error(f"Column '{x_col}' not found in data")
@@ -126,8 +132,11 @@ class MatplotlibCSVLinePlotter(MatplotlibBasePlotter):
                 if color_col and color_col in data.columns:
                     # Group by color column and plot each group separately
                     categories = data[color_col].unique()
-                    cmap = plt.cm.get_cmap(plot_options.get('cmap', 'viridis'))
-                    color_map = {cat: cmap(i / len(categories)) for i, cat in enumerate(categories)}
+                    cmap = plt.cm.get_cmap(plot_options.get("cmap", "viridis"))
+                    color_map = {
+                        cat: cmap(i / len(categories))
+                        for i, cat in enumerate(categories)
+                    }
 
                     for category in categories:
                         mask = data[color_col] == category
@@ -138,37 +147,39 @@ class MatplotlibCSVLinePlotter(MatplotlibBasePlotter):
                             y_values[mask],
                             color=line_color,
                             label=str(category),
-                            linewidth=plot_options.get('linewidth', 2),
-                            linestyle=plot_options.get('linestyle', '-'),
-                            marker=plot_options.get('marker', None),
-                            markersize=plot_options.get('markersize', 6),
-                            alpha=plot_options.get('alpha', 1.0)
+                            linewidth=plot_options.get("linewidth", 2),
+                            linestyle=plot_options.get("linestyle", "-"),
+                            marker=plot_options.get("marker", None),
+                            markersize=plot_options.get("markersize", 6),
+                            alpha=plot_options.get("alpha", 1.0),
                         )
 
                     # Add legend if there are multiple categories
                     if len(categories) > 1:
-                        ax.legend(title=color_col, loc=plot_options.get('legend_loc', 'best'))
+                        ax.legend(
+                            title=color_col, loc=plot_options.get("legend_loc", "best")
+                        )
                 else:
                     # Simple line plot without grouping
                     ax.plot(
                         x_values,
                         y_values,
-                        color=plot_options.get('color', 'steelblue'),
-                        linewidth=plot_options.get('linewidth', 2),
-                        linestyle=plot_options.get('linestyle', '-'),
-                        marker=plot_options.get('marker', None),
-                        markersize=plot_options.get('markersize', 6),
-                        alpha=plot_options.get('alpha', 1.0),
-                        label=plot_options.get('label', y_col)
+                        color=plot_options.get("color", "steelblue"),
+                        linewidth=plot_options.get("linewidth", 2),
+                        linestyle=plot_options.get("linestyle", "-"),
+                        marker=plot_options.get("marker", None),
+                        markersize=plot_options.get("markersize", 6),
+                        alpha=plot_options.get("alpha", 1.0),
+                        label=plot_options.get("label", y_col),
                     )
 
-                    if plot_options.get('show_legend', False):
-                        ax.legend(loc=plot_options.get('legend_loc', 'best'))
+                    if plot_options.get("show_legend", False):
+                        ax.legend(loc=plot_options.get("legend_loc", "best"))
 
-                xlabel = plot_options.get('xlabel', x_col)
-                ylabel = plot_options.get('ylabel', y_col)
-                ax.set_xlabel(xlabel, fontsize=plot_options.get('xlabel_fontsize', 12))
-                ax.set_ylabel(ylabel, fontsize=plot_options.get('ylabel_fontsize', 12))
+                xlabel = plot_options.get("xlabel", x_col)
+                ylabel = plot_options.get("ylabel", y_col)
+                ax.set_xlabel(xlabel, fontsize=plot_options.get("xlabel_fontsize", 12))
+                ax.set_ylabel(ylabel, fontsize=plot_options.get("ylabel_fontsize", 12))
 
             else:
                 # Fallback: if no plot_params, try to plot the field_name column
@@ -180,39 +191,41 @@ class MatplotlibCSVLinePlotter(MatplotlibBasePlotter):
                         ax.plot(
                             x_values,
                             y_values,
-                            color=plot_options.get('color', 'steelblue'),
-                            linewidth=plot_options.get('linewidth', 2),
-                            linestyle=plot_options.get('linestyle', '-'),
-                            marker=plot_options.get('marker', None),
-                            markersize=plot_options.get('markersize', 6),
-                            alpha=plot_options.get('alpha', 1.0)
+                            color=plot_options.get("color", "steelblue"),
+                            linewidth=plot_options.get("linewidth", 2),
+                            linestyle=plot_options.get("linestyle", "-"),
+                            marker=plot_options.get("marker", None),
+                            markersize=plot_options.get("markersize", 6),
+                            alpha=plot_options.get("alpha", 1.0),
                         )
 
-                        ax.set_xlabel('Index')
+                        ax.set_xlabel("Index")
                         ax.set_ylabel(field_name)
                     else:
-                        self.logger.error(f"Column '{field_name}' not found in DataFrame")
+                        self.logger.error(
+                            f"Column '{field_name}' not found in DataFrame"
+                        )
                         return
                 else:
                     self.logger.error("Data must be a pandas DataFrame for line plots")
                     return
 
-            title = plot_options.get('title', f'{field_name} Line Plot')
-            ax.set_title(title, fontsize=plot_options.get('title_fontsize', 14))
+            title = plot_options.get("title", f"{field_name} Line Plot")
+            ax.set_title(title, fontsize=plot_options.get("title_fontsize", 14))
 
-            if plot_options.get('grid', True):
+            if plot_options.get("grid", True):
                 ax.grid(True, alpha=0.3)
 
-            if plot_options.get('hide_top_spine', False):
-                ax.spines['top'].set_visible(False)
-            if plot_options.get('hide_right_spine', False):
-                ax.spines['right'].set_visible(False)
-            if plot_options.get('hide_bottom_spine', False):
-                ax.spines['bottom'].set_visible(False)
-            if plot_options.get('hide_left_spine', False):
-                ax.spines['left'].set_visible(False)
+            if plot_options.get("hide_top_spine", False):
+                ax.spines["top"].set_visible(False)
+            if plot_options.get("hide_right_spine", False):
+                ax.spines["right"].set_visible(False)
+            if plot_options.get("hide_bottom_spine", False):
+                ax.spines["bottom"].set_visible(False)
+            if plot_options.get("hide_left_spine", False):
+                ax.spines["left"].set_visible(False)
 
-            if 'xlim' in plot_options:
-                ax.set_xlim(plot_options['xlim'])
-            if 'ylim' in plot_options:
-                ax.set_ylim(plot_options['ylim'])
+            if "xlim" in plot_options:
+                ax.set_xlim(plot_options["xlim"])
+            if "ylim" in plot_options:
+                ax.set_ylim(plot_options["ylim"])

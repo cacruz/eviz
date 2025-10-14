@@ -57,21 +57,25 @@ class CategoricalDataSource(GenericDataSource):
         -------
             Dictionary containing processed data and metadata
         """
-        self.logger.debug(f"Processing categorical dataset with variables: {list(dataset.data_vars)}")
+        self.logger.debug(
+            f"Processing categorical dataset with variables: {list(dataset.data_vars)}"
+        )
 
         # Convert to DataFrame for easier categorical/tabular operations
         df = dataset.to_dataframe().reset_index()
 
         processed_data = {
-            'dataset': dataset,
-            'dataframe': df,
-            'type': 'categorical',
-            'variables': list(dataset.data_vars),
-            'columns': list(df.columns),
-            'row_count': len(df)
+            "dataset": dataset,
+            "dataframe": df,
+            "type": "categorical",
+            "variables": list(dataset.data_vars),
+            "columns": list(df.columns),
+            "row_count": len(df),
         }
 
-        self.logger.debug(f"Processed categorical data: {len(df)} rows, {len(df.columns)} columns")
+        self.logger.debug(
+            f"Processed categorical data: {len(df)} rows, {len(df.columns)} columns"
+        )
 
         return processed_data
 
@@ -116,7 +120,7 @@ class CategoricalDataSource(GenericDataSource):
         -------
             List of supported plot type strings
         """
-        return ['bar', 'hist', 'scatter', 'box', 'pie']
+        return ["bar", "hist", "scatter", "box", "pie"]
 
     def __call__(self):
         """Execute the categorical data visualization process."""
