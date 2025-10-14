@@ -6,9 +6,9 @@ across different visualization backends and data types.
 """
 
 from .base import GenericDataSource
+from .factory import DataSourceFactory
 from .gridded import GriddedDataSource
 from .observational import ObservationalDataSource
-from .factory import DataSourceFactory
 
 __all__ = [
     'GenericDataSource',

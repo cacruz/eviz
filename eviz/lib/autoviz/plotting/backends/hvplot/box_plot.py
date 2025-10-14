@@ -1,8 +1,10 @@
-import pandas as pd
 import logging
+
 import holoviews as hv
-import hvplot.xarray  # register the hvplot method with xarray objects
 import hvplot.pandas  # noqa
+import hvplot.xarray  # register the hvplot method with xarray objects
+import pandas as pd
+
 from eviz.lib.autoviz.plotting.base import BoxPlotter
 
 

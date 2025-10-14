@@ -1,9 +1,11 @@
-import numpy as np
 import logging
+
 import holoviews as hv
-import hvplot.xarray  # register the hvplot method with xarray objects
 import hvplot.pandas  # noqa
+import hvplot.xarray  # register the hvplot method with xarray objects
+import numpy as np
 import xarray as xr
+
 from eviz.lib.autoviz.plotting.base import XYPlotter
 
 

@@ -2,16 +2,15 @@ import logging
 import multiprocessing
 import sys
 import warnings
+from dataclasses import dataclass, field
 from typing import Any
 
 import xarray as xr
 
-from dataclasses import dataclass, field
-
 from eviz.lib.autoviz.figure import Figure
 from eviz.lib.autoviz.utils import print_map
-from eviz.models.source_base import GenericSource
 from eviz.lib.data.utils import apply_conversion
+from eviz.models.source_base import GenericSource
 
 warnings.filterwarnings("ignore")
 

@@ -1,12 +1,14 @@
-from matplotlib import colors
-import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.path as mpath
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-from .base import MatplotlibBasePlotter
+import matplotlib as mpl
+import matplotlib.path as mpath
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import colors
+
 import eviz.lib.autoviz.utils as pu
+
+from .base import MatplotlibBasePlotter
 
 
 class MatplotlibPolarPlotter(MatplotlibBasePlotter):

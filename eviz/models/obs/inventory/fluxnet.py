@@ -1,12 +1,11 @@
 import logging
 import warnings
+from dataclasses import dataclass, field
 from typing import Any
 
 import pandas as pd
 
 from eviz.lib.config.config import Config
-from dataclasses import dataclass, field
-
 from eviz.models.source_base import GenericSource
 
 warnings.filterwarnings("ignore")

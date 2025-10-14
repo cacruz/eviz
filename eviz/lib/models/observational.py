@@ -1,11 +1,13 @@
-from dataclasses import dataclass
 import logging
 import warnings
+from dataclasses import dataclass
+
 import numpy as np
 import xarray as xr
+
+import eviz.lib.autoviz.utils as pu
 from eviz.lib.autoviz.figure import Figure
 from eviz.lib.models.base import GenericDataSource
-import eviz.lib.autoviz.utils as pu
 
 warnings.filterwarnings("ignore")
 

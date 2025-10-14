@@ -1,11 +1,13 @@
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
+
 import xarray as xr
-from eviz.lib.data.sources import DataSource
-from eviz.lib.data.pipeline.reader import DataReader
-from eviz.lib.data.pipeline.processor import DataProcessor
-from eviz.lib.data.pipeline.transformer import DataTransformer
+
 from eviz.lib.data.pipeline.integrator import DataIntegrator
+from eviz.lib.data.pipeline.processor import DataProcessor
+from eviz.lib.data.pipeline.reader import DataReader
+from eviz.lib.data.pipeline.transformer import DataTransformer
+from eviz.lib.data.sources import DataSource
 
 
 class DataPipeline:

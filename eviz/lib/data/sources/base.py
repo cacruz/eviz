@@ -1,7 +1,8 @@
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, List
-import logging
+from typing import Any, Dict, List, Optional
+
 import xarray as xr
 
 

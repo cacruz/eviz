@@ -1,11 +1,14 @@
-import os
 import logging
+import os
+from dataclasses import dataclass, field
+from typing import Dict, Optional
+
 import xarray as xr
 from dask.distributed import Client
-from dataclasses import dataclass, field
-from typing import Optional, Dict
+
+from eviz.lib.data.url_validator import is_opendap_url, is_url
+
 from .base import DataSource
-from eviz.lib.data.url_validator import is_url, is_opendap_url
 
 
 @dataclass

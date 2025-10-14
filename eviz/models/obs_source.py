@@ -6,6 +6,7 @@ New code should import from: eviz.lib.models.observational
 """
 
 import warnings
+
 from eviz.lib.models.observational import ObservationalDataSource
 
 # Issue deprecation warning

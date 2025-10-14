@@ -15,26 +15,18 @@ Legacy imports (compatibility - will redirect):
 
 # Legacy compatibility imports - redirect to new architecture
 from eviz.lib.models.base import GenericDataSource as BaseSource
-from eviz.lib.models.gridded import GriddedDataSource as GriddedSource  
-from eviz.lib.models.observational import ObservationalDataSource as ObsSource
-from eviz.lib.models.factory import DataSourceFactory as SourceFactory
-
 # Legacy factory aliases
 from eviz.lib.models.factory import DataSourceFactory as BaseSourceFactory
 from eviz.lib.models.factory import DataSourceFactory as GriddedSourceFactory
 from eviz.lib.models.factory import DataSourceFactory as ObsSourceFactory
+from eviz.lib.models.factory import DataSourceFactory as SourceFactory
+from eviz.lib.models.gridded import GriddedDataSource as GriddedSource
+from eviz.lib.models.observational import ObservationalDataSource as ObsSource
 
 # Model-specific factories still in this package
-from .source_factory import (
-    GribFactory,
-    GeosFactory,
-    WrfFactory,
-    LisFactory,
-    AirnowFactory,
-    OmiFactory,
-    CrestFactory,
-    GhgFactory
-)
+from .source_factory import (AirnowFactory, CrestFactory, GeosFactory,
+                             GhgFactory, GribFactory, LisFactory, OmiFactory,
+                             WrfFactory)
 
 __all__ = [
     'BaseSource',           # -> eviz.lib.models.base.GenericDataSource

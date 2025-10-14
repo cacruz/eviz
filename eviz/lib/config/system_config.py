@@ -1,6 +1,7 @@
-from dataclasses import dataclass, field
 import logging
+from dataclasses import dataclass, field
 from time import strftime
+
 from eviz.lib.config.app_data import AppData
 
 

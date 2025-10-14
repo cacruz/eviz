@@ -1,7 +1,8 @@
+import cartopy.crs as ccrs
 import matplotlib as mpl
 import numpy as np
-import cartopy.crs as ccrs
 from cartopy.mpl.geoaxes import GeoAxes
+
 import eviz.lib.autoviz.utils as pu
 
 from .base import MatplotlibBasePlotter

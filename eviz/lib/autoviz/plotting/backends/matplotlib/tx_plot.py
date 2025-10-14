@@ -1,10 +1,11 @@
-import numpy as np
-import matplotlib as mpl
-import matplotlib.gridspec as mgridspec
+import datetime
+
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+import matplotlib as mpl
+import matplotlib.gridspec as mgridspec
+import numpy as np
 from matplotlib import colors
-import datetime
 from matplotlib.dates import date2num
 
 from .base import MatplotlibBasePlotter

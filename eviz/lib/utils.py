@@ -1,18 +1,20 @@
-import os
-import re
-import sys
 import errno
-import yaml
 import logging
+import os
 import pathlib
+import re
 import subprocess
-import matplotlib.pyplot as plt
-import seaborn as sns
+import sys
+from datetime import timedelta
 from functools import wraps
 from typing import Any, Dict, List
-from yaml import SafeLoader
-from datetime import timedelta
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+import yaml
 from matplotlib.transforms import BboxBase as bbase
+from yaml import SafeLoader
+
 from eviz.lib.config.paths_config import PathsConfig
 
 logger = logging.getLogger(__name__)

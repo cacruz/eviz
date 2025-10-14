@@ -5,14 +5,14 @@ This module provides a factory pattern for instantiating the correct
 data source type based on the source name and configuration.
 """
 
-from typing import Dict, Type, Optional
 import logging
+from typing import Dict, Optional, Type
 
 from eviz.lib.config.config_manager import ConfigManager
 from eviz.lib.models.base import GenericDataSource
+from eviz.lib.models.categorical import CategoricalDataSource
 from eviz.lib.models.gridded import GriddedDataSource
 from eviz.lib.models.observational import ObservationalDataSource
-from eviz.lib.models.categorical import CategoricalDataSource
 
 
 class DataSourceFactory:
@@ -112,7 +112,7 @@ class DataSourceFactory:
         """
         # Import here to avoid circular imports
         from eviz.models.source_base import GenericSource
-        
+
         # Return the legacy GenericSource which has all the plot methods
         return GenericSource(config_manager=config_manager)
 
@@ -130,4 +130,5 @@ DataSourceFactory.register('lis', GriddedDataSource)
 DataSourceFactory.register('geos', GriddedDataSource)
 DataSourceFactory.register('nuwrf', GriddedDataSource)
 from eviz.models.esm.crest import Crest
+
 DataSourceFactory.register('crest', Crest)

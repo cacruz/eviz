@@ -1,9 +1,11 @@
 import logging
-from typing import List
-import xarray as xr
-import numpy as np
-from eviz.lib.data.sources import DataSource
 from dataclasses import dataclass
+from typing import List
+
+import numpy as np
+import xarray as xr
+
+from eviz.lib.data.sources import DataSource
 
 
 @dataclass()

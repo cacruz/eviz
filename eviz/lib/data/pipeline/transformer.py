@@ -1,6 +1,8 @@
 import logging
-import xarray as xr
 from dataclasses import dataclass
+
+import xarray as xr
+
 from eviz.lib.data.sources import DataSource
 
 

@@ -1,13 +1,12 @@
 import logging
 import warnings
+from dataclasses import dataclass, field
 from typing import Any
 
-from matplotlib import pyplot as plt
 import xarray as xr
+from matplotlib import pyplot as plt
 
 from eviz.lib.config.config import Config
-from dataclasses import dataclass, field
-
 from eviz.models.source_base import GenericSource
 
 warnings.filterwarnings("ignore")

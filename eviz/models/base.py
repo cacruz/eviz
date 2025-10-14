@@ -6,6 +6,7 @@ New code should import from: eviz.lib.models.base
 """
 
 import warnings
+
 from eviz.lib.models.base import GenericDataSource
 
 # Issue deprecation warning

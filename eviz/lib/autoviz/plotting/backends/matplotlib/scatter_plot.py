@@ -1,14 +1,17 @@
 """Unified scatter plot plotter for both gridded and categorical data using Matplotlib."""
 
+import logging
+
+import cartopy.crs as ccrs
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import logging
-from matplotlib.ticker import FormatStrFormatter
-import cartopy.crs as ccrs
 from cartopy.mpl.geoaxes import GeoAxes
+from matplotlib.ticker import FormatStrFormatter
+
 import eviz.lib.autoviz.utils as pu
+
 from .base import MatplotlibBasePlotter
 
 

@@ -1,9 +1,11 @@
 """Line plot plotter for categorical/CSV data using Matplotlib."""
 
+import logging
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pandas as pd
-import logging
+
 from .base import MatplotlibBasePlotter
 
 

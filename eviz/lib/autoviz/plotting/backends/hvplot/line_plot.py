@@ -1,7 +1,9 @@
-import numpy as np
 import logging
+
 import holoviews as hv
+import numpy as np
 import pandas as pd
+
 from eviz.lib.autoviz.plotting.base import BasePlotter
 
 

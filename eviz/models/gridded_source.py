@@ -6,6 +6,7 @@ New code should import from: eviz.lib.models.gridded
 """
 
 import warnings
+
 from eviz.lib.models.gridded import GriddedDataSource
 
 # Issue deprecation warning

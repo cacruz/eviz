@@ -1,12 +1,14 @@
-import sys
-from dataclasses import dataclass, field
-import xarray as xr
-import numpy as np
-import requests
 import logging
 import os
-from eviz.lib import constants as constants
+import sys
+from dataclasses import dataclass, field
+
+import numpy as np
+import requests
+import xarray as xr
+
 import eviz.lib.utils as u
+from eviz.lib import constants as constants
 from eviz.lib.data.pipeline.processor import DataProcessor
 
 logger = logging.getLogger(__name__)

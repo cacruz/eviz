@@ -7,28 +7,26 @@ Generic data sources should use: eviz.lib.models.factory.DataSourceFactory
 
 import warnings
 from dataclasses import dataclass
-from eviz.lib.config.config_manager import ConfigManager
 
+from eviz.lib.config.config_manager import ConfigManager
 # Import new architecture for base
 from eviz.lib.models.factory import DataSourceFactory
-
 # Model-specific imports remain here
 from eviz.models.esm.crest import Crest
-from eviz.models.esm.grib import Grib
 from eviz.models.esm.geos import Geos
 from eviz.models.esm.giss import Giss
+from eviz.models.esm.grib import Grib
 from eviz.models.esm.lis import Lis
 from eviz.models.esm.wrf import Wrf
+from eviz.models.gridded_source import GriddedSource
 from eviz.models.obs.inventory.airnow import Airnow
-from eviz.models.obs.inventory.ghg import Ghg
 from eviz.models.obs.inventory.fluxnet import Fluxnet
+from eviz.models.obs.inventory.ghg import Ghg
 from eviz.models.obs.satellite.landsat import Landsat
 from eviz.models.obs.satellite.mopitt import Mopitt
 from eviz.models.obs.satellite.omi import Omi
-
 # Import legacy sources for compatibility
 from eviz.models.obs_source import ObsSource
-from eviz.models.gridded_source import GriddedSource
 from eviz.models.source_base import GenericSource
 
 # Issue deprecation warning for generic factories

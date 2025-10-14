@@ -1,36 +1,26 @@
 import glob
-import os
 import logging
+import os
 import time
-from typing import Optional
 from argparse import Namespace
 from dataclasses import dataclass, field
+from typing import Optional
 
 from eviz.lib.config.config import Config
 from eviz.lib.config.config_manager import ConfigManager
 from eviz.lib.config.configuration_adapter import ConfigurationAdapter
+from eviz.lib.config.paths_config import PathsConfig
 # New architecture imports
 from eviz.lib.models.factory import DataSourceFactory
-
-# Model-specific factories remain in legacy location
-from eviz.models.source_factory import (AirnowFactory,
-                                        CategoricalFactory,
-                                        CrestFactory,
-                                        GhgFactory,
-                                        GribFactory,
-                                        WrfFactory,
-                                        LisFactory,
-                                        MopittFactory,
-                                        LandsatFactory,
-                                        OmiFactory,
-                                        FluxnetFactory,
-                                        GriddedSourceFactory,
-                                        ObsSourceFactory,
-                                        GeosFactory,
-                                        GissFactory,
-                                        )
-from eviz.lib.config.paths_config import PathsConfig
 from eviz.lib.utils import load_style
+# Model-specific factories remain in legacy location
+from eviz.models.source_factory import (AirnowFactory, CategoricalFactory,
+                                        CrestFactory, FluxnetFactory,
+                                        GeosFactory, GhgFactory, GissFactory,
+                                        GribFactory, GriddedSourceFactory,
+                                        LandsatFactory, LisFactory,
+                                        MopittFactory, ObsSourceFactory,
+                                        OmiFactory, WrfFactory)
 
 # Suppress matplotlib debug messages
 logging.getLogger('matplotlib').setLevel(logging.WARNING)

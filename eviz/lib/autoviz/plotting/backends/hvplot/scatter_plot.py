@@ -1,7 +1,9 @@
+import logging
+
+import holoviews as hv
 import numpy as np
 import pandas as pd
-import logging
-import holoviews as hv
+
 from eviz.lib.autoviz.plotting.base import ScatterPlotter
 
 

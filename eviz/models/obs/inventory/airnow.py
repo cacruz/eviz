@@ -1,10 +1,12 @@
 import logging
 import sys
 import warnings
+from dataclasses import dataclass, field
 from typing import Any
+
 import numpy as np
 import pandas as pd
-from dataclasses import dataclass, field
+
 import eviz.lib.autoviz.utils as pu
 from eviz.lib.autoviz.figure import Figure
 from eviz.models.obs_source import ObsSource

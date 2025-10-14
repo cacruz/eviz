@@ -7,9 +7,11 @@ This module provides support for GISS ModelE output files which have a unique st
 - Variables may not have time dimension (single time slice)
 """
 import logging
+from dataclasses import dataclass
+
 import numpy as np
 import xarray as xr
-from dataclasses import dataclass
+
 from eviz.models.gridded_source import GriddedSource
 
 

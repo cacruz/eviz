@@ -1,7 +1,8 @@
-from typing import List, Set, Dict, Type
-from eviz.lib.data.sources import DataSource
-from dataclasses import dataclass, field
 import logging
+from dataclasses import dataclass, field
+from typing import Dict, List, Set, Type
+
+from eviz.lib.data.sources import DataSource
 
 
 @dataclass

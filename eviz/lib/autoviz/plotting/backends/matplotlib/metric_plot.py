@@ -1,11 +1,13 @@
+import logging
+
+import cartopy.crs as ccrs
 import matplotlib as mpl
 import numpy as np
-import logging
 import xarray as xr
-import cartopy.crs as ccrs
-from scipy.stats import pearsonr, spearmanr
-from scipy.signal import correlate
 from cartopy.mpl.geoaxes import GeoAxes
+from scipy.signal import correlate
+from scipy.stats import pearsonr, spearmanr
+
 from .base import MatplotlibBasePlotter
 
 

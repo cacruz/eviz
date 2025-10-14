@@ -1,13 +1,16 @@
 import logging
 import os
+
 import numpy as np
-import xarray as xr
 import pandas as pd
-from eviz.lib.autoviz.plotting.backends.matplotlib.simple_plot import SimplePlotter
-from eviz.lib.autoviz.plotting.factory import PlotterFactory
-from eviz.lib.autoviz.figure import Figure
-import eviz.lib.utils as u
+import xarray as xr
+
 import eviz.lib.autoviz.utils as pu
+import eviz.lib.utils as u
+from eviz.lib.autoviz.figure import Figure
+from eviz.lib.autoviz.plotting.backends.matplotlib.simple_plot import \
+    SimplePlotter
+from eviz.lib.autoviz.plotting.factory import PlotterFactory
 from eviz.lib.config.config_manager import ConfigManager
 from eviz.lib.data.data_extractor import DataExtractor
 from eviz.lib.data.utils import subset_region
@@ -1050,7 +1053,8 @@ class PlotManager:
                                 # Get the model name from config manager
                                 model_name = getattr(data_source, 'model_name', None)
                                 if model_name:
-                                    from eviz.lib.models.factory import DataSourceFactory
+                                    from eviz.lib.models.factory import \
+                                        DataSourceFactory
                                     model_factory = DataSourceFactory()
                                     try:
                                         # Create the model object for correlation processing
@@ -1138,7 +1142,8 @@ class PlotManager:
                         # For correlation plots, we need to use the model object, not just the data source
                         model_name = getattr(data_source, 'model_name', None)
                         if model_name:
-                            from eviz.lib.models.factory import DataSourceFactory
+                            from eviz.lib.models.factory import \
+                                DataSourceFactory
                             model_factory = DataSourceFactory()
                             try:
                                 # Create the model object for correlation processing
@@ -1600,8 +1605,8 @@ class PlotManager:
 
     def _process_csv_plot(self, data_array, field_name, file_index, plot_type, figure):
         """Process CSV/categorical plots (bar, pie, hist, scatter, box) using pandas DataFrames."""
-        import pandas as pd
         import matplotlib.pyplot as plt
+        import pandas as pd
 
         self.logger.info(f"Processing CSV/categorical {plot_type} plot for {field_name}")
 

@@ -1,18 +1,18 @@
 import logging
 from typing import Any, Dict, Optional
-import matplotlib as mpl
-import matplotlib.figure as mfigure
-import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import matplotlib.gridspec as gridspec
+
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-from matplotlib.ticker import MultipleLocator
-
+import matplotlib as mpl
+import matplotlib.figure as mfigure
+import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.ticker import MultipleLocator
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from eviz.lib.autoviz.utils import get_subplot_geometry
 import eviz.lib.autoviz.utils as pu
+from eviz.lib.autoviz.utils import get_subplot_geometry
 
 
 class Figure(mfigure.Figure):

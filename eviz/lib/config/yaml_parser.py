@@ -1,9 +1,10 @@
-from dataclasses import dataclass, field
-from typing import List, Dict, Any
-import os
 import logging
-from eviz.lib.utils import get_nested_key
+import os
+from dataclasses import dataclass, field
+from typing import Any, Dict, List
+
 import eviz.lib.utils as u
+from eviz.lib.utils import get_nested_key
 
 
 @dataclass

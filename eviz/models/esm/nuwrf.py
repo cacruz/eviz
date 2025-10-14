@@ -1,10 +1,12 @@
 import logging
 import warnings
 from dataclasses import dataclass
+
 import numpy as np
 import pandas as pd
-from eviz.models.gridded_source import GriddedSource
+
 from eviz.lib.data.utils import apply_conversion
+from eviz.models.gridded_source import GriddedSource
 
 warnings.filterwarnings("ignore")
 

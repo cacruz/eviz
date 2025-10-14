@@ -1,8 +1,8 @@
-import numpy as np
-import pandas as pd
-import hvplot.xarray  # register the hvplot method with xarray objects
 import holoviews as hv
 import hvplot.pandas  # noqa
+import hvplot.xarray  # register the hvplot method with xarray objects
+import numpy as np
+import pandas as pd
 from holoviews import opts
 
 from eviz.lib.autoviz.plotting.base import YZPlotter

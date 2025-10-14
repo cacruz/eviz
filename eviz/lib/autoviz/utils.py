@@ -1,30 +1,29 @@
 import decimal
+import glob
 import json
+import logging
 import math
+import multiprocessing
 import os
 import re
 import shlex
 import shutil
 import subprocess
-import multiprocessing
-import logging
+import tempfile
 import time
-from typing import Optional, Union
-from typing import Tuple, Any
+import webbrowser
+from typing import Any, Optional, Tuple, Union
+
+import holoviews as hv
 import matplotlib
-from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
-import holoviews as hv
 from IPython.display import display
-import tempfile
-import webbrowser
-
+from matplotlib.figure import Figure
 from matplotlib.ticker import LogFormatter
-import glob
+from numpy import e
 from PIL import Image
 
-from numpy import e
 import eviz.lib.utils as u
 from eviz.lib.utils import timer
 
@@ -82,8 +81,9 @@ def run_plot_commands(filenames: list[str]):
 
 
 def create_pdf(config: "ConfigManager") -> None:
-    from PIL import Image
     import glob
+
+    from PIL import Image
     irgb0 = None
 
     img_files = sorted(
@@ -797,8 +797,8 @@ def colorbar(mappable):
     """
     Create a colorbar that works with both standard Matplotlib Axes and Cartopy GeoAxes.
     """
-    from mpl_toolkits.axes_grid1 import make_axes_locatable
     from cartopy.mpl.geoaxes import GeoAxes
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
 
     last_axes = plt.gca()
     ax = mappable.axes

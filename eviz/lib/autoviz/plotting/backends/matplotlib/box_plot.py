@@ -1,10 +1,12 @@
 """Unified box plot plotter for both gridded and categorical data using Matplotlib."""
 
+import logging
+
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import logging
-import matplotlib.pyplot as plt
+
 import eviz.lib.autoviz.utils as pu
 
 from .base import MatplotlibBasePlotter

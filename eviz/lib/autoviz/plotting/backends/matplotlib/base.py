@@ -1,13 +1,13 @@
-import numpy as np
+import logging
+
 import cartopy.crs as ccrs
 import matplotlib as mpl
+import numpy as np
 from matplotlib import colors
-import logging
-from matplotlib.ticker import FixedLocator
-from matplotlib.ticker import FuncFormatter, FormatStrFormatter
-from eviz.lib.autoviz.plotting.base import BasePlotter
-import eviz.lib.autoviz.utils as pu
+from matplotlib.ticker import FixedLocator, FormatStrFormatter, FuncFormatter
 
+import eviz.lib.autoviz.utils as pu
+from eviz.lib.autoviz.plotting.base import BasePlotter
 
 DEFAULT_CONTOUR_LABELSIZE = 12
 DEFAULT_COLORBAR_LABELSIZE = 10

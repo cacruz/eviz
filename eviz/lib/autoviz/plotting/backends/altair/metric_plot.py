@@ -1,9 +1,11 @@
-import numpy as np
 import logging
+
+import altair as alt
+import numpy as np
 import xarray as xr
 from scipy.interpolate import griddata
 from scipy.stats import pearsonr
-import altair as alt
+
 from eviz.lib.autoviz.plotting.base import XYPlotter
 
 

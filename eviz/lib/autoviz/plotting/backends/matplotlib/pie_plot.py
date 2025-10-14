@@ -1,9 +1,11 @@
 """Pie chart plotter for CSV data using Matplotlib."""
 
+import logging
+
 import matplotlib as mpl
 import numpy as np
 import pandas as pd
-import logging
+
 from .base import MatplotlibBasePlotter
 
 

@@ -1,8 +1,11 @@
-import numpy as np
-import matplotlib as mpl
 import logging
+
+import matplotlib as mpl
+import numpy as np
 from matplotlib.ticker import FormatStrFormatter, NullFormatter
+
 import eviz.lib.autoviz.utils as pu
+
 from .base import MatplotlibBasePlotter
 
 

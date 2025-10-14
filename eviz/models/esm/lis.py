@@ -1,9 +1,10 @@
 import warnings
 from dataclasses import dataclass
+
 import numpy as np
 import xarray as xr
-from eviz.lib.data.utils import apply_mean
-from eviz.lib.data.utils import apply_conversion
+
+from eviz.lib.data.utils import apply_conversion, apply_mean
 from eviz.models.esm.nuwrf import NuWrf
 
 warnings.filterwarnings("ignore")

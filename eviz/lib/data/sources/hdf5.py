@@ -1,6 +1,8 @@
 import logging
-import xarray as xr
+
 import h5py
+import xarray as xr
+
 from eviz.lib.data.sources.base import DataSource
 
 

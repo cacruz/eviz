@@ -1,22 +1,25 @@
+import logging
 import os
 from dataclasses import dataclass
-import logging
+
 import matplotlib
 import numpy as np
-import xarray as xr
 import pandas as pd
+import xarray as xr
 
-from eviz.lib.autoviz.plotting.backends.matplotlib.simple_plot import SimplePlotter
-from eviz.lib.autoviz.plotting.factory import PlotterFactory
-from eviz.lib.autoviz.figure import Figure
-import eviz.lib.utils as u
 import eviz.lib.autoviz.utils as pu
+import eviz.lib.utils as u
+from eviz.lib.autoviz.figure import Figure
+from eviz.lib.autoviz.plotting.backends.matplotlib.simple_plot import \
+    SimplePlotter
+from eviz.lib.autoviz.plotting.factory import PlotterFactory
+from eviz.lib.autoviz.plotting.plot_manager import PlotManager
 from eviz.lib.config.config_manager import ConfigManager
 from eviz.lib.data import DataSource
-from eviz.lib.models.base import GenericDataSource as BaseSource
-from eviz.lib.data.utils import apply_conversion, apply_mean, apply_zsum, subset_region
 from eviz.lib.data.data_extractor import DataExtractor
-from eviz.lib.autoviz.plotting.plot_manager import PlotManager
+from eviz.lib.data.utils import (apply_conversion, apply_mean, apply_zsum,
+                                 subset_region)
+from eviz.lib.models.base import GenericDataSource as BaseSource
 
 logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 

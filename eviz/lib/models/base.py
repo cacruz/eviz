@@ -5,15 +5,16 @@ This module provides the foundational interface and common functionality
 for all data source implementations in the EViz visualization system.
 """
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
-import logging
+
 import xarray as xr
 
+from eviz.lib.autoviz.plotting.plot_manager import PlotManager
 from eviz.lib.config.config_manager import ConfigManager
 from eviz.lib.data.data_extractor import DataExtractor
-from eviz.lib.autoviz.plotting.plot_manager import PlotManager
 
 
 @dataclass

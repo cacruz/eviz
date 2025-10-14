@@ -1,7 +1,9 @@
+import logging
+
+import holoviews as hv
 import numpy as np
 import pandas as pd
-import logging
-import holoviews as hv
+
 from eviz.lib.autoviz.plotting.base import XTPlotter
 
 
@@ -150,7 +152,7 @@ class HvplotXTPlotter(XTPlotter):
                             config.spec_data[field_name]['xtplot']['add_trend']:
                         self.logger.debug("Adding trend line")
                         from scipy import stats
-                        
+
                         # Convert time to numeric for regression
                         if isinstance(df['time'].iloc[0], (pd.Timestamp, np.datetime64)):
                             x_numeric = (df['time'] - df['time'].iloc[0]).dt.total_seconds().values

@@ -1,12 +1,14 @@
-from dataclasses import dataclass
 import logging
 import warnings
+from dataclasses import dataclass
+
 import numpy as np
 import xarray as xr
-from eviz.lib.data.pipeline.processor import DataProcessor
-from eviz.lib.models.base import GenericDataSource
+
 import eviz.lib.autoviz.utils as pu
 from eviz.lib.autoviz.figure import Figure
+from eviz.lib.data.pipeline.processor import DataProcessor
+from eviz.lib.models.base import GenericDataSource
 
 warnings.filterwarnings("ignore")
 
@@ -57,7 +59,7 @@ class GriddedDataSource(GenericDataSource):
         # Import here to avoid circular imports
         from eviz.lib.autoviz.plotting.plot_manager import PlotManager
         from eviz.lib.data.data_extractor import DataExtractor
-        
+
         # Initialize plot type registry if not already present
         if not hasattr(self.config_manager, '_plot_type_registry'):
             self.config_manager._plot_type_registry = {}

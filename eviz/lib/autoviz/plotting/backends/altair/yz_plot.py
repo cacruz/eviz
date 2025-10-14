@@ -1,7 +1,8 @@
+import logging
+
+import altair as alt
 import numpy as np
 import pandas as pd
-import altair as alt
-import logging
 
 from eviz.lib.autoviz.plotting.base import YZPlotter
 

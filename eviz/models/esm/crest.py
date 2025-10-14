@@ -1,12 +1,13 @@
-import warnings
 import logging
-import numpy as np
+import warnings
 from dataclasses import dataclass
+
+import numpy as np
+
 from eviz.lib.autoviz.figure import Figure
-from eviz.models.source_base import GenericSource
 from eviz.models.gridded_source import GriddedSource
 from eviz.models.obs_source import ObsSource
-
+from eviz.models.source_base import GenericSource
 
 warnings.filterwarnings("ignore")
 

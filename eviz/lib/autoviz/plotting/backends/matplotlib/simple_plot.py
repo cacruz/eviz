@@ -6,16 +6,15 @@ when no SPECS file is provided.
 """
 import logging
 import math
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
+import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
 
 import eviz.lib.utils as u
 from eviz.lib.config.config_manager import ConfigManager
-
 
 logger = logging.getLogger(__name__)
 
@@ -299,9 +298,11 @@ class SimplePlotter:
 
     def _plot_csv(self, config: ConfigManager, field_name: str, plot_type: str, data: xr.DataArray, dataset: xr.Dataset):
         """Create CSV plots (bar, pie, hist) using the PlotterFactory."""
-        import pandas as pd
-        from eviz.lib.autoviz.plotting.factory import PlotterFactory
         from unittest.mock import MagicMock
+
+        import pandas as pd
+
+        from eviz.lib.autoviz.plotting.factory import PlotterFactory
 
         self.logger.info(f"Creating CSV {plot_type} plot for {field_name}")
 

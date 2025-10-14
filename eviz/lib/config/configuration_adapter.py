@@ -1,6 +1,7 @@
 import logging
 import os
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
 import xarray as xr
 
 from eviz.lib.data.pipeline import DataPipeline

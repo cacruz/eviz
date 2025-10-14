@@ -1,13 +1,15 @@
-import sys
-import os
 import logging
+import os
+import sys
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
-from eviz.lib.data.sources.base import DataSource
-from eviz.lib.utils import join_file_path
+from typing import Any, Dict, List, Optional
+
 from eviz.lib.autoviz.utils import get_subplot_shape
 from eviz.lib.config.app_data import AppData
 from eviz.lib.data.factory.source_factory import DataSourceFactory
+from eviz.lib.data.sources.base import DataSource
+from eviz.lib.utils import join_file_path
+
 
 @dataclass
 class InputConfig:

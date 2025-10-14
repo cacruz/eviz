@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+
 from eviz.lib.config.app_data import AppData
 
 

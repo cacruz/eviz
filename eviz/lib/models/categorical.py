@@ -6,9 +6,11 @@ from CSV files and similar sources, supporting various statistical plot types
 like bar charts, histograms, scatter plots, box plots, and pie charts.
 """
 
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
+
 import xarray as xr
+
 from eviz.lib.models.base import GenericDataSource
 
 

@@ -1,6 +1,7 @@
 import logging
 import warnings
 from dataclasses import dataclass
+
 from eviz.models.gridded_source import GriddedSource
 
 warnings.filterwarnings("ignore")
