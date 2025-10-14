@@ -3,14 +3,9 @@ import os
 from dataclasses import dataclass, field
 from typing import List, Optional, Type
 
-from eviz.lib.data.sources import (
-    CSVDataSource,
-    DataSource,
-    GRIBDataSource,
-    HDF5DataSource,
-    NetCDFDataSource,
-    ZARRDataSource,
-)
+from eviz.lib.data.sources import (CSVDataSource, DataSource, GRIBDataSource,
+                                   HDF5DataSource, NetCDFDataSource,
+                                   ZARRDataSource)
 from eviz.lib.data.url_validator import is_opendap_url, is_url
 
 from .registry import DataSourceRegistry

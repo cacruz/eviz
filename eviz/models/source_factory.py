@@ -9,10 +9,8 @@ import warnings
 from dataclasses import dataclass
 
 from eviz.lib.config.config_manager import ConfigManager
-
 # Import new architecture for base
 from eviz.lib.models.factory import DataSourceFactory
-
 # Model-specific imports remain here
 from eviz.models.esm.crest import Crest
 from eviz.models.esm.geos import Geos
@@ -27,7 +25,6 @@ from eviz.models.obs.inventory.ghg import Ghg
 from eviz.models.obs.satellite.landsat import Landsat
 from eviz.models.obs.satellite.mopitt import Mopitt
 from eviz.models.obs.satellite.omi import Omi
-
 # Import legacy sources for compatibility
 from eviz.models.obs_source import ObsSource
 from eviz.models.source_base import GenericSource

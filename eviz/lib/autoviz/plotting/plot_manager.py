@@ -8,7 +8,8 @@ import xarray as xr
 import eviz.lib.autoviz.utils as pu
 import eviz.lib.utils as u
 from eviz.lib.autoviz.figure import Figure
-from eviz.lib.autoviz.plotting.backends.matplotlib.simple_plot import SimplePlotter
+from eviz.lib.autoviz.plotting.backends.matplotlib.simple_plot import \
+    SimplePlotter
 from eviz.lib.autoviz.plotting.factory import PlotterFactory
 from eviz.lib.config.config_manager import ConfigManager
 from eviz.lib.data.data_extractor import DataExtractor
@@ -1311,9 +1312,8 @@ class PlotManager:
                                 # Get the model name from config manager
                                 model_name = getattr(data_source, "model_name", None)
                                 if model_name:
-                                    from eviz.lib.models.factory import (
-                                        DataSourceFactory,
-                                    )
+                                    from eviz.lib.models.factory import \
+                                        DataSourceFactory
 
                                     model_factory = DataSourceFactory()
                                     try:
@@ -1443,7 +1443,8 @@ class PlotManager:
                         # For correlation plots, we need to use the model object, not just the data source
                         model_name = getattr(data_source, "model_name", None)
                         if model_name:
-                            from eviz.lib.models.factory import DataSourceFactory
+                            from eviz.lib.models.factory import \
+                                DataSourceFactory
 
                             model_factory = DataSourceFactory()
                             try:

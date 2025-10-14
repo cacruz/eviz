@@ -5,7 +5,8 @@ import pandas as pd
 import xarray as xr
 
 from eviz.lib.config.config_manager import ConfigManager
-from eviz.lib.data.utils import apply_conversion, apply_mean, apply_zsum, subset_region
+from eviz.lib.data.utils import (apply_conversion, apply_mean, apply_zsum,
+                                 subset_region)
 
 
 class DataExtractor:
