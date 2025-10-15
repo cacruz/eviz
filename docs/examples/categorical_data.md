@@ -28,11 +28,11 @@ python autoviz.py -s categorical -f config/examples/categorical/penguins.yaml
 
 **Expected output:**
 
-![Penguins Scatter Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/penguins_scatter_bill_dimensions.png)
+![Penguins Scatter Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/penguins_scatter_bill_dimensions.png)
 
 *Scatter plot showing bill length vs. bill depth colored by penguin species*
 
-![Penguins Box Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/penguins_box_bill_length_by_species.png)
+![Penguins Box Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/penguins_box_bill_length_by_species.png)
 
 *Box plot comparing bill length distribution across penguin species*
 
@@ -67,23 +67,23 @@ python autoviz.py -s categorical -f config/examples/categorical/cars.yaml
 
 **Expected output:**
 
-![Cars Histogram](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/cars_hist_mpg.png)
+![Cars Histogram](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/cars_hist_mpg.png)
 
 *Histogram showing the distribution of miles per gallon (mpg)*
 
-![Cars Bar Chart](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/cars_bar_horsepower_by_origin.png)
+![Cars Bar Chart](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/cars_bar_horsepower_by_origin.png)
 
 *Bar chart comparing average horsepower by region of origin*
 
-![Cars Pie Chart](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/cars_pie_cylinders.png)
+![Cars Pie Chart](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/cars_pie_cylinders.png)
 
 *Pie chart showing proportion of vehicles by number of cylinders*
 
-![Cars Scatter Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/cars_scatter_weight_vs_mpg.png)
+![Cars Scatter Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/cars_scatter_weight_vs_mpg.png)
 
 *Scatter plot showing relationship between vehicle weight and fuel efficiency*
 
-![Cars Box Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/cars_box_mpg_by_cylinders.png)
+![Cars Box Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/cars_box_mpg_by_cylinders.png)
 
 *Box plot comparing mpg distribution across different cylinder counts*
 

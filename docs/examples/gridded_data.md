@@ -18,7 +18,7 @@ python autoviz.py -s gridded -f $EVIZ_CONFIG_PATH/gridded/xy.yaml
 - Generates images for all time steps in the dataset
 
 **Expected output:**
-![Basic XY Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/xy_plot_basic_temperature.png)
+![Basic XY Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/xy_plot_basic_temperature.png)
 
 *Example showing temperature distribution across a spatial domain*
 
@@ -35,7 +35,7 @@ python autoviz.py -s gridded -f $EVIZ_CONFIG_PATH/gridded/xy_zsum.yaml
 - Useful for column-integrated quantities (e.g., total precipitable water)
 
 **Expected output:**
-![Basic XY Plot (Column Sum)](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/xy_plot_vertical_sum.png)
+![Basic XY Plot (Column Sum)](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/xy_plot_vertical_sum.png)
 
 *Example showing column-integrated Ozone field**
 
@@ -52,7 +52,7 @@ python autoviz.py -s gridded -f $EVIZ_CONFIG_PATH/gridded/xy_zave.yaml
 
 
 **Expected output:**
-![Basic XY Plot (Column Average)](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/xy_plot_vertical_avg.png)
+![Basic XY Plot (Column Average)](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/xy_plot_vertical_avg.png)
 
 *Example showing column-mean Ozone field**
 
@@ -69,7 +69,7 @@ python autoviz.py -s gridded -f $EVIZ_CONFIG_PATH/gridded/xy_zlevs.yaml
 - Configure levels in the YAML file
 
 **Expected output:**
-![Basic XY Plot (at Specified Level)](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/xy_plot_vertical_levs.png)
+![Basic XY Plot (at Specified Level)](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/xy_plot_vertical_levs.png)
 
 *Example showing Ozone distribution at a specific vertical level*
 
@@ -85,7 +85,7 @@ python autoviz.py -s gridded -f $EVIZ_CONFIG_PATH/gridded/xy_proj.yaml
 - Useful for regional studies or specific map projections
 
 **Expected output:**
-![Projected Map](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/xy_plot_robinson_projection.png)
+![Projected Map](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/xy_plot_robinson_projection.png)
 
 *Example showing global temperature map with Robinson projection*
 
@@ -101,7 +101,7 @@ python autoviz.py -s gridded -f $EVIZ_CONFIG_PATH/gridded/xy_extent-proj.yaml
 - Focus on specific regions (CONUS) with appropriate projection
 
 **Expected output:**
-![Projected Map over CONUS](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/xy_plot_conus_lambert_projection.png)
+![Projected Map over CONUS](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/xy_plot_conus_lambert_projection.png)
 
 *Example showing temperature distribution in the CONUS with Lambert Conformal projection*
 
@@ -120,7 +120,7 @@ python autoviz.py -s gridded -f $EVIZ_CONFIG_PATH/gridded/xt.yaml
 - Useful for temporal analysis 
 
 **Expected output:**
-![Time Series Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/temperature_timeseries_basic.png)
+![Time Series Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/temperature_timeseries_basic.png)
 
 *Example showing a basic temperature time series*
 
@@ -137,7 +137,7 @@ python autoviz.py -s gridded -f $EVIZ_CONFIG_PATH/gridded/xt_point_sel.yaml
 - Good for multi-site analysis
 
 **Expected output:**
-![Time Series Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/temperature_timeseries_at_nyc.png)
+![Time Series Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/temperature_timeseries_at_nyc.png)
 
 *Example showing a basic temperature time serie at a selected point (NYC)*
 
@@ -154,7 +154,7 @@ python autoviz.py -s gridded -f $EVIZ_CONFIG_PATH/gridded/xt_KtoC.yaml
 - Demonstrates EViz's unit conversion capabilities
 
 **Expected output:**
-![Time Series Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/temperature_timeseries_at_nyc_inC.png)
+![Time Series Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/temperature_timeseries_at_nyc_inC.png)
 
 *Same as before but different units for temperature*
 
@@ -169,7 +169,7 @@ python autoviz.py -s gridded -f $EVIZ_CONFIG_PATH/gridded/xt_trendline.yaml
 - Fits and displays linear trends
 
 **Expected output:**
-![Time Series Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/temperature_timeseries_trendline.png)
+![Time Series Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/temperature_timeseries_trendline.png)
 
 *Example showing a basic temperature time series with a trendline*
 
@@ -184,7 +184,7 @@ python autoviz.py -s gridded -f $EVIZ_CONFIG_PATH/gridded/xt_rolling_window.yaml
 - Fits and displays timeseries with a rolling window of size 12
 
 **Expected output:**
-![Time Series Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/temperature_timeseries_rolling_window.png)
+![Time Series Plot](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/temperature_timeseries_rolling_window.png)
 
 *Example showing a basic temperature time series with a rolling window of size 12*
 
@@ -203,7 +203,7 @@ python autoviz.py -s gridded -f $EVIZ_CONFIG_PATH/gridded/yz.yaml
 - Uses default projection and styling
 
 **Expected output:**
-![Zonal Mean](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/temperature_zonal_mean.png)
+![Zonal Mean](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/temperature_zonal_mean.png)
 
 *Example showing atmospheric temperature zonal mean*
 
@@ -220,7 +220,7 @@ python autoviz.py -s gridded -f $EVIZ_CONFIG_PATH/gridded/yz_profile.yaml
 - Useful for atmospheric/oceanic profile analysis
 
 **Expected output:**
-![Vertical Profile](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.1/temperature_profile.png)
+![Vertical Profile](https://github.com/cacruz/eviz-dev/releases/download/docs-images-v0.9.2/temperature_profile.png)
 
 *Example showing atmospheric temperature vertical profile*
 
