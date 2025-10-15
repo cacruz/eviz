@@ -28,12 +28,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3 :: Only",
 ]
-
-[project.urls]
-Repository = "https://github.com/cacruz/eviz"
-Documentation = "https://cacruz.github.io/eviz/"
-Issues = "https://github.com/cacruz/eviz/issues"
-
 dependencies = [
     "xesmf>=0.7.1",
     "matplotlib>=3.8.2",
@@ -56,6 +50,11 @@ dependencies = [
     "email-validator>=2.2.0",
     "python-dotenv>=1.0.1"
 ]
+
+[project.urls]
+Repository = "https://github.com/cacruz/eviz"
+Documentation = "https://cacruz.github.io/eviz/"
+Issues = "https://github.com/cacruz/eviz/issues"
 
 [project.optional-dependencies]
 dev = [
