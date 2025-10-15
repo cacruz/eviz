@@ -16,6 +16,7 @@ Before running these examples, ensure you have:
 
 gridded_data
 observational_data
+categorical_data
 model_specific
 ```
 

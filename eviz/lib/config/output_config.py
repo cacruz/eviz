@@ -1,7 +1,7 @@
-from dataclasses import dataclass, field
-import os
 import logging
-from typing import Dict, Any
+import os
+from dataclasses import dataclass, field
+from typing import Any, Dict
 
 
 @dataclass
@@ -44,19 +44,19 @@ class OutputConfig:
     def _init_visualization(self, outputs: Dict[str, Any]) -> None:
         """Initialize parameters in the `visualization` subsection ."""
         # Set default values if not already set
-        if not hasattr(self, 'backend'):
+        if not hasattr(self, "backend"):
             self.backend = "matplotlib"
-        if not hasattr(self, 'colormap'):
+        if not hasattr(self, "colormap"):
             self.colormap = "coolwarm"
-        if not hasattr(self, 'style'):
+        if not hasattr(self, "style"):
             self.fig_style = "default"
-        if not hasattr(self, 'dpi'):
+        if not hasattr(self, "dpi"):
             self.dpi = 300
-        if not hasattr(self, 'gif_fps'):
+        if not hasattr(self, "gif_fps"):
             self.gif_fps = 10
-        if not hasattr(self, 'mpl_style'):
+        if not hasattr(self, "mpl_style"):
             self.mpl_style = "classic"
-            
+
         # Override with visualization-specific settings if present
         if "visualization" in outputs:
             outputs_config = outputs["visualization"]

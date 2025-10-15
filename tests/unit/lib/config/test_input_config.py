@@ -667,3 +667,197 @@ def test_set_trop_height_file_list_disables():
     config.use_trop_height = True
     config._set_trop_height_file_list()
     assert not config.use_trop_height
+
+# --- Tests for CSV plot type handling ---
+
+def test_get_plot_types_for_field_string_format():
+    """Test getting plot types from comma-separated string."""
+    config = InputConfig(source_names=['A'], config_files=['c.yaml'])
+    file_entry = {
+        'name': 'test.csv',
+        'to_plot': {
+            'metric_name': 'bar,pie,hist'
+        }
+    }
+    result = config.get_plot_types_for_field(file_entry, 'metric_name')
+    assert result == ['bar', 'pie', 'hist']
+
+def test_get_plot_types_for_field_string_with_whitespace():
+    """Test getting plot types with whitespace handling."""
+    config = InputConfig(source_names=['A'], config_files=['c.yaml'])
+    file_entry = {
+        'name': 'test.csv',
+        'to_plot': {
+            'metric_name': ' bar , pie , hist '
+        }
+    }
+    result = config.get_plot_types_for_field(file_entry, 'metric_name')
+    assert result == ['bar', 'pie', 'hist']
+
+def test_get_plot_types_for_field_list_format():
+    """Test getting plot types from list format."""
+    config = InputConfig(source_names=['A'], config_files=['c.yaml'])
+    file_entry = {
+        'name': 'test.csv',
+        'to_plot': {
+            'metric_name': ['bar', 'pie', 'hist']
+        }
+    }
+    result = config.get_plot_types_for_field(file_entry, 'metric_name')
+    assert result == ['bar', 'pie', 'hist']
+
+def test_get_plot_types_for_field_dict_format():
+    """Test getting plot types from dict format with options."""
+    config = InputConfig(source_names=['A'], config_files=['c.yaml'])
+    file_entry = {
+        'name': 'test.csv',
+        'to_plot': {
+            'metric_name': {
+                'bar': {'color': 'blue'},
+                'pie': {},
+                'hist': {'bins': 20}
+            }
+        }
+    }
+    result = config.get_plot_types_for_field(file_entry, 'metric_name')
+    assert set(result) == {'bar', 'pie', 'hist'}
+
+def test_get_plot_types_for_field_no_to_plot():
+    """Test getting plot types when to_plot is missing."""
+    config = InputConfig(source_names=['A'], config_files=['c.yaml'])
+    file_entry = {'name': 'test.csv'}
+    result = config.get_plot_types_for_field(file_entry, 'metric_name')
+    assert result == []
+
+def test_get_plot_types_for_field_missing_field():
+    """Test getting plot types for a field that doesn't exist."""
+    config = InputConfig(source_names=['A'], config_files=['c.yaml'])
+    file_entry = {
+        'name': 'test.csv',
+        'to_plot': {
+            'other_field': 'bar'
+        }
+    }
+    result = config.get_plot_types_for_field(file_entry, 'metric_name')
+    assert result == []
+
+def test_get_plot_types_for_field_invalid_to_plot():
+    """Test getting plot types when to_plot is not a dict."""
+    config = InputConfig(source_names=['A'], config_files=['c.yaml'])
+    file_entry = {
+        'name': 'test.csv',
+        'to_plot': 'invalid'
+    }
+    result = config.get_plot_types_for_field(file_entry, 'metric_name')
+    assert result == []
+
+def test_get_plot_options_for_field_dict_format():
+    """Test getting plot options from dict format."""
+    config = InputConfig(source_names=['A'], config_files=['c.yaml'])
+    file_entry = {
+        'name': 'test.csv',
+        'to_plot': {
+            'metric_name': {
+                'bar': {'color': 'blue', 'width': 0.8},
+                'pie': {'explode': [0.1, 0]},
+                'hist': {'bins': 20}
+            }
+        }
+    }
+
+    # Get options for specific plot type
+    bar_options = config.get_plot_options_for_field(file_entry, 'metric_name', 'bar')
+    assert bar_options == {'color': 'blue', 'width': 0.8}
+
+    pie_options = config.get_plot_options_for_field(file_entry, 'metric_name', 'pie')
+    assert pie_options == {'explode': [0.1, 0]}
+
+    hist_options = config.get_plot_options_for_field(file_entry, 'metric_name', 'hist')
+    assert hist_options == {'bins': 20}
+
+    # Get all options when no plot_type specified
+    all_options = config.get_plot_options_for_field(file_entry, 'metric_name')
+    assert 'bar' in all_options
+    assert 'pie' in all_options
+    assert 'hist' in all_options
+
+def test_get_plot_options_for_field_dict_empty_options():
+    """Test getting plot options when options are empty dicts."""
+    config = InputConfig(source_names=['A'], config_files=['c.yaml'])
+    file_entry = {
+        'name': 'test.csv',
+        'to_plot': {
+            'metric_name': {
+                'bar': {},
+                'pie': {}
+            }
+        }
+    }
+
+    bar_options = config.get_plot_options_for_field(file_entry, 'metric_name', 'bar')
+    assert bar_options == {}
+
+def test_get_plot_options_for_field_string_format():
+    """Test getting plot options from string format (should return empty)."""
+    config = InputConfig(source_names=['A'], config_files=['c.yaml'])
+    file_entry = {
+        'name': 'test.csv',
+        'to_plot': {
+            'metric_name': 'bar,pie,hist'
+        }
+    }
+
+    options = config.get_plot_options_for_field(file_entry, 'metric_name', 'bar')
+    assert options == {}
+
+def test_get_plot_options_for_field_no_to_plot():
+    """Test getting plot options when to_plot is missing."""
+    config = InputConfig(source_names=['A'], config_files=['c.yaml'])
+    file_entry = {'name': 'test.csv'}
+
+    options = config.get_plot_options_for_field(file_entry, 'metric_name')
+    assert options == {}
+
+def test_get_plot_options_for_field_missing_field():
+    """Test getting plot options for a field that doesn't exist."""
+    config = InputConfig(source_names=['A'], config_files=['c.yaml'])
+    file_entry = {
+        'name': 'test.csv',
+        'to_plot': {
+            'other_field': {'bar': {'color': 'red'}}
+        }
+    }
+
+    options = config.get_plot_options_for_field(file_entry, 'metric_name')
+    assert options == {}
+
+def test_get_plot_options_for_field_missing_plot_type():
+    """Test getting plot options for a plot type that doesn't exist returns empty dict."""
+    config = InputConfig(source_names=['A'], config_files=['c.yaml'])
+    file_entry = {
+        'name': 'test.csv',
+        'to_plot': {
+            'metric_name': {
+                'bar': {'color': 'blue'}
+            }
+        }
+    }
+
+    # When plot_type is not found, it should return empty dict
+    options = config.get_plot_options_for_field(file_entry, 'metric_name', 'scatter')
+    assert options == {}
+
+def test_get_plot_options_for_field_non_dict_value():
+    """Test getting plot options when the plot type value is not a dict."""
+    config = InputConfig(source_names=['A'], config_files=['c.yaml'])
+    file_entry = {
+        'name': 'test.csv',
+        'to_plot': {
+            'metric_name': {
+                'bar': 'not_a_dict'
+            }
+        }
+    }
+
+    options = config.get_plot_options_for_field(file_entry, 'metric_name', 'bar')
+    assert options == {}

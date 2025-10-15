@@ -1,41 +1,50 @@
-from .backends.matplotlib.xy_plot import MatplotlibXYPlotter
-from .backends.matplotlib.yz_plot import MatplotlibYZPlotter
-from .backends.matplotlib.xt_plot import MatplotlibXTPlotter
-from .backends.matplotlib.tx_plot import MatplotlibTXPlotter
-from .backends.matplotlib.polar_plot import MatplotlibPolarPlotter
-from .backends.matplotlib.scatter_plot import MatplotlibScatterPlotter
-from .backends.matplotlib.metric_plot import MatplotlibMetricPlotter
-from .backends.matplotlib.box_plot import MatplotlibBoxPlotter
-from .backends.hvplot.xy_plot import HvplotXYPlotter
-from .backends.hvplot.yz_plot import HvplotYZPlotter
-from .backends.hvplot.xt_plot import HvplotXTPlotter
-from .backends.hvplot.scatter_plot import HvplotScatterPlotter
+from .backends.altair.metric_plot import AltairMetricPlotter
+from .backends.altair.scatter_plot import AltairScatterPlotter
+from .backends.altair.xt_plot import AltairXTPlotter
+from .backends.altair.xy_plot import AltairXYPlotter
+from .backends.altair.yz_plot import AltairYZPlotter
 from .backends.hvplot.box_plot import HvplotBoxPlotter
 from .backends.hvplot.line_plot import HvplotLinePlotter
 from .backends.hvplot.metric_plot import HvplotMetricPlotter
-from .backends.altair.xy_plot import AltairXYPlotter
-from .backends.altair.yz_plot import AltairYZPlotter
-from .backends.altair.xt_plot import AltairXTPlotter
-from .backends.altair.scatter_plot import AltairScatterPlotter
-from .backends.altair.metric_plot import AltairMetricPlotter
+from .backends.hvplot.scatter_plot import HvplotScatterPlotter
+from .backends.hvplot.xt_plot import HvplotXTPlotter
+from .backends.hvplot.xy_plot import HvplotXYPlotter
+from .backends.hvplot.yz_plot import HvplotYZPlotter
+from .backends.matplotlib.bar_plot import MatplotlibCSVBarPlotter
+from .backends.matplotlib.box_plot import MatplotlibBoxPlotter
+from .backends.matplotlib.csv_line import MatplotlibCSVLinePlotter
+from .backends.matplotlib.hist_plot import MatplotlibCSVHistPlotter
+from .backends.matplotlib.metric_plot import MatplotlibMetricPlotter
+from .backends.matplotlib.pie_plot import MatplotlibCSVPiePlotter
+from .backends.matplotlib.polar_plot import MatplotlibPolarPlotter
+from .backends.matplotlib.scatter_plot import MatplotlibScatterPlotter
+from .backends.matplotlib.tx_plot import MatplotlibTXPlotter
+from .backends.matplotlib.xt_plot import MatplotlibXTPlotter
+from .backends.matplotlib.xy_plot import MatplotlibXYPlotter
+from .backends.matplotlib.yz_plot import MatplotlibYZPlotter
 
 
 class PlotterFactory:
     """Factory for creating appropriate plotters."""
-    
+
     @staticmethod
     def create_plotter(plot_type, backend="matplotlib"):
         """Create a plotter for the given plot type and backend.
-        
-        Args:
-            plot_type: Type of plot ('xy', 'yz', 'xt', 'sc', etc.)
-            backend: Backend to use ('matplotlib', 'hvplot', 'altair')
-            
-        Returns:
+
+        Parameters
+        ----------
+            plot_type
+                Type of plot ('xy', 'yz', 'xt', 'sc', etc.)
+            backend
+                Backend to use ('matplotlib', 'hvplot', 'altair')
+
+        Returns
+        -------
             An instance of the appropriate plotter
-            
-        Raises:
-            ValueError: If no plotter is available for the given plot type and backend
+        Raises
+        ------
+            ValueError
+                If no plotter is available for the given plot type and backend
         """
         # Dictionary mapping (plot_type, backend) to plotter class
         plotters = {
@@ -46,8 +55,21 @@ class PlotterFactory:
             ("tx", "matplotlib"): MatplotlibTXPlotter,
             ("polar", "matplotlib"): MatplotlibPolarPlotter,
             ("corr", "matplotlib"): MatplotlibMetricPlotter,
-            ("box", "matplotlib"): MatplotlibBoxPlotter,
-
+            # CSV/Categorical plot types (box is here to prioritize categorical over gridded)
+            ("bar", "matplotlib"): MatplotlibCSVBarPlotter,
+            ("pie", "matplotlib"): MatplotlibCSVPiePlotter,
+            ("hist", "matplotlib"): MatplotlibCSVHistPlotter,
+            (
+                "scatter",
+                "matplotlib",
+            ): MatplotlibScatterPlotter,  # Unified plotter handles both gridded and categorical
+            (
+                "box",
+                "matplotlib",
+            ): MatplotlibBoxPlotter,  # Unified plotter handles both gridded and categorical
+            ("line", "matplotlib"): MatplotlibCSVLinePlotter,
+            # Gridded box plot also available via 'boxplot' key if needed
+            ("boxplot", "matplotlib"): MatplotlibBoxPlotter,
             ("xy", "hvplot"): HvplotXYPlotter,
             ("xt", "hvplot"): HvplotXTPlotter,
             ("sc", "hvplot"): HvplotScatterPlotter,
@@ -55,18 +77,18 @@ class PlotterFactory:
             ("corr", "hvplot"): HvplotMetricPlotter,
             ("box", "hvplot"): HvplotBoxPlotter,
             ("line", "hvplot"): HvplotLinePlotter,
-
             ("xy", "altair"): AltairXYPlotter,
             ("xt", "altair"): AltairXTPlotter,
             ("sc", "altair"): AltairScatterPlotter,
             ("yz", "altair"): AltairYZPlotter,
             ("corr", "altair"): AltairMetricPlotter,
-
             # Add other combinations as they are implemented
         }
-        
+
         key = (plot_type, backend)
         if key in plotters:
             return plotters[key]()
         else:
-            raise ValueError(f"No plotter available for plot_type={plot_type}, backend={backend}")
+            raise ValueError(
+                f"No plotter available for plot_type={plot_type}, backend={backend}"
+            )

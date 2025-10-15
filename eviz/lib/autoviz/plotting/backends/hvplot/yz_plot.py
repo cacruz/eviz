@@ -1,8 +1,8 @@
-import numpy as np
-import pandas as pd
-import hvplot.xarray  # register the hvplot method with xarray objects
 import holoviews as hv
 import hvplot.pandas  # noqa
+import hvplot.xarray  # register the hvplot method with xarray objects
+import numpy as np
+import pandas as pd
 from holoviews import opts
 
 from eviz.lib.autoviz.plotting.base import YZPlotter
@@ -20,27 +20,33 @@ class HvplotYZPlotter(YZPlotter):
         """Initialize the YZ Plotter."""
         super().__init__()
         try:
-            hv.extension('bokeh')
+            hv.extension("bokeh")
         except Exception as e:
-            self.logger.warning(f"Could not initialize HoloViews/hvplot extensions: {e}")   
+            self.logger.warning(
+                f"Could not initialize HoloViews/hvplot extensions: {e}"
+            )
 
     def plot(self, config_manager, plot_data):
-        """
-        Create a YZ (latitude-height) plot using hvplot.
+        """Create a YZ (latitude-height) plot using hvplot.
 
-        Parameters:
-            config_manager: The configuration manager object
-            plot_data: Tuple containing (data_array, x, y, field_name, plot_type, file_index, figure)
-                data_array: xarray.DataArray containing the data to plot
-                x: x-coordinates (latitude values)
-                y: y-coordinates (height/pressure levels)
-                field_name: Name of the field being plotted
-                plot_type: Type of plot ('yz')
-                file_index: Index of the file being plotted
-                figure: Figure object to plot on
+        Parameters
+        ----------
+            config_manager
+                The configuration manager object
+            plot_data
+                Tuple containing (data_array, x, y, field_name, plot_type, file_index, figure)
+                - data_array: xarray.DataArray containing the data to plot
+                - x: x-coordinates (latitude values)
+                - y: y-coordinates (height/pressure levels)
+                - field_name: Name of the field being plotted
+                - plot_type: Type of plot ('yz')
+                - file_index: Index of the file being plotted
+                - figure: Figure object to plot on
 
-        Returns:
-            holoviews.Element: The created plot
+        Returns
+        -------
+            holoviews.Element
+                The created plot
         """
         data_array, x, y, field_name, plot_type, file_index, figure = plot_data
 

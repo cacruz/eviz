@@ -3,11 +3,26 @@ name: Build and Test
 on:
   push:
     branches: [ main, develop ]
+    # Run workflow only if these files change
+    paths:
+      - 'docs/**'
+      - 'README.md'
+      - 'environment.yaml'
+      - 'src/**'
+      - 'tests/**'
   pull_request:
     branches: [ main, develop ]
+    paths:
+      - 'docs/**'
+      - 'README.md'
+      - 'environment.yaml'
+      - 'src/**'
+      - 'tests/**'
 
 jobs:
   test:
+    # Run tests only if code or environment changes, not just docs
+    if: contains(github.event.head_commit.message, '[docs]') == false
     runs-on: ubuntu-latest
     container: continuumio/miniconda3:latest
 
@@ -81,3 +96,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
