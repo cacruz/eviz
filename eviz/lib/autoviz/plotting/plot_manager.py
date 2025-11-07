@@ -212,54 +212,66 @@ class PlotManager:
                     data_array, field_name, file_index, plot_type, figure
                 )
             else:
-                self.logger.warning(
-                    f"_process_xy_plot not implemented for {self.__class__.__name__}"
+                self.logger.error(
+                    f"ERROR: _process_xy_plot not implemented for {self.__class__.__name__}. "
+                    f"No plot will be generated for field '{field_name}'."
                 )
+                return
         elif plot_type == "polar":
             if hasattr(self, "_process_polar_plot"):
                 self._process_polar_plot(
                     data_array, field_name, file_index, plot_type, figure
                 )
             else:
-                self.logger.warning(
-                    f"_process_polar_plot not implemented for {self.__class__.__name__}"
+                self.logger.error(
+                    f"ERROR: _process_polar_plot not implemented for {self.__class__.__name__}. "
+                    f"No plot will be generated for field '{field_name}'."
                 )
+                return
         elif plot_type == "xt":
             if hasattr(self, "_process_xt_plot"):
                 self._process_xt_plot(
                     data_array, field_name, file_index, plot_type, figure
                 )
             else:
-                self.logger.warning(
-                    f"_process_xt_plot not implemented for {self.__class__.__name__}"
+                self.logger.error(
+                    f"ERROR: _process_xt_plot not implemented for {self.__class__.__name__}. "
+                    f"No plot will be generated for field '{field_name}'."
                 )
+                return
         elif plot_type == "tx":
             if hasattr(self, "_process_tx_plot"):
                 self._process_tx_plot(
                     data_array, field_name, file_index, plot_type, figure
                 )
             else:
-                self.logger.warning(
-                    f"_process_tx_plot not implemented for {self.__class__.__name__}"
+                self.logger.error(
+                    f"ERROR: _process_tx_plot not implemented for {self.__class__.__name__}. "
+                    f"No plot will be generated for field '{field_name}'."
                 )
+                return
         elif plot_type == "sc":
             if hasattr(self, "_process_scatter_plot"):
                 self._process_scatter_plot(
                     data_array, field_name, file_index, plot_type, figure
                 )
             else:
-                self.logger.warning(
-                    f"_process_scatter_plot not implemented for {self.__class__.__name__}"
+                self.logger.error(
+                    f"ERROR: _process_scatter_plot not implemented for {self.__class__.__name__}. "
+                    f"No plot will be generated for field '{field_name}'."
                 )
+                return
         elif plot_type == "corr":
             if hasattr(self, "_process_corr_plot"):
                 self._process_corr_plot(
                     data_array, field_name, file_index, plot_type, figure
                 )
             else:
-                self.logger.warning(
-                    f"_process_corr_plot not implemented for {self.__class__.__name__}"
+                self.logger.error(
+                    f"ERROR: _process_corr_plot not implemented for {self.__class__.__name__}. "
+                    f"No plot will be generated for field '{field_name}'."
                 )
+                return
         elif plot_type in ["bar", "pie", "hist", "scatter", "box", "line"]:
             # CSV/categorical plot types - use pandas DataFrames directly
             if hasattr(self, "_process_csv_plot"):
@@ -267,18 +279,22 @@ class PlotManager:
                     data_array, field_name, file_index, plot_type, figure
                 )
             else:
-                self.logger.warning(
-                    f"_process_csv_plot not implemented for {self.__class__.__name__}"
+                self.logger.error(
+                    f"ERROR: _process_csv_plot not implemented for {self.__class__.__name__}. "
+                    f"No plot will be generated for field '{field_name}'."
                 )
+                return
         else:
             if hasattr(self, "_process_other_plot"):
                 self._process_other_plot(
                     data_array, field_name, file_index, plot_type, figure
                 )
             else:
-                self.logger.warning(
-                    f"_process_other_plot not implemented for {self.__class__.__name__}"
+                self.logger.error(
+                    f"ERROR: Plot type '{plot_type}' is not supported for {self.__class__.__name__}. "
+                    f"No plot will be generated for field '{field_name}'."
                 )
+                return
 
     def _is_observational_data(self, data_array):
         """
@@ -725,6 +741,9 @@ class PlotManager:
                         "%Y-%m-%d %H"
                     )
                     self.config_manager.real_time = real_time_readable
+                    self.logger.debug(
+                        f"Set time display to: {real_time_readable} (index {time_index})"
+                    )
                 else:
                     self.config_manager.real_time = f"Time level {time_index}"
             else:
@@ -742,11 +761,15 @@ class PlotManager:
                             "%Y-%m-%d %H"
                         )
                         self.config_manager.real_time = real_time_readable
+                        self.logger.debug(
+                            f"Set time display to: {real_time_readable} (index {time_index})"
+                        )
                     else:
                         self.config_manager.real_time = f"Time level {time_index}"
                 else:
                     self.config_manager.real_time = f"Time level {time_index}"
         except Exception as e:
+            self.logger.warning(f"Error setting time config: {e}")
             self.config_manager.real_time = f"Time level {time_index}"
 
     def process_simple_plots(self, plotter):
@@ -1508,11 +1531,34 @@ class PlotManager:
             )
             time_levels = ["average"]  # Special marker for time averaging
         else:
-            time_levels = (
-                range(num_times) if time_level_config == "all" else [time_level_config]
-            )
+            # Handle different time_lev formats
+            if time_level_config == "all":
+                time_levels = range(num_times)
+            elif isinstance(time_level_config, list):
+                # Support list format [start, end] for time range
+                if len(time_level_config) == 2:
+                    start, end = time_level_config
+                    # Ensure indices are within bounds
+                    start = max(0, min(start, num_times - 1))
+                    end = max(0, min(end, num_times))
+                    time_levels = range(start, end)
+                    self.logger.info(
+                        f"Processing time range [{start}, {end}) for {field_name} ({len(time_levels)} frames)"
+                    )
+                else:
+                    self.logger.warning(
+                        f"Invalid time_lev list format: {time_level_config}. Expected [start, end]. Using default."
+                    )
+                    time_levels = [0]
+            else:
+                time_levels = [time_level_config]
 
         if not levels and not do_zsum:
+            self.logger.error(
+                f"ERROR: No vertical levels defined for field '{field_name}'. "
+                f"Please add level specifications in your YAML configuration or spec file. "
+                f"No plot will be generated."
+            )
             return
 
         # Calculate global min/max for consistent colorbar if creating a GIF
@@ -1641,7 +1687,8 @@ class PlotManager:
                     self.config_manager.real_time = "Averaged over all times"
                     self.config_manager.time_level = "average"
                 else:
-                    self._set_time_config(t, data_at_time)
+                    # Pass the original data_array (not sliced) so time coords are available
+                    self._set_time_config(t, data_array)
 
                 # Create a new figure for each level to avoid reusing axes
                 figure = Figure.create_eviz_figure(self.config_manager, plot_type)
@@ -2579,9 +2626,13 @@ class PlotManager:
                 data_source = self.config_manager.pipeline.get_data_source(filename)
                 dataset = data_source.dataset
 
-                # Use the same field name for all datasets in the comparison
-                # since we're comparing the same variable across different datasets
-                field_name_for_dataset = field_name1
+                # Determine which field name to use for this dataset
+                # For the first dataset in b_list (index 1), use field_name2
+                # This allows comparing fields with different names across datasets
+                if i == 1 and field_name2 and field_name2 != field_name1:
+                    field_name_for_dataset = field_name2
+                else:
+                    field_name_for_dataset = field_name1
 
                 # Verify the field exists in this dataset
                 if field_name_for_dataset not in dataset.data_vars:

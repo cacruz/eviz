@@ -366,11 +366,13 @@ class InputConfig:
             self.profile = for_inputs.get("compare_diff", {}).get("profile", False)
             # TODO: app level cmap: move to outputs?
             self.cmap = for_inputs.get("compare_diff", {}).get("cmap", "rainbow")
+            self.suptitle = for_inputs.get("compare_diff", {}).get("suptitle", None)
             self.comp_panels = (2, 2) if self.extra_diff_plot else (3, 1)
         elif self.compare:
             self.profile = for_inputs.get("compare", {}).get("profile", False)
             # TODO: app level cmap: move to outputs?
             self.cmap = for_inputs.get("compare", {}).get("cmap", "rainbow")
+            self.suptitle = for_inputs.get("compare", {}).get("suptitle", None)
             self.comp_panels = get_subplot_shape(len(self.compare_exp_ids))
 
         if self.overlay and (self.compare or self.compare_diff):
@@ -610,7 +612,6 @@ class InputConfig:
 
         field_values = to_plot[field_name]
 
-        # If field_values is a dict with plot types as keys
         if isinstance(field_values, dict):
             if plot_type:
                 # Return options for the specific plot type
@@ -621,7 +622,6 @@ class InputConfig:
                         else {}
                     )
                 else:
-                    # Plot type not found
                     return {}
             else:
                 # Return the entire dict when no specific plot_type requested

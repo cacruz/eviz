@@ -301,7 +301,20 @@ def print_map(
 
         # If custom filename is specified, process it
         if config.filename:
-            return _process_custom_filename(config.filename)
+            base_filename = _process_custom_filename(config.filename)
+
+            map_params = config.map_params
+            data_type = map_params[findex].get("data_type", "gridded")
+            if data_type == "categorical":
+                # Check if filename already has an extension
+                if "." in os.path.basename(base_filename):
+                    # Split into name and extension
+                    name, ext = os.path.splitext(base_filename)
+                    return f"{name}_{plot_type}{ext}"
+                else:
+                    return f"{base_filename}_{plot_type}"
+
+            return base_filename
 
         map_params = config.map_params
         field_name = config.current_field_name or map_params[findex]["field"]
@@ -309,17 +322,19 @@ def print_map(
 
         levstr = f"_{level}" if level is not None else ""
         time_level = getattr(config, "time_level", "")
-        exp_id_suf = "."
+        # Only include time_level in suffix if it's set (not empty string or None)
+        time_level_str = f"_{time_level}" if time_level not in ("", None) else ""
+        exp_id_suf = ""
 
         if not config.compare:
             if exp_id:
-                exp_id_suf = f"_{exp_id}_{findex}_{time_level}."
+                exp_id_suf = f"_{exp_id}_{findex}{time_level_str}"
             else:
-                exp_id_suf = f"_{findex}_{time_level}."
-        # else: exp_id_suf remains "."
+                exp_id_suf = f"_{findex}{time_level_str}"
+        # else: exp_id_suf remains ""
         # ...but if a filename_id is given, use it
         if config.filename_id:
-            exp_id_suf = f"_{config.filename_id}."
+            exp_id_suf = f"_{config.filename_id}"
 
         # Add plot type to filename to make it unique for each field and plot type
         if "xy" in plot_type:

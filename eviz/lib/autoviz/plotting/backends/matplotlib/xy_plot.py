@@ -135,15 +135,30 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
                 )
             else:
                 vmin, vmax = None, None
-                if config.compare or not config.compare_diff:
-                    # Check if we've stored limits for this field in the config
-                    if not hasattr(config, "_comparison_cbar_limits"):
-                        config._comparison_cbar_limits = {}
+                # Manage clevs consistently (need to make this better?!)
+                if config.compare_diff and self.ax_opts.get("is_diff_field", False):
+                    # For difference plots, use user-defined diff levels if they exist
+                    # Otherwise auto-generate independent levels
+                    pass  # Keep existing clevs from spec or let _create_clevs generate them
+                elif config.compare_diff and config.axindex == 1:
+                    # For second field in compare_diff, use same clevs as first field
+                    if not hasattr(config, "_comparison_clevs"):
+                        config._comparison_clevs = {}
+                    if field_name in config._comparison_clevs:
+                        self.ax_opts["clevs"] = config._comparison_clevs[field_name]
+                        self.logger.debug(
+                            f"Reusing clevs from first field for {field_name}: {len(self.ax_opts['clevs'])} levels"
+                        )
+                elif config.compare:
+                    # For regular compare, use same clevs across all fields
+                    if not hasattr(config, "_comparison_clevs"):
+                        config._comparison_clevs = {}
+                    if config.axindex > 0 and field_name in config._comparison_clevs:
+                        self.ax_opts["clevs"] = config._comparison_clevs[field_name]
+                        self.logger.debug(
+                            f"Reusing clevs for comparison {field_name}: {len(self.ax_opts['clevs'])} levels"
+                        )
 
-                    if field_name in config._comparison_cbar_limits:
-                        vmin, vmax = config._comparison_cbar_limits[field_name]
-
-            # Ensure contour levels are created based on vmin and vmax
             self._create_clevs(field_name, data2d, vmin, vmax)
 
             if fig.use_cartopy and is_cartopy_axis:
@@ -167,15 +182,22 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
             if cfilled is None:
                 self.set_const_colorbar(cfilled, fig, ax)
             else:
-                # Store colorbar limits for the first plot in a comparison
+                # Store clevs for the first plot in a comparison (but not for difference plots)
                 if config.compare and config.axindex == 0:
-                    vmin, vmax = cfilled.get_clim()
-                    config._comparison_cbar_limits[field_name] = (vmin, vmax)
+                    if not hasattr(config, "_comparison_clevs"):
+                        config._comparison_clevs = {}
+                    config._comparison_clevs[field_name] = self.ax_opts["clevs"].copy()
                     self.logger.debug(
-                        f"Setting comparison colorbar limits for {field_name}: {vmin} to {vmax}"
+                        f"Storing clevs for comparison {field_name}: {len(self.ax_opts['clevs'])} levels"
                     )
-                elif not config.compare_diff and config.axindex == 0:
-                    pass
+                elif config.compare_diff and config.axindex == 0 and not self.ax_opts.get("is_diff_field", False):
+                    # For compare_diff, store clevs from first field plot (not difference)
+                    if not hasattr(config, "_comparison_clevs"):
+                        config._comparison_clevs = {}
+                    config._comparison_clevs[field_name] = self.ax_opts["clevs"].copy()
+                    self.logger.debug(
+                        f"Storing clevs for compare_diff {field_name}: {len(self.ax_opts['clevs'])} levels"
+                    )
 
                 # Suppress individual colorbars if shared_bar is enabled
                 if config.shared_cbar:
@@ -198,26 +220,32 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
 
             long_name = self.get_long_name(config, data2d, findex)
             if config.compare_diff:
-                level_text = None
-                if ax_opts.get("zave", False):
-                    level_text = " (Column Mean)"
-                elif ax_opts.get("zsum", False):
-                    level_text = " (Total Column)"
-                else:
-                    if str(config.level) == "0":
-                        level_text = ""
-                    else:
-                        if config.level is not None:
-                            if config.level > 10000:
-                                level_text = "@ " + str(config.level) + " Pa"
-                            else:
-                                level_text = "@ " + str(config.level) + " mb"
-
-                if level_text and long_name:
-                    title_str = long_name + level_text
-                else:
-                    title_str = data2d.name + level_text
+                # Use custom suptitle if configured, otherwise construct from field name
                 if getattr(fig, "_suptitle", None) is None:
+                    if hasattr(config.input_config, "suptitle") and config.input_config.suptitle:
+                        title_str = config.input_config.suptitle
+                    else:
+                        level_text = None
+                        if ax_opts.get("zave", False):
+                            level_text = " (Column Mean)"
+                        elif ax_opts.get("zsum", False):
+                            level_text = " (Total Column)"
+                        else:
+                            if str(config.level) == "0":
+                                level_text = ""
+                            else:
+                                if config.level is not None:
+                                    if config.level > 10000:
+                                        level_text = "@ " + str(config.level) + " Pa"
+                                    else:
+                                        level_text = "@ " + str(config.level) + " mb"
+
+                        if level_text and long_name:
+                            title_str = long_name + level_text
+                        else:
+                            data_name = data2d.name if data2d.name is not None else field_name
+                            title_str = data_name + level_text
+
                     fig.suptitle_eviz(
                         title_str,
                         fontweight="bold",
@@ -226,9 +254,13 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
                     )
 
             elif config.compare:
-                title_str = data2d.name
-                if long_name:
-                    title_str = long_name
+                # Use custom suptitle if configured, otherwise use field name or long name
+                if hasattr(config.input_config, "suptitle") and config.input_config.suptitle:
+                    title_str = config.input_config.suptitle
+                else:
+                    title_str = data2d.name
+                    if long_name:
+                        title_str = long_name
                 if getattr(fig, "_suptitle", None) is None:
                     fig.suptitle_eviz(
                         text=title_str,

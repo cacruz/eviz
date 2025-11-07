@@ -298,7 +298,7 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
                                     all_categories[i] for i in sorted_indices
                                 ]
                             except:
-                                # If all else fails, use lexicographic sorting
+                                # If all else fails...
                                 all_categories = sorted(all_categories)
 
                     positions = []
@@ -458,7 +458,7 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
                                 ]
                                 categories = sorted_categories
                             except:
-                                # If all else fails, use lexicographic sorting
+                                # If all else fails...
                                 sorted_categories = sorted(categories)
                                 values = [
                                     grouped_data[cat] for cat in sorted_categories
@@ -629,10 +629,27 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
 
                     # Prepare data
                     categories = data[by_col].unique()
-                    box_data = [
-                        data[data[by_col] == cat][y_col].dropna().values
-                        for cat in categories
-                    ]
+
+                    # Check if y_col contains datetime values and convert to numeric
+                    if pd.api.types.is_datetime64_any_dtype(data[y_col]):
+                        self.logger.info(
+                            f"Converting datetime column '{y_col}' to numeric (seconds since epoch) for box plot"
+                        )
+                        box_data = [
+                            data[data[by_col] == cat][y_col]
+                            .dropna()
+                            .astype("int64")
+                            .values
+                            / 1e9  # Convert nanoseconds to seconds
+                            for cat in categories
+                        ]
+                        ylabel_suffix = " (seconds since epoch)"
+                    else:
+                        box_data = [
+                            data[data[by_col] == cat][y_col].dropna().values
+                            for cat in categories
+                        ]
+                        ylabel_suffix = ""
 
                     bp = ax.boxplot(
                         box_data,
@@ -651,10 +668,22 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
                         patch.set_alpha(plot_options.get("alpha", 0.7))
 
                     xlabel = by_col
-                    ylabel = y_col
+                    ylabel = y_col + ylabel_suffix
                 else:
                     # Single box plot
-                    values = data[y_col].dropna().values
+                    # Check if y_col contains datetime values and convert to numeric
+                    if pd.api.types.is_datetime64_any_dtype(data[y_col]):
+                        self.logger.info(
+                            f"Converting datetime column '{y_col}' to numeric (seconds since epoch) for box plot"
+                        )
+                        values = (
+                            data[y_col].dropna().astype("int64").values / 1e9
+                        )  # Convert nanoseconds to seconds
+                        ylabel_suffix = " (seconds since epoch)"
+                    else:
+                        values = data[y_col].dropna().values
+                        ylabel_suffix = ""
+
                     bp = ax.boxplot(
                         [values],
                         labels=[y_col],
@@ -672,7 +701,7 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
                         patch.set_alpha(plot_options.get("alpha", 0.7))
 
                     xlabel = "Variable"
-                    ylabel = y_col
+                    ylabel = y_col + ylabel_suffix
             else:
                 self.logger.error("Box plot requires 'y' parameter in plot_params")
                 return
@@ -724,13 +753,12 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
             float
                 The RMSE value
         """
-        # Ensure inputs are numpy arrays
+        # We need numpy arrays
         if isinstance(data1, pd.Series):
             data1 = data1.values
         if isinstance(data2, pd.Series):
             data2 = data2.values
 
-        # Flatten arrays
         if hasattr(data1, "flatten"):
             data1 = data1.flatten()
         if hasattr(data2, "flatten"):
@@ -745,7 +773,6 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
         data1_clean = data1[mask]
         data2_clean = data2[mask]
 
-        # Calculate RMSE
         mse = np.mean((data1_clean - data2_clean) ** 2)
         rmse = np.sqrt(mse)
 
@@ -767,7 +794,6 @@ class MatplotlibBoxPlotter(MatplotlibBasePlotter):
         """
         try:
             if isinstance(data, list):
-                # Flatten the list of lists into a single list
                 flat_data = [item for sublist in data for item in sublist]
                 data = np.array(flat_data)
 

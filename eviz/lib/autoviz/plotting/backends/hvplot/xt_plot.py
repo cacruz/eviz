@@ -34,7 +34,22 @@ class HvplotXTPlotter(XTPlotter):
         -------
             The created HvPlot object
         """
-        data2d, _, _, field_name, plot_type, findex, _ = data_to_plot
+        # Handle both old 7-element and new 9-element tuples (with global min/max for GIF consistency)
+        if len(data_to_plot) == 9:
+            (
+                data2d,
+                _,
+                _,
+                field_name,
+                plot_type,
+                findex,
+                _,
+                global_vmin,
+                global_vmax,
+            ) = data_to_plot
+        else:
+            data2d, _, _, field_name, plot_type, findex, _ = data_to_plot
+            global_vmin, global_vmax = None, None
 
         if data2d is None:
             return None

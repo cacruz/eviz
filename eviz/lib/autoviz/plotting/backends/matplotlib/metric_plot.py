@@ -37,13 +37,14 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
             # Two datasets to correlate
             data1, data2 = data_to_plot[0]
 
-            # Store original data for R^2 calculation
+            # Store original data for R^2 or global RMSE calculation
             self._original_data = (data1, data2)
 
             self.logger.debug("Computing correlation between two datasets")
             # Get corr plot settings from for_inputs
             corr_settings = config.app_data.for_inputs["correlation"]
             corr_method = corr_settings["method"]
+            self._corr_method = corr_method  # Store for later use
             data2d = self._compute_correlation_map(corr_method, data1, data2)
             if data2d is None:
                 self.logger.error("Failed to compute correlation map")
@@ -53,19 +54,28 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
                 "pearson": "Pearson",
                 "spearman": "Spearman",
                 "cross": "Cross",
+                "rmse": "RMSE",
             }.get(corr_method, "Correlation")
 
             # Reconstruct data_to_plot with the correlation map
             x, y = data_to_plot[1], data_to_plot[2]
-            if "name" in config.spec_data[data_to_plot[3]]:
-                field_name = (
-                    config.spec_data[data_to_plot[3]]["name"]
+            original_field_name = data_to_plot[3]
+
+            # Create a display name for the plot title
+            display_name = original_field_name
+            if "name" in config.spec_data[original_field_name]:
+                display_name = (
+                    config.spec_data[original_field_name]["name"]
                     + " "
                     + method_name.capitalize()
                     + " correlation"
                 )
+
+            # Store the original field name for spec lookups
+            config.original_field_name = original_field_name
+
             plot_type, findex, fig = data_to_plot[4], data_to_plot[5], data_to_plot[6]
-            data_to_plot = (data2d, x, y, field_name, plot_type, findex, fig)
+            data_to_plot = (data2d, x, y, display_name, plot_type, findex, fig)
         else:
             # Assume data2d is already a correlation map
             data2d = data_to_plot[0]
@@ -82,10 +92,15 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
                     "pearson": "Pearson",
                     "spearman": "Spearman",
                     "cross": "Cross",
+                    "rmse": "RMSE",
                 }.get(corr_method, "Correlation")
 
         self.source_name = config.source_names[config.ds_index]
-        self.units = "R value"
+        # Set units based on correlation method
+        if hasattr(self, "_corr_method") and self._corr_method == "rmse":
+            self.units = "RMSE"
+        else:
+            self.units = "R value"
         self.fig = fig
         self.ax_opts = config.ax_opts
 
@@ -187,20 +202,43 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
                 self.set_const_colorbar(cfilled, fig, ax)
             else:
                 if "colorbar_label" not in ax_opts:
-                    ax_opts["colorbar_label"] = f"{method_name} Correlation"
+                    # Set colorbar label based on correlation method
+                    if hasattr(self, "_corr_method") and self._corr_method == "rmse":
+                        ax_opts["colorbar_label"] = "RMSE"
+                    else:
+                        ax_opts["colorbar_label"] = f"{method_name} Correlation"
                 self.set_colorbar(config, cfilled, fig, ax, findex, field_name, data2d)
 
-            # Calculate and display R^2 value
-            if hasattr(self, "_original_data") and len(self._original_data) == 2:
-                data1, data2 = self._original_data
-                r_squared = self._calculate_r_squared(data1, data2)
+            # Calculate and display R^2 or global RMSE
+            if hasattr(self, "_corr_method") and self._corr_method == "rmse":
+                # For RMSE, calculate global RMSE across all valid points
+                if hasattr(self, "_original_data") and len(self._original_data) == 2:
+                    data1, data2 = self._original_data
+                    global_rmse = self._calculate_global_rmse(data1, data2)
+                    if not np.isnan(global_rmse):
+                        units = data1.attrs.get("units", data2.attrs.get("units", ""))
+                        units_str = f" {units}" if units else ""
+                        stat_text = f"Global RMSE = {global_rmse:.3f}{units_str}"
+                    else:
+                        stat_text = None
+                else:
+                    stat_text = None
             else:
-                # Estimate R^2 from correlation values if original data is not available
-                r_squared = self._estimate_r_squared_from_correlation(data2d)
+                # For correlation methods, calculate R^2
+                if hasattr(self, "_original_data") and len(self._original_data) == 2:
+                    data1, data2 = self._original_data
+                    r_squared = self._calculate_r_squared(data1, data2)
+                else:
+                    # Estimate R^2 from correlation values if original data is not available
+                    r_squared = self._estimate_r_squared_from_correlation(data2d)
 
-            if not np.isnan(r_squared):
-                r_squared_text = f"R² = {r_squared:.3f}"
+                if not np.isnan(r_squared):
+                    stat_text = f"R² = {r_squared:.3f}"
+                else:
+                    stat_text = None
 
+            # Display the statistic text if available
+            if stat_text:
                 # Position the text in the upper right corner
                 x_pos = 0.92
                 y_pos = 1.01
@@ -208,7 +246,7 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
                 ax.text(
                     x_pos,
                     y_pos,
-                    r_squared_text,
+                    stat_text,
                     transform=ax.transAxes,
                     horizontalalignment="center",
                     verticalalignment="bottom",
@@ -217,8 +255,9 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
                 )
 
     def _compute_correlation_map(self, corr_method, data1, data2):
-        """Compute pixel-wise correlation coefficient between two datasets."""
-        self.logger.debug("Computing correlation map")
+        """Compute pixel-wise correlation coefficient or RMSE between two datasets."""
+        metric_type = "RMSE" if corr_method == "rmse" else "correlation"
+        self.logger.debug(f"Computing {metric_type} map")
 
         if not isinstance(data1, xr.DataArray) or not isinstance(data2, xr.DataArray):
             self.logger.error("Both inputs must be xarray DataArrays")
@@ -249,12 +288,18 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
             time_len = data1.shape[0]
             y_len, x_len = data1.shape[1], data1.shape[2]
 
-            self.logger.info(
-                f"Computing {corr_method} correlation across {time_len} time points "
-                f"for a {y_len}x{x_len} grid"
-            )
+            if corr_method == "rmse":
+                self.logger.info(
+                    f"Computing RMSE across {time_len} time points "
+                    f"for a {y_len}x{x_len} grid"
+                )
+            else:
+                self.logger.info(
+                    f"Computing {corr_method} correlation across {time_len} time points "
+                    f"for a {y_len}x{x_len} grid"
+                )
 
-            # Compute correlation coefficient for each grid point
+            # Compute correlation coefficient or RMSE for each grid point
             for i in range(y_len):
                 for j in range(x_len):
                     ts1 = data1[:, i, j].values
@@ -265,12 +310,17 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
                         continue
 
                     mask = ~np.isnan(ts1) & ~np.isnan(ts2)
-                    if np.sum(mask) < 2:  # Need at least 2 points for correlation
+                    if np.sum(mask) < 2:  # Need at least 2 points!
                         corr_data[i, j] = np.nan
                         continue
 
                     try:
-                        if corr_method == "pearson":
+                        if corr_method == "rmse":
+                            # RMSE: sqrt(mean((X - Y)^2))
+                            diff = ts1[mask] - ts2[mask]
+                            rmse = np.sqrt(np.mean(diff ** 2))
+                            corr_data[i, j] = rmse
+                        elif corr_method == "pearson":
                             r, _ = pearsonr(ts1[mask], ts2[mask])
                             corr_data[i, j] = r
                         elif corr_method == "spearman":
@@ -291,7 +341,7 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
                             corr_data[i, j] = np.max(np.abs(cross_corr))
                     except Exception as e:
                         self.logger.debug(
-                            f"Error computing {corr_method} correlation at point "
+                            f"Error computing {corr_method} at point "
                             f"({i},{j}): {e}"
                         )
                         corr_data[i, j] = np.nan
@@ -300,13 +350,23 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
                 "pearson": "Pearson",
                 "spearman": "Spearman",
                 "cross": "Cross",
+                "rmse": "RMSE",
             }.get(corr_method, "Correlation")
 
-            corr_data.attrs["long_name"] = f"{method_name} Correlation Coefficient"
-            corr_data.attrs["units"] = "dimensionless"
-            corr_data.attrs["description"] = (
-                f"{method_name} correlation between {data1.name} and {data2.name} across time"
-            )
+            if corr_method == "rmse":
+                corr_data.attrs["long_name"] = "Root Mean Square Error"
+                # Try to get units from the input data
+                units = data1.attrs.get("units", data2.attrs.get("units", "unknown"))
+                corr_data.attrs["units"] = units
+                corr_data.attrs["description"] = (
+                    f"RMSE between {data1.name} and {data2.name} across time"
+                )
+            else:
+                corr_data.attrs["long_name"] = f"{method_name} Correlation Coefficient"
+                corr_data.attrs["units"] = "dimensionless"
+                corr_data.attrs["description"] = (
+                    f"{method_name} correlation between {data1.name} and {data2.name} across time"
+                )
             corr_data.attrs["correlation_method"] = corr_method
 
             return corr_data
@@ -414,6 +474,35 @@ class MatplotlibMetricPlotter(MatplotlibBasePlotter):
             r_squared = np.nan
 
         return r_squared
+
+    def _calculate_global_rmse(self, data1, data2):
+        """
+        Calculate the global RMSE between two datasets across all valid points.
+
+        Parameters
+        ----------
+            data1 : xarray.DataArray
+                First dataset
+            data2 : xarray.DataArray
+                Second dataset
+
+        Returns
+        -------
+            float
+                The global RMSE value
+        """
+        flat1 = data1.values.flatten()
+        flat2 = data2.values.flatten()
+
+        mask = ~np.isnan(flat1) & ~np.isnan(flat2)
+        if np.sum(mask) < 1:
+            self.logger.error("Not enough valid data points for RMSE calculation")
+            return np.nan
+
+        diff = flat1[mask] - flat2[mask]
+        global_rmse = np.sqrt(np.mean(diff**2))
+
+        return global_rmse
 
     def _estimate_r_squared_from_correlation(self, corr_data):
         """
