@@ -111,14 +111,7 @@ class ZARRDataSource(DataSource):
                 "shape": var.shape,
             }
 
-            # Add some basic statistics
-            try:
-                self.metadata["variables"][var_name]["stats"] = {
-                    "min": float(var.min().values),
-                    "max": float(var.max().values),
-                    "mean": float(var.mean().values),
-                    "std": float(var.std().values),
-                }
-            except Exception:
-                # Skip statistics if they can't be computed
-                pass
+            # Skip statistics computation for ZARR files with Dask arrays
+            # Computing min/max/mean/std on lazy-loaded arrays triggers full data reads
+            # These stats are not used anywhere in the visualization pipeline
+            # If needed in the future, they should be computed on-demand or on subsets

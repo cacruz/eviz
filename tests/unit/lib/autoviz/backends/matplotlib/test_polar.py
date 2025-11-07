@@ -52,30 +52,34 @@ class TestMatplotlibPolarPlotter(unittest.TestCase):
         # Create a mock figure
         self.fig = MagicMock()
         self.fig.subplots = (1, 1)
-        self.fig.get_axes.return_value = MagicMock()
+        # get_axes should return a list of axes
+        mock_ax = MagicMock()
+        self.fig.get_axes.return_value = [mock_ax]
         self.fig.update_ax_opts.return_value = self.config.ax_opts
         
         # Create data_to_plot tuple
         self.data_to_plot = (self.test_data, lon, lat, 'test_field', 'polar', 0, self.fig)
 
+    @patch('matplotlib.pyplot.colorbar')
     @patch('matplotlib.pyplot.figure')
     @patch('cartopy.crs.NorthPolarStereo')
     @patch('cartopy.crs.SouthPolarStereo')
     @patch('cartopy.crs.PlateCarree')
-    def test_plot(self, mock_plate_carree, mock_south_polar, mock_north_polar, mock_figure):
+    def test_plot(self, mock_plate_carree, mock_south_polar, mock_north_polar, mock_figure, mock_colorbar):
         """Test the plot method."""
         # Mock the necessary matplotlib and cartopy objects
         mock_figure.return_value = self.fig
         mock_north_polar.return_value = MagicMock()
         mock_south_polar.return_value = MagicMock()
         mock_plate_carree.return_value = MagicMock()
-        
+        mock_colorbar.return_value = MagicMock()
+
         # Call the plot method
         result = self.plotter.plot(self.config, self.data_to_plot)
-        
+
         # Check that the result is the figure
         self.assertEqual(result, self.fig)
-        
+
         # Check that the plot_object attribute is set
         self.assertEqual(self.plotter.plot_object, self.fig)
 

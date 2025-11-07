@@ -495,6 +495,11 @@ class ObservationalDataSource(GenericDataSource):
         if self.config_manager.correlation:
             corr_settings = self.config_manager.app_data.for_inputs["correlation"]
         else:
+            self.logger.error(
+                f"ERROR: Correlation settings not found in configuration. "
+                f"Please add 'for_inputs.correlation' section to your YAML file. "
+                f"No correlation plot will be generated for {field_name}."
+            )
             return
 
         # Determine correlation type (time or space)
@@ -538,6 +543,10 @@ class ObservationalDataSource(GenericDataSource):
                     )
                     if map_params:
                         filename = map_params.get("filename")
+                        # Get the field name from map_params for the reference dataset
+                        # This allows correlating fields with different names
+                        reference_field_name = map_params.get("field", field_name)
+
                         if filename:
                             data_source = self.config_manager.pipeline.get_data_source(
                                 filename
@@ -545,9 +554,10 @@ class ObservationalDataSource(GenericDataSource):
                             if (
                                 data_source
                                 and hasattr(data_source, "dataset")
-                                and field_name in data_source.dataset
+                                and reference_field_name in data_source.dataset
                             ):
-                                reference_data = data_source.dataset[field_name]
+                                reference_data = data_source.dataset[reference_field_name]
+                                reference_field = reference_field_name  # Store for later use
 
         # If we couldn't find reference data using experiment IDs, fall back to using field names
         if reference_data is None:
@@ -567,6 +577,11 @@ class ObservationalDataSource(GenericDataSource):
                 reference_field = self.config_manager.ax_opts.get("reference_field")
 
             if not reference_field:
+                self.logger.error(
+                    f"ERROR: No reference field found for correlation with '{field_name}'. "
+                    f"Please specify either 'ids' or 'fields' in the correlation settings. "
+                    f"No correlation plot will be generated."
+                )
                 return
 
             if hasattr(self.config_manager, "pipeline"):
@@ -600,10 +615,16 @@ class ObservationalDataSource(GenericDataSource):
                         )
 
         if reference_data is None:
-            error_msg = f"Reference data not found"
+            error_msg = f"ERROR: Reference data not found for correlation"
             if reference_field:
                 error_msg = (
-                    f"Reference field '{reference_field}' not found in any data source"
+                    f"ERROR: Reference field '{reference_field}' not found in any data source. "
+                    f"No correlation plot will be generated for '{field_name}'."
+                )
+            else:
+                error_msg += (
+                    f". Could not determine reference field for '{field_name}'. "
+                    f"No correlation plot will be generated."
                 )
             self.logger.error(error_msg)
             return

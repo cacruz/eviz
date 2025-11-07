@@ -62,63 +62,77 @@ class Crest(GenericSource):
                     data_array, field_name, file_index, plot_type, figure
                 )
             else:
-                self.logger.warning(
-                    f"_process_xy_plot not implemented for {handler.__class__.__name__}"
+                self.logger.error(
+                    f"ERROR: _process_xy_plot not implemented for {handler.__class__.__name__}. "
+                    f"No plot will be generated for {field_name}."
                 )
-        if plot_type == "sc":
+                return
+        elif plot_type == "sc":
             if hasattr(handler, "_process_scatter_plot"):
                 handler._process_scatter_plot(
                     data_array, field_name, file_index, plot_type, figure
                 )
             else:
-                self.logger.warning(
-                    f"_process_scatter_plot not implemented for {handler.__class__.__name__}"
+                self.logger.error(
+                    f"ERROR: _process_scatter_plot not implemented for {handler.__class__.__name__}. "
+                    f"No plot will be generated for {field_name}."
                 )
+                return
         elif plot_type == "polar":
             if hasattr(handler, "_process_polar_plot"):
                 handler._process_polar_plot(
                     data_array, field_name, file_index, plot_type, figure
                 )
             else:
-                self.logger.warning(
-                    f"_process_polar_plot not implemented for {handler.__class__.__name__}"
+                self.logger.error(
+                    f"ERROR: _process_polar_plot not implemented for {handler.__class__.__name__}. "
+                    f"No plot will be generated for {field_name}."
                 )
+                return
         elif plot_type == "xt":
             if hasattr(handler, "_process_xt_plot"):
                 handler._process_xt_plot(
                     data_array, field_name, file_index, plot_type, figure
                 )
             else:
-                self.logger.warning(
-                    f"_process_xt_plot not implemented for {handler.__class__.__name__}"
+                self.logger.error(
+                    f"ERROR: _process_xt_plot not implemented for {handler.__class__.__name__}. "
+                    f"No plot will be generated for {field_name}."
                 )
+                return
         elif plot_type == "box":
             if hasattr(handler, "_process_box_plot"):
                 handler._process_box_plot(
                     data_array, field_name, file_index, plot_type, figure
                 )
             else:
-                self.logger.warning(
-                    f"_process_box_plot not implemented for {handler.__class__.__name__}"
+                self.logger.error(
+                    f"ERROR: _process_box_plot not implemented for {handler.__class__.__name__}. "
+                    f"No plot will be generated for {field_name}."
                 )
+                return
         elif plot_type == "line":
             if hasattr(handler, "_process_line_plot"):
                 handler._process_line_plot(
                     data_array, field_name, file_index, plot_type, figure
                 )
             else:
-                self.logger.warning(
-                    f"_process_line_plot not implemented for {handler.__class__.__name__}"
+                self.logger.error(
+                    f"ERROR: _process_line_plot not implemented for {handler.__class__.__name__}. "
+                    f"No plot will be generated for {field_name}."
                 )
+                return
         elif plot_type == "corr":
             if hasattr(handler, "_process_corr_plot"):
                 handler._process_corr_plot(
                     data_array, field_name, file_index, plot_type, figure
                 )
             else:
-                self.logger.warning(
-                    f"_process_corr_plot not implemented for {handler.__class__.__name__}"
+                self.logger.error(
+                    f"ERROR: _process_corr_plot not implemented for {handler.__class__.__name__}. "
+                    f"No plot will be generated for {field_name}."
                 )
+                return
 
     def _process_xy_side_by_side_plots(
         self,
