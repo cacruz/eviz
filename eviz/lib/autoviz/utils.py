@@ -317,13 +317,55 @@ def print_map(
             return base_filename
 
         map_params = config.map_params
+        data_type = map_params[findex].get("data_type", "gridded")
+
+        # Special handling for categorical data
+        if data_type == "categorical":
+            # For categorical data, extract meaningful variable names from plot_params
+            plot_params = map_params[findex].get("plot_params", {})
+            # Work with dataset name
+            dataset_name = map_params[findex].get("filename",
+                          map_params[findex].get("exp_name", "data"))
+            if "." in dataset_name:
+                dataset_name = dataset_name.rsplit(".", 1)[0]
+            dataset_name = os.path.basename(dataset_name)
+
+            exp_id = map_params[findex].get("exp_id", None)
+
+            var_parts = []
+            # Common parameter names to check, in priority order
+            for param in ["x", "y", "labels", "values", "color", "by"]:
+                if param in plot_params and plot_params[param]:
+                    var_parts.append(plot_params[param])
+
+            # Limit up to 3 most important variables to avoid long names
+            var_parts = var_parts[:3]
+            var_descriptor = "_".join(var_parts) if var_parts else ""
+
+            suffix_parts = []
+            if exp_id:
+                suffix_parts.append(exp_id)
+            if findex > 0 or len(map_params) > 1:
+                suffix_parts.append(f"file{findex}")
+
+            suffix = "_" + "_".join(suffix_parts) if suffix_parts else ""
+
+            # Build filename: dataset_plottype_variables[_suffix]
+            if var_descriptor:
+                fname = f"{dataset_name}_{plot_type}_{var_descriptor}{suffix}"
+            else:
+                fname = f"{dataset_name}_{plot_type}{suffix}"
+
+            return fname
+
+        # Standard handling for gridded/observational data
         field_name = config.current_field_name or map_params[findex]["field"]
         exp_id = map_params[findex].get("exp_id", None)
 
-        # Build descriptive level string
+        # Create level string
         levstr = f"_lev{level}" if level is not None else ""
 
-        # Build descriptive time string
+        # Create time string
         time_level = getattr(config, "time_level", "")
         if time_level not in ("", None):
             # Convert common time indices to readable names
@@ -341,23 +383,18 @@ def print_map(
         # Build file and experiment ID suffix
         suffix_parts = []
 
-        # Add file index if not in compare mode or if multiple files
         if not config.compare:
             suffix_parts.append(f"file{findex}")
 
-        # Add time string
         if time_str:
             suffix_parts.append(time_str.lstrip("_"))
 
-        # Add experiment ID
         if exp_id:
             suffix_parts.append(exp_id)
 
-        # Override with custom filename_id if provided
         if config.filename_id:
             suffix_parts = [config.filename_id]
 
-        # Combine suffix parts
         suffix = "_" + "_".join(suffix_parts) if suffix_parts else ""
 
         # Add plot type to filename to make it unique for each field and plot type
