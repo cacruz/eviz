@@ -320,31 +320,53 @@ def print_map(
         field_name = config.current_field_name or map_params[findex]["field"]
         exp_id = map_params[findex].get("exp_id", None)
 
-        levstr = f"_{level}" if level is not None else ""
-        time_level = getattr(config, "time_level", "")
-        # Only include time_level in suffix if it's set (not empty string or None)
-        time_level_str = f"_{time_level}" if time_level not in ("", None) else ""
-        exp_id_suf = ""
+        # Build descriptive level string
+        levstr = f"_lev{level}" if level is not None else ""
 
-        if not config.compare:
-            if exp_id:
-                exp_id_suf = f"_{exp_id}_{findex}{time_level_str}"
+        # Build descriptive time string
+        time_level = getattr(config, "time_level", "")
+        if time_level not in ("", None):
+            # Convert common time indices to readable names
+            if time_level == -1:
+                time_str = "_last"
+            elif time_level == 0:
+                time_str = "_first"
+            elif isinstance(time_level, int):
+                time_str = f"_t{time_level}"
             else:
-                exp_id_suf = f"_{findex}{time_level_str}"
-        # else: exp_id_suf remains ""
-        # ...but if a filename_id is given, use it
+                time_str = f"_{time_level}"
+        else:
+            time_str = ""
+
+        # Build file and experiment ID suffix
+        suffix_parts = []
+
+        # Add file index if not in compare mode or if multiple files
+        if not config.compare:
+            suffix_parts.append(f"file{findex}")
+
+        # Add time string
+        if time_str:
+            suffix_parts.append(time_str.lstrip("_"))
+
+        # Add experiment ID
+        if exp_id:
+            suffix_parts.append(exp_id)
+
+        # Override with custom filename_id if provided
         if config.filename_id:
-            exp_id_suf = f"_{config.filename_id}"
+            suffix_parts = [config.filename_id]
+
+        # Combine suffix parts
+        suffix = "_" + "_".join(suffix_parts) if suffix_parts else ""
 
         # Add plot type to filename to make it unique for each field and plot type
         if "xy" in plot_type:
-            fname = (
-                f"{field_name}_xy{levstr}{exp_id_suf}"  # Added _xy to ensure uniqueness
-            )
+            fname = f"{field_name}_xy{levstr}{suffix}"
         elif "yz" in plot_type:
-            fname = f"{field_name}_yz{exp_id_suf}"
+            fname = f"{field_name}_yz{suffix}"
         else:
-            fname = f"{field_name}_{plot_type}{exp_id_suf}"
+            fname = f"{field_name}_{plot_type}{suffix}"
 
         return fname
 
