@@ -273,17 +273,46 @@ class PlotManager:
                 )
                 return
         elif plot_type in ["bar", "pie", "hist", "scatter", "box", "line"]:
-            # CSV/categorical plot types - use pandas DataFrames directly
-            if hasattr(self, "_process_csv_plot"):
-                self._process_csv_plot(
-                    data_array, field_name, file_index, plot_type, figure
-                )
+            # These plot types can be either CSV/categorical or gridded
+            # Check data_type to determine which handler to use
+            data_type = self.config_manager.map_params[file_index].get("data_type", "gridded")
+
+            if data_type == "categorical":
+                # CSV/categorical plot types - use pandas DataFrames directly
+                if hasattr(self, "_process_csv_plot"):
+                    self._process_csv_plot(
+                        data_array, field_name, file_index, plot_type, figure
+                    )
+                else:
+                    self.logger.error(
+                        f"ERROR: _process_csv_plot not implemented for {self.__class__.__name__}. "
+                        f"No plot will be generated for field '{field_name}'."
+                    )
+                    return
             else:
-                self.logger.error(
-                    f"ERROR: _process_csv_plot not implemented for {self.__class__.__name__}. "
-                    f"No plot will be generated for field '{field_name}'."
-                )
-                return
+                # Gridded data - use appropriate gridded plot handler
+                if plot_type == "box":
+                    if hasattr(self, "_process_box_plot"):
+                        self._process_box_plot(
+                            data_array, field_name, file_index, plot_type, figure
+                        )
+                    else:
+                        self.logger.error(
+                            f"ERROR: _process_box_plot not implemented for {self.__class__.__name__}. "
+                            f"No plot will be generated for field '{field_name}'."
+                        )
+                        return
+                elif hasattr(self, "_process_other_plot"):
+                    # For other plot types (bar, pie, hist, scatter, line) with gridded data
+                    self._process_other_plot(
+                        data_array, field_name, file_index, plot_type, figure
+                    )
+                else:
+                    self.logger.error(
+                        f"ERROR: Plot type '{plot_type}' with data_type '{data_type}' is not supported for {self.__class__.__name__}. "
+                        f"No plot will be generated for field '{field_name}'."
+                    )
+                    return
         else:
             if hasattr(self, "_process_other_plot"):
                 self._process_other_plot(
