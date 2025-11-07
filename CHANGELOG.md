@@ -21,6 +21,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.3] - 2025-11-07
+
+[Compare changes](https://github.com/cacruz/eviz/compare/v0.9.2...v0.9.3)
+
+### Summary
+
+This minor release resolves numerous plotting issues that have accumulated over time.
+
+### Added
+
+Tests:
+
+* lib/autoviz/backends/matplotlib/test_metric_plot.py
+* lib/autoviz/backends/matplotlib/test_xy_plot.py
+* lib/autoviz/plotting/test_plot_manager.py
+
+### Deprecated
+
+### Fixed
+* Add RMSE calculation enhancement
+* Fix hvplot backend tuple unpacking
+* Fix correlation plot processing
+* Fix time-level display to show datetime
+* Make Cartopy-controlled features configurable
+* Fix box plot DateTime error
+* Remove unnecessary statistics computation from ZARR's data source method
+* Allow for different time_lev formats
+* Fix issue when selecting conus extent
+* Manage clevs more consistently
+* Crest error messages for supported plot types
+* Fix support for comparing fields with different names.
+* Fix filename creation issue
+* Add descriptive filenames
+* Add new tests
+
+### Removed
+
+### Known Issues
+
+* Incomplete functionality in **hvplot/Altair** backends (`yzplot`)
+* **Units module** requires more comprehensive testing
+* **Tropopause height overlay** not working (fix in progress)
+* **GRIB class** not fully tested; may not behave as expected
+* **Style sheets** need further refinement
+
+---
+
 ## [0.9.2] - 2025-10-15
 
 [Compare changes](https://github.com/cacruz/eviz/compare/v0.9.1...v0.9.2)
@@ -218,6 +265,7 @@ Releases **0.1.0 through 0.6.3** were maintained in a private repository prior t
 
 ### Version Links
 
+[0.9.3]: https://github.com/cacruz/eviz/compare/v0.9.2...v0.9.3
 [0.9.2]: https://github.com/cacruz/eviz/compare/v0.9.1...v0.9.2
 [0.9.1]: https://github.com/cacruz/eviz/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/cacruz/eviz/compare/v0.6.3...v0.9.0
