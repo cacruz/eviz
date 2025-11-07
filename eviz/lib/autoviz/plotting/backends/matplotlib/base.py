@@ -250,7 +250,8 @@ class MatplotlibBasePlotter(BasePlotter):
         self.logger.debug(f"Create contour levels for {field_name}")
 
         # If clevs already set, exit early
-        if self.ax_opts.get("clevs"):
+        clevs = self.ax_opts.get("clevs")
+        if clevs is not None and len(clevs) > 0:
             return
 
         if np.isnan(data2d).all():
