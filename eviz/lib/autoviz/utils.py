@@ -301,35 +301,109 @@ def print_map(
 
         # If custom filename is specified, process it
         if config.filename:
-            return _process_custom_filename(config.filename)
+            base_filename = _process_custom_filename(config.filename)
+
+            map_params = config.map_params
+            data_type = map_params[findex].get("data_type", "gridded")
+            if data_type == "categorical":
+                # Check if filename already has an extension
+                if "." in os.path.basename(base_filename):
+                    # Split into name and extension
+                    name, ext = os.path.splitext(base_filename)
+                    return f"{name}_{plot_type}{ext}"
+                else:
+                    return f"{base_filename}_{plot_type}"
+
+            return base_filename
 
         map_params = config.map_params
+        data_type = map_params[findex].get("data_type", "gridded")
+
+        # Special handling for categorical data
+        if data_type == "categorical":
+            # For categorical data, extract meaningful variable names from plot_params
+            plot_params = map_params[findex].get("plot_params", {})
+            # Work with dataset name
+            dataset_name = map_params[findex].get("filename",
+                          map_params[findex].get("exp_name", "data"))
+            if "." in dataset_name:
+                dataset_name = dataset_name.rsplit(".", 1)[0]
+            dataset_name = os.path.basename(dataset_name)
+
+            exp_id = map_params[findex].get("exp_id", None)
+
+            var_parts = []
+            # Common parameter names to check, in priority order
+            for param in ["x", "y", "labels", "values", "color", "by"]:
+                if param in plot_params and plot_params[param]:
+                    var_parts.append(plot_params[param])
+
+            # Limit up to 3 most important variables to avoid long names
+            var_parts = var_parts[:3]
+            var_descriptor = "_".join(var_parts) if var_parts else ""
+
+            suffix_parts = []
+            if exp_id:
+                suffix_parts.append(exp_id)
+            if findex > 0 or len(map_params) > 1:
+                suffix_parts.append(f"file{findex}")
+
+            suffix = "_" + "_".join(suffix_parts) if suffix_parts else ""
+
+            # Build filename: dataset_plottype_variables[_suffix]
+            if var_descriptor:
+                fname = f"{dataset_name}_{plot_type}_{var_descriptor}{suffix}"
+            else:
+                fname = f"{dataset_name}_{plot_type}{suffix}"
+
+            return fname
+
+        # Standard handling for gridded/observational data
         field_name = config.current_field_name or map_params[findex]["field"]
         exp_id = map_params[findex].get("exp_id", None)
 
-        levstr = f"_{level}" if level is not None else ""
+        # Create level string
+        levstr = f"_lev{level}" if level is not None else ""
+
+        # Create time string
         time_level = getattr(config, "time_level", "")
-        exp_id_suf = "."
+        if time_level not in ("", None):
+            # Convert common time indices to readable names
+            if time_level == -1:
+                time_str = "_last"
+            elif time_level == 0:
+                time_str = "_first"
+            elif isinstance(time_level, int):
+                time_str = f"_t{time_level}"
+            else:
+                time_str = f"_{time_level}"
+        else:
+            time_str = ""
+
+        # Build file and experiment ID suffix
+        suffix_parts = []
 
         if not config.compare:
-            if exp_id:
-                exp_id_suf = f"_{exp_id}_{findex}_{time_level}."
-            else:
-                exp_id_suf = f"_{findex}_{time_level}."
-        # else: exp_id_suf remains "."
-        # ...but if a filename_id is given, use it
+            suffix_parts.append(f"file{findex}")
+
+        if time_str:
+            suffix_parts.append(time_str.lstrip("_"))
+
+        if exp_id:
+            suffix_parts.append(exp_id)
+
         if config.filename_id:
-            exp_id_suf = f"_{config.filename_id}."
+            suffix_parts = [config.filename_id]
+
+        suffix = "_" + "_".join(suffix_parts) if suffix_parts else ""
 
         # Add plot type to filename to make it unique for each field and plot type
         if "xy" in plot_type:
-            fname = (
-                f"{field_name}_xy{levstr}{exp_id_suf}"  # Added _xy to ensure uniqueness
-            )
+            fname = f"{field_name}_xy{levstr}{suffix}"
         elif "yz" in plot_type:
-            fname = f"{field_name}_yz{exp_id_suf}"
+            fname = f"{field_name}_yz{suffix}"
         else:
-            fname = f"{field_name}_{plot_type}{exp_id_suf}"
+            fname = f"{field_name}_{plot_type}{suffix}"
 
         return fname
 

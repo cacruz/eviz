@@ -50,7 +50,28 @@ class MatplotlibBasePlotter(BasePlotter):
             max_size = getattr(
                 self.ax_opts, "coarse_max_size", None
             ) or self.ax_opts.get("coarse_max_size", 2000)
+
+        # Ensure data2d is 2D by squeezing any singleton dimensions
+        if hasattr(data2d, 'squeeze'):
+            data2d = data2d.squeeze()
+
         # Check if coarsening is needed
+        if data2d.ndim != 2:
+            self.logger.warning(
+                f"Expected 2D data for plotting, but got {data2d.ndim}D data with shape {data2d.shape}. "
+                f"Attempting to reshape..."
+            )
+            # If still not 2D after squeezing, try to get the last 2 dimensions
+            if data2d.ndim > 2:
+                # Take the first slice of any extra dimensions
+                while data2d.ndim > 2:
+                    if hasattr(data2d, 'isel'):
+                        data2d = data2d.isel({data2d.dims[0]: 0})
+                    else:
+                        data2d = data2d[0]
+            elif data2d.ndim < 2:
+                raise ValueError(f"Data must have at least 2 dimensions, got {data2d.ndim}D")
+
         ny, nx = data2d.shape
         if nx <= max_size and ny <= max_size:
             return x, y, data2d
@@ -229,7 +250,8 @@ class MatplotlibBasePlotter(BasePlotter):
         self.logger.debug(f"Create contour levels for {field_name}")
 
         # If clevs already set, exit early
-        if self.ax_opts.get("clevs"):
+        clevs = self.ax_opts.get("clevs")
+        if clevs is not None and len(clevs) > 0:
             return
 
         if np.isnan(data2d).all():

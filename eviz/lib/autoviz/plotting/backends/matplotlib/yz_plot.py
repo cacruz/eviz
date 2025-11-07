@@ -248,7 +248,49 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
                     )
 
             else:
+                # Manage clevs consistently (need to make this better?!)
+                if config.compare_diff and self.ax_opts.get("is_diff_field", False):
+                    # For difference plots, use user-defined diff levels if they exist
+                    # Otherwise auto-generate independent levels
+                    pass  # Keep existing clevs from spec or let _create_clevs generate them
+                elif config.compare_diff and config.axindex == 1:
+                    # For second field in compare_diff, use same clevs as first field
+                    if not hasattr(config, "_comparison_clevs"):
+                        config._comparison_clevs = {}
+                    if field_name in config._comparison_clevs:
+                        self.ax_opts["clevs"] = config._comparison_clevs[field_name]
+                        self.logger.debug(
+                            f"Reusing clevs from first field for {field_name}: {len(self.ax_opts['clevs'])} levels"
+                        )
+                elif config.compare:
+                    # For regular compare, use same clevs across all fields
+                    if not hasattr(config, "_comparison_clevs"):
+                        config._comparison_clevs = {}
+                    if config.axindex > 0 and field_name in config._comparison_clevs:
+                        self.ax_opts["clevs"] = config._comparison_clevs[field_name]
+                        self.logger.debug(
+                            f"Reusing clevs for comparison {field_name}: {len(self.ax_opts['clevs'])} levels"
+                        )
+
                 cfilled = self.filled_contours(config, field_name, ax, x, y, data2d)
+
+                # Store clevs for the first plot in a comparison (but not for difference plots)
+                if cfilled is not None:
+                    if config.compare and config.axindex == 0:
+                        if not hasattr(config, "_comparison_clevs"):
+                            config._comparison_clevs = {}
+                        config._comparison_clevs[field_name] = self.ax_opts["clevs"].copy()
+                        self.logger.debug(
+                            f"Storing clevs for comparison {field_name}: {len(self.ax_opts['clevs'])} levels"
+                        )
+                    elif config.compare_diff and config.axindex == 0 and not self.ax_opts.get("is_diff_field", False):
+                        # For compare_diff, store clevs from first field plot (not difference)
+                        if not hasattr(config, "_comparison_clevs"):
+                            config._comparison_clevs = {}
+                        config._comparison_clevs[field_name] = self.ax_opts["clevs"].copy()
+                        self.logger.debug(
+                            f"Storing clevs for compare_diff {field_name}: {len(self.ax_opts['clevs'])} levels"
+                        )
 
                 ylabels = ax.get_yticklabels()
                 for label in ylabels:
@@ -280,8 +322,13 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
             long_name = self.get_long_name(config, data2d, findex)
             if config.compare_diff or config.compare:
                 if getattr(fig, "_suptitle", None) is None:
+                    # Use custom suptitle if configured, otherwise use long name
+                    if hasattr(config.input_config, "suptitle") and config.input_config.suptitle:
+                        title_str = config.input_config.suptitle
+                    else:
+                        title_str = long_name
                     fig.suptitle_eviz(
-                        long_name,
+                        title_str,
                         # TODO: use rc_params
                         fontweight="bold",
                         fontstyle="italic",
@@ -391,17 +438,13 @@ class MatplotlibYZPlotter(MatplotlibBasePlotter):
         ax.set_xticklabels(["90S", "60S", "30S", "EQ", "30N", "60N", "90N"])
         ax.tick_params(width=3, length=6)
 
-        # Set y-axis limits and scale
         ax.set_ylim(lo_z, hi_z)
         ax.set_yscale(self.ax_opts["zscale"])
         ax.yaxis.set_minor_formatter(NullFormatter())
 
-        # Set y-axis formatter
         ax.yaxis.set_major_formatter(FormatStrFormatter("%3.1f"))
 
-        # Set y-axis label
         ax.set_ylabel(f"Pressure ({units})", size=pu.axes_label_font_size(fig.subplots))
 
-        # Add grid if requested
         if self.ax_opts["add_grid"]:
             ax.grid()

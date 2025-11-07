@@ -3,10 +3,14 @@ font.family        : sans-serif
 font.sans-serif    : DejaVu Sans
 font.size          : 11
 
+# === Text ===
+text.color         : "#eeeeee"
+
 # === Figure ===
 figure.figsize     : 6, 4
 figure.dpi         : 150
 figure.facecolor   : "#111111"
+figure.titlesize   : 14
 savefig.facecolor  : "#111111"
 savefig.edgecolor  : "#111111"
 savefig.bbox       : tight
@@ -15,6 +19,7 @@ savefig.bbox       : tight
 axes.facecolor     : "#111111"
 axes.edgecolor     : "#cccccc"
 axes.labelcolor    : "#eeeeee"
+axes.titlecolor    : "#eeeeee"
 axes.titlesize     : 12
 axes.labelsize     : 11
 axes.grid          : True

@@ -347,12 +347,26 @@ class Figure(mfigure.Figure):
                 ax = self.add_subplot(self.gs[i, j], projection=map_projection)
                 self.axes_array.append(ax)
 
+        # Determine water body colors based on style
+        # For dark mode, use darker colors for water to reduce contrast
+        water_color = "white"  # Default for light themes
+        land_edgecolor = "black"
+        water_edgecolor = "black"
+
+        if hasattr(self.config_manager, "fig_style"):
+            if self.config_manager.fig_style == "darkmode":
+                water_color = "#333333"  # Dark grey for water bodies in dark mode
+                land_edgecolor = "#666666"  # Lighter grey for land edges
+                water_edgecolor = "#555555"  # Medium grey for water edges
+
         for ax in self.axes_array:
             ax.coastlines()
             ax.add_feature(cfeature.BORDERS, linestyle=":")
-            ax.add_feature(cfeature.LAND, edgecolor="black")
-            ax.add_feature(cfeature.LAKES, edgecolor="black", color="white", zorder=0)
-            ax.add_feature(cfeature.OCEAN, color="white", zorder=0)
+            ax.add_feature(cfeature.LAND, edgecolor=land_edgecolor)
+            ax.add_feature(
+                cfeature.LAKES, edgecolor=water_edgecolor, color=water_color, zorder=0
+            )
+            ax.add_feature(cfeature.OCEAN, color=water_color, zorder=0)
 
         return self
 
@@ -548,6 +562,13 @@ class Figure(mfigure.Figure):
             if key == "rc_params":
                 # Special handling for rc_params to preserve existing values
                 new_ax_opts[key] = defaults[key].copy()
+            elif key == "extent":
+                # Convert "conus" extent
+                extent_value = spec.get(key, defaults[key])
+                if isinstance(extent_value, str) and extent_value.lower() == "conus":
+                    new_ax_opts[key] = [-120, -70, 24, 50.5]
+                else:
+                    new_ax_opts[key] = extent_value
             else:
                 new_ax_opts[key] = spec.get(key, defaults[key])
 
@@ -613,7 +634,7 @@ class Figure(mfigure.Figure):
             Dict[str, Any]
                 Updated axes internal state
         """
-        if not self.config_manager.compare or not self.config_manager.compare_diff:
+        if not self.config_manager.compare and not self.config_manager.compare_diff:
             return self._update_single_plot(field_name, pid, level)
 
         geom = get_subplot_geometry(ax)
@@ -661,17 +682,31 @@ class Figure(mfigure.Figure):
             "corr": "corrplot",
         }
         plot_key = plot_type_map.get(pid, None)
+
+        # Use original_field_name for spec lookups if available (e.g., for correlation plots)
+        spec_field_name = getattr(
+            self.config_manager, "original_field_name", field_name
+        )
+
         if plot_key in ["xyplot", "yzplot", "txplot", "polarplot"]:
             self._set_clevs(
-                field_name, plot_key, level if isinstance(level, int) else "contours"
+                spec_field_name,
+                plot_key,
+                level if isinstance(level, int) else "contours",
             )
 
         # Update options at the field (not plot) level
         opts = {
             k: v
-            for k, v in self.config_manager.spec_data[field_name].items()
+            for k, v in self.config_manager.spec_data[spec_field_name].items()
             if not isinstance(v, dict)
         }
+
+        # Convert named extents like "conus" to coordinates
+        if "extent" in opts and isinstance(opts["extent"], str):
+            if opts["extent"].lower() == "conus":
+                opts["extent"] = [-120, -70, 24, 50.5]
+
         self._ax_opts.update(opts)
 
         return self._ax_opts
@@ -963,9 +998,12 @@ class Figure(mfigure.Figure):
             "aspect_ratio": None,
         }
 
-        if config_manager.spec_data and field_name in config_manager.spec_data:
+        # Use original_field_name for spec lookups if available (e.g., for correlation plots)
+        spec_field_name = getattr(config_manager, "original_field_name", field_name)
 
-            field_spec = config_manager.spec_data[field_name]
+        if config_manager.spec_data and spec_field_name in config_manager.spec_data:
+
+            field_spec = config_manager.spec_data[spec_field_name]
             plot_spec_key = (
                 plot_type + "plot" if not plot_type.startswith("po") else "polarplot"
             )

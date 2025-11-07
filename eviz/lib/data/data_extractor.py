@@ -248,7 +248,11 @@ class DataExtractor:
                 else:
                     d_temp = d_temp.isel({tc_dim: 0})
             else:
-                self.logger.warning(f"No time dimension found matching {tc_dim}")
+                self.logger.warning(
+                    f"time_level is {time_level} (type: {type(time_level)}), but multiple time steps exist. "
+                    f"Selecting first time step."
+                )
+                d_temp = d_temp.isel({tc_dim: 0})
 
         # Conditionally squeeze: only squeeze dimensions that are not 'zc_dim' if zave/zsum is active
         dims_to_squeeze = [dim for dim in d_temp.dims if d_temp[dim].size == 1]
