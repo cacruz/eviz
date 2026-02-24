@@ -88,4 +88,3 @@ Here are the key components organized by functionality:
 **Plotting Backends:**
   - :doc:`eviz.lib.autoviz.plotting.backends.matplotlib` - Matplotlib backend
   - :doc:`eviz.lib.autoviz.plotting.backends.hvplot` - HvPlot backend
-  - :doc:`eviz.lib.autoviz.plotting.backends.altair` - Altair backend

@@ -9,6 +9,5 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   eviz.lib.autoviz.plotting.backends.altair
    eviz.lib.autoviz.plotting.backends.hvplot
    eviz.lib.autoviz.plotting.backends.matplotlib

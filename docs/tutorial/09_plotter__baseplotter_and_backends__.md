@@ -11,7 +11,6 @@ Now, imagine the director has made all the decisions and has the script (instruc
 Think of a plotting library like a set of art supplies:
 *   **Matplotlib** is like a traditional set of oil paints and brushes – powerful, versatile, but sometimes requires a lot of setup for each stroke.
 *   **HvPlot** is like a modern digital art tablet with smart features – it's great for interactive plots and automatically handles many details.
-*   **Altair** is like a minimalist graphic design tool – perfect for clean, declarative, web-friendly charts.
 
 Each of these tools has its own unique way of drawing lines, coloring areas, and adding labels. If the [Plot Manager](08_plot_manager__plotmanager__.md) had to know the exact commands for *every* plotting library and *every* plot type, it would be a huge, unmanageable mess!
 
@@ -19,7 +18,6 @@ Each of these tools has its own unique way of drawing lines, coloring areas, and
 
 *   `MatplotlibXYPlotter` knows exactly how to draw an XY map using Matplotlib.
 *   `HvplotXYPlotter` knows how to draw an interactive XY map using HvPlot.
-*   `AltairXYPlotter` knows how to draw a web-friendly XY map using Altair.
 
 This way, the [Plot Manager](08_plot_manager__plotmanager__.md) simply tells the right Plotter, "Draw an XY map of temperature," and doesn't need to worry about the underlying technical details of Matplotlib's `contourf` function or HvPlot's `hvplot.image` method. It delegates the actual drawing to the specialist.
 
@@ -42,11 +40,10 @@ Plotters are the hands-on workers who turn data into visible plots.
 
 *   **`BasePlotter` (The Generic Artist):** This is the **abstract base class** for all Plotters. Think of it as the basic job description for *any* artist in EViz. It defines common actions like "draw a plot," "save the plot," and "show the plot." Every specific Plotter must be able to do these things, even if *how* they do them differs.
 *   **Specialized Plotter Types (e.g., `XYPlotter`, `XTPlotter`, `ScatterPlotter`):** These are further abstract blueprints for specific *types* of plots. For example, `XYPlotter` defines what any artist who draws XY (latitude-longitude) maps must be able to do.
-*   **Backends (Matplotlib, HvPlot, Altair):** These are the actual software libraries that do the drawing. They are the "art supplies" or "tools" an artist uses.
+*   **Backends (Matplotlib, HvPlot):** These are the actual software libraries that do the drawing. They are the "art supplies" or "tools" an artist uses.
     *   **Matplotlib:** A widely used, highly customizable plotting library for Python.
     *   **HvPlot / HoloViews:** Libraries built for interactive and dashboard-friendly plots, often used with Bokeh or Plotly.
-    *   **Altair:** A declarative statistical visualization library based on Vega-Lite, excellent for interactive web-based plots.
-*   **Concrete Plotters (e.g., `MatplotlibXYPlotter`, `HvplotXYPlotter`, `AltairXYPlotter`):** These are the actual "artists" that implement the abstract ideas.
+*   **Concrete Plotters (e.g., `MatplotlibXYPlotter`, `HvplotXYPlotter`):** These are the actual "artists" that implement the abstract ideas.
     *   `MatplotlibXYPlotter` *is* an `XYPlotter` and uses the Matplotlib backend.
     *   `HvplotXYPlotter` *is* an `XYPlotter` and uses the HvPlot backend.
     *   They each have unique code in their `plot()` method to draw the specific visualization using their chosen library.
@@ -125,12 +122,11 @@ This factory is responsible for creating the right Plotter instance.
 # File: eviz/lib/autoviz/plotting/factory.py (simplified)
 from .backends.matplotlib.xy_plot import MatplotlibXYPlotter
 from .backends.hvplot.xy_plot import HvplotXYPlotter
-from .backends.altair.xy_plot import AltairXYPlotter
 # ... other plotter imports ...
 
 class PlotterFactory:
     """Factory for creating appropriate plotters."""
-    
+
     @staticmethod
     def create_plotter(plot_type, backend="matplotlib"):
         """Create a plotter for the given plot type and backend."""
@@ -138,7 +134,6 @@ class PlotterFactory:
             ("xy", "matplotlib"): MatplotlibXYPlotter,
             ("xt", "matplotlib"): MatplotlibXTPlotter, # For time series
             ("xy", "hvplot"): HvplotXYPlotter,
-            ("xy", "altair"): AltairXYPlotter,
             # ... many more (plot_type, backend) mappings ...
         }
         
@@ -184,7 +179,7 @@ class BasePlotter(ABC):
         pass # Must be implemented by subclasses
     
     def get_plot_object(self):
-        """Return the underlying plot object (e.g., Matplotlib Figure, Altair Chart)."""
+        """Return the underlying plot object (e.g., Matplotlib Figure, HoloViews object)."""
         return self.plot_object
 
 class XYPlotter(BasePlotter):
@@ -269,71 +264,6 @@ class MatplotlibXYPlotter(MatplotlibBasePlotter):
     *   `self.set_colorbar(...)`: Another helper to add the color scale.
     *   `self.plot_object = self.fig`: The resulting Matplotlib Figure is stored, making it available for saving or showing.
 
-**`AltairXYPlotter` - The Altair Artist (`eviz/lib/autoviz/plotting/backends/altair/xy_plot.py`)**
-
-For comparison, here's a simplified view of how an Altair plotter would work:
-
-```python
-# File: eviz/lib/autoviz/plotting/backends/altair/xy_plot.py (simplified)
-import altair as alt
-import pandas as pd
-from eviz.lib.autoviz.plotting.base import XYPlotter
-
-class AltairXYPlotter(XYPlotter):
-    """Altair implementation of XY plotting."""
-    def __init__(self):
-        super().__init__()
-        alt.data_transformers.disable_max_rows() # Important for large datasets
-    
-    def plot(self, config, data_to_plot_tuple):
-        """
-        Create an interactive XY plot using Altair.
-        data_to_plot_tuple contains (data2d, x, y, field_name, plot_idx, figure_obj).
-        """
-        data2d, x, y, field_name, _, _ = data_to_plot_tuple # Figure object often not used directly by Altair
-        
-        if data2d is None: return None
-
-        # Altair often works best with pandas DataFrames
-        # This converts the xarray DataArray into a pandas DataFrame
-        df = self._convert_to_dataframe(data2d, x, y)
-        
-        title = field_name
-        cmap = config.ax_opts.get('use_cmap', 'viridis')
-        # Altair uses Vega color schemes, so conversion might be needed
-        vega_scheme = 'viridis' # Simplified
-        
-        # This is the core Altair drawing command!
-        chart = alt.Chart(df).mark_square().encode(
-            x=alt.X('x:Q', title=x.name), # 'Q' means quantitative data
-            y=alt.Y('y:Q', title=y.name),
-            color=alt.Color('value:Q', scale=alt.Scale(scheme=vega_scheme), title=field_name),
-            tooltip=[alt.Tooltip('x:Q'), alt.Tooltip('y:Q'), alt.Tooltip('value:Q')]
-        ).properties(
-            width=800, height=500, title=title
-        ).interactive() # Makes the plot interactive (zoom, pan)
-        
-        self.plot_object = chart # Store the Altair chart object
-        return chart
-
-    def _convert_to_dataframe(self, data2d, x, y):
-        """Helper to convert xarray DataArray to pandas DataFrame."""
-        # Simplified for brevity. In reality, it handles various cases.
-        df = data2d.to_dataframe(name='value').reset_index()
-        df = df.rename(columns={x.name: 'x', y.name: 'y'}) # Standardize column names
-        return df
-
-    def save(self, filename, **kwargs):
-        """Save the plot to a file."""
-        if self.plot_object:
-            self.plot_object.save(filename, **kwargs)
-    # ... show method omitted ...
-```
-**Explanation:**
-*   `plot()` method unpacks the `data_to_plot_tuple`. Note how Altair often works with `pandas.DataFrame`s, so `_convert_to_dataframe` is used.
-*   `alt.Chart(df).mark_square().encode(...)`: This is the declarative way Altair builds a plot, specifying what goes on the x-axis, y-axis, and what determines the color. `.interactive()` adds interactivity.
-*   The `plot_object` here stores an `altair.Chart` object.
-
 **`HvplotXYPlotter` - The HvPlot Artist (`eviz/lib/autoviz/plotting/backends/hvplot/xy_plot.py`)**
 
 And a similar view for HvPlot:
@@ -400,7 +330,7 @@ These different Plotters demonstrate how EViz abstracts away the details of vari
 
 ### Conclusion
 
-In this chapter, you've learned that **Plotters (BasePlotter and backends)** are the actual "artists" who draw the visualizations in EViz. `BasePlotter` provides a common blueprint for what any artist should do, while specialized concrete Plotters (like `MatplotlibXYPlotter`, `HvplotXYPlotter`, `AltairXYPlotter`) know how to use specific libraries (Matplotlib, HvPlot, Altair) to draw specific types of plots (like XY maps). The [Plot Manager (PlotManager)](08_plot_manager__plotmanager__.md) selects the right Plotter, hands it the data and a canvas, and lets the Plotter perform the detailed drawing. This makes EViz flexible and able to leverage various powerful plotting tools.
+In this chapter, you've learned that **Plotters (BasePlotter and backends)** are the actual "artists" who draw the visualizations in EViz. `BasePlotter` provides a common blueprint for what any artist should do, while specialized concrete Plotters (like `MatplotlibXYPlotter`, `HvplotXYPlotter`) know how to use specific libraries (Matplotlib, HvPlot) to draw specific types of plots (like XY maps). The [Plot Manager (PlotManager)](08_plot_manager__plotmanager__.md) selects the right Plotter, hands it the data and a canvas, and lets the Plotter perform the detailed drawing. This makes EViz flexible and able to leverage various powerful plotting tools.
 
 Now that we understand who draws the plots, the next logical step is to understand the "canvas" itself – the object that holds the plot and manages its layout and saving. In the next chapter, we'll dive into the [Figure (eViz Figure)](10_figure__eviz_figure__.md).
 

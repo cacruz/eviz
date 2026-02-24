@@ -483,9 +483,7 @@ def print_map(
     fname = build_filename(config, plot_type, findex, level)
 
     # Determine file extension based on backend
-    if backend == "altair":
-        default_ext = "html"
-    elif backend == "hvplot":
+    if backend == "hvplot":
         default_ext = "html"
     else:  # matplotlib or other image-based backends
         default_ext = config.print_format
@@ -533,15 +531,6 @@ def print_map(
 
             plt.close(fig)
 
-        elif backend == "altair":
-            if hasattr(fig, "save"):
-                fig.save(filename)
-            else:
-                logger.warning(
-                    f"Cannot save Altair plot: "
-                    f"{filename}. Object doesn't have save method."
-                )
-
         elif backend == "hvplot":
             try:
                 hv.save(fig, filename)
@@ -582,14 +571,6 @@ def print_map(
         if backend == "matplotlib":
             plt.tight_layout()
             plt.show()
-        elif backend == "altair":
-            try:
-                display(fig)
-            except ImportError:
-                temp_file = os.path.join(tempfile.gettempdir(), f"{fname}.html")
-                if hasattr(fig, "save"):
-                    fig.save(temp_file)
-                    webbrowser.open(f"file://{temp_file}")
         elif backend == "hvplot":
             # For HvPlot in notebooks, display directly
             try:

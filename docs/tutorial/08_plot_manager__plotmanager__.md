@@ -13,14 +13,13 @@ Imagine you're the head chef (our [Model Source](05_model_source__genericdatasou
 But there are many ways to plate a dish:
 *   Should it be a fancy, artistic arrangement (a Matplotlib map)?
 *   A clean, interactive display (an HvPlot time series)?
-*   A minimalist, informative chart (an Altair box plot)?
 *   You also need to know *exactly* what kind of dish to make (an XY map, a time series, a profile plot).
 *   And once it's made, you need to decide if it's served immediately (displayed) or packaged for later (saved as a file).
 
 If the head chef had to know all the intricate details of every plating style, every dish type, and every serving method, they'd be overwhelmed!
 
 **PlotManager solves this by acting like the "director" or "art curator" of all visualization efforts.** It receives the perfectly prepared data and all the plotting instructions (from the [Configuration Manager](04_configuration_manager__configmanager__.md)). Then, it intelligently decides:
-1.  **Which specific plotting "artist" (tool)** to use (like Matplotlib, HvPlot, or Altair).
+1.  **Which specific plotting "artist" (tool)** to use (like Matplotlib or HvPlot).
 2.  **Which "style of art" (plot type)** to create (like an XY map, a time series, or a box plot).
 It then orchestrates the entire plot creation process and handles saving or displaying the final image according to your preferences. It makes sure your beautiful data gets the perfect visual presentation.
 

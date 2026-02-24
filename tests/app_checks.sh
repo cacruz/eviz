@@ -8,7 +8,7 @@
 # Test Categories:
 # - Single-plot tests: Tests individual plot generation for different data sources
 # - Comparison-plot tests: Tests plot comparison features
-# - Backend tests: Tests different visualization backends (matplotlib, altair, hvplot)
+# - Backend tests: Tests different visualization backends (matplotlib, hvplot)
 #
 # Usage: ./app_checks.sh [conda env name] [--no-prompt]
 #   conda env name: The conda environment where EViz is installed
@@ -255,13 +255,6 @@ fi
 #   echo
 #fi
 
-# Altair backend
-
-if prompt "Source: 'gridded' - altair backend"; then
-   python autoviz.py -s gridded -f $EVIZ_CONFIG_PATH/gridded/gridded_altair.yaml -v 0
-   echo
-fi
-   
 # Hvplot backend
 if prompt "Source: crest, pearson map  - hvplot backend"; then
    python autoviz.py -s crest -v 0 -f $EVIZ_CONFIG_PATH/crest/crest_pearson.yaml

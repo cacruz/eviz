@@ -1,8 +1,3 @@
-from .backends.altair.metric_plot import AltairMetricPlotter
-from .backends.altair.scatter_plot import AltairScatterPlotter
-from .backends.altair.xt_plot import AltairXTPlotter
-from .backends.altair.xy_plot import AltairXYPlotter
-from .backends.altair.yz_plot import AltairYZPlotter
 from .backends.hvplot.box_plot import HvplotBoxPlotter
 from .backends.hvplot.line_plot import HvplotLinePlotter
 from .backends.hvplot.metric_plot import HvplotMetricPlotter
@@ -36,7 +31,7 @@ class PlotterFactory:
             plot_type
                 Type of plot ('xy', 'yz', 'xt', 'sc', etc.)
             backend
-                Backend to use ('matplotlib', 'hvplot', 'altair')
+                Backend to use ('matplotlib', 'hvplot')
 
         Returns
         -------
@@ -77,11 +72,6 @@ class PlotterFactory:
             ("corr", "hvplot"): HvplotMetricPlotter,
             ("box", "hvplot"): HvplotBoxPlotter,
             ("line", "hvplot"): HvplotLinePlotter,
-            ("xy", "altair"): AltairXYPlotter,
-            ("xt", "altair"): AltairXTPlotter,
-            ("sc", "altair"): AltairScatterPlotter,
-            ("yz", "altair"): AltairYZPlotter,
-            ("corr", "altair"): AltairMetricPlotter,
             # Add other combinations as they are implemented
         }
 
