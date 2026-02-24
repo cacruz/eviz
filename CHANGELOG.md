@@ -21,6 +21,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.4] - 2026-02-24
+
+[Compare changes](https://github.com/cacruz/eviz/compare/v0.9.3...v0.9.4)
+
+### Summary
+
+This minor release removes a backend functionality that is no longer supported
+
+### Added
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+- Altair backend: eviz/lib/autoviz/plotting/backends/altair/ 
+- Updated 
+  - eviz/lib/autoviz/plotting/factory.py 
+  - eviz/lib/autoviz/utils.py 
+  - Documentation
+
+### Known Issues
+
+* Incomplete functionality in **hvplot** backend
+* **Units module** requires more comprehensive testing
+* **Tropopause height overlay** not working (fix in progress)
+* **GRIB class** not fully tested; may not behave as expected
+* **Style sheets** need further refinement
+
+
+---
+
 ## [0.9.3] - 2025-11-07
 
 [Compare changes](https://github.com/cacruz/eviz/compare/v0.9.2...v0.9.3)

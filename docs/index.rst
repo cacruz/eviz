@@ -12,7 +12,7 @@ Key Features
 * **Multi-format Support**: NetCDF, HDF5, Zarr, GRIB, CSV, and OPeNDAP URLs
 * **Earth System Models**: WRF, LIS, GEOS, CREST, and generic formats  
 * **Observational Data**: OMI, MOPITT, Landsat, AirNow
-* **Multiple Backends**: matplotlib, hvplot, and altair plotting backends
+* **Multiple Backends**: matplotlib and hvplot plotting backends
 * **Configuration-driven**: YAML-based configuration system
 * **Web Interface**: Interactive Streamlit application (sviz)
 
