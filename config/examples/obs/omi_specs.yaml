@@ -1,0 +1,22 @@
+ColumnAmountNO2: 
+    unitconversion: 1e-15
+    units: molec/cm2
+    xyplot:
+        extent: conus
+        projection: lambert
+        levels:
+            0: []
+
+ColumnAmountO3: 
+    xyplot:
+#        extent: conus
+#        projection: lambert
+        levels:
+            0: []
+
+ColumnAmountSO2: 
+    xyplot:
+        extent: conus
+        levels:
+            0: []
+

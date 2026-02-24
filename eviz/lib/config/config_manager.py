@@ -1,13 +1,16 @@
-from dataclasses import dataclass, field
 import logging
 import os
-from typing import Optional, List
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
+
+import numpy as np
+
 import eviz.lib.utils as u
 from eviz.lib.config.config import Config
+from eviz.lib.config.history_config import HistoryConfig
 from eviz.lib.config.input_config import InputConfig
 from eviz.lib.config.output_config import OutputConfig
 from eviz.lib.config.system_config import SystemConfig
-from eviz.lib.config.history_config import HistoryConfig
 from eviz.lib.data.pipeline.integrator import DataIntegrator
 from eviz.lib.data.pipeline.pipeline import DataPipeline
 
@@ -16,42 +19,32 @@ from eviz.lib.data.pipeline.pipeline import DataPipeline
 class ConfigManager:
     """
     Enhanced configuration manager for the eViz application.
-    
+
     This class extends the base Config class to provide additional functionality specific
     to the eViz application's needs. It serves as the primary interface between the application
     and its configuration system, offering simplified access to configuration parameters and
     adding application-specific features.
-    
+
     The ConfigManager integrates with command-line arguments, manages comparison modes between
     data sources, provides dimension name mapping, and offers runtime configuration updates.
     It also maintains references to key application components like the data processing pipeline.
-    
-    Attributes:
-        All attributes from Config class, plus:
-        args: Command-line arguments passed to the application
-        compare: Flag indicating if comparison mode is active
-        compare_diff: Flag indicating if difference comparison mode is active
-        compare_exp_ids: List of experiment IDs for comparison
+
+    Attributes
+    ----------
+        input_config: Configuration for input data sources and parameters
+        output_config: Configuration for output settings and file generation
+        system_config: Configuration for system-level settings
+        history_config: Configuration for tracking history and versioning
+        config: Base configuration object containing shared settings
         a_list: List of indices for the first set of comparison items
         b_list: List of indices for the second set of comparison items
-        findex: Current file index being processed
-        pindex: Current plot index being processed
-        axindex: Current axis index being processed
-        level: Current vertical level being processed
-        time_level: Current time level being processed
-        real_time: Human-readable representation of the current time
-        pipeline: Reference to the data processing pipeline
-        
-    Methods:
-        initialize: Complete the initialization process after construction
-        get_model_dim_name: Map standard dimension names to model-specific names
-        get_dim_names: Get dimension names for a specific plot type
-        get_levels: Get level information for a specific field and plot type
-        
-    Note:
-        This class is designed to be instantiated once and used throughout the application
-        as the single source of configuration information.
+        _findex: Current file index being processed
+        _ds_index: Current data source index being processed
+        _units: Reference to the units conversion system (lazy loaded)
+        _integrator: Reference to the data integrator (lazy loaded)
+        _pipeline: Reference to the data processing pipeline (lazy loaded)
     """
+
     # Required fields first
     input_config: InputConfig
     output_config: OutputConfig
@@ -62,57 +55,73 @@ class ConfigManager:
     # Fields with default values
     a_list: List[int] = field(default_factory=list)
     b_list: List[int] = field(default_factory=list)
-    _findex: int = 0  # Use underscore to avoid name conflicts
-    _ds_index: int = 0  # Use underscore to avoid name conflicts
+    _findex: int = 0
+    _ds_index: int = 0
+    current_field_name: str = ""
 
     # Fields not included in __init__
     _units: Optional[object] = field(default=None, init=False)
     _integrator: Optional[DataIntegrator] = field(default=None, init=False)
     _pipeline: Optional[DataPipeline] = field(default=None, init=False)
-        
+
+    # Domain information (extracted from datasets)
+    _domain_info: Dict[str, Any] = field(default_factory=dict, init=False)
+
     def __post_init__(self):
-        self.logger.info("Start init")
+        """Initialize the ConfigManager after construction."""
+        self.input_config.config_manager = self  # CC: Is this necessary?
         self.setup_comparison()
 
-    # Delegate properties to Config
-    @property
-    def app_data(self):
-        return self.config.app_data
-
-    @property
-    def spec_data(self):
-        return self.config.spec_data
-    
-    @property
-    def source_names(self):
-        return self.config.source_names
-
-    @property
-    def ds_index(self):
-        # Return the local value, not delegating to config
-        return self._ds_index
-
-    @ds_index.setter
-    def ds_index(self, value):
-        self._ds_index = value
-        # Optionally also update config if needed
-        if hasattr(self.config, '_ds_index'):
-            self.config._ds_index = value
-
-    @property
-    def findex(self):
-        return self._findex
-
-    @findex.setter
-    def findex(self, value):
-        self._findex = value
-        # Optionally also update config if needed
-        if hasattr(self.config, '_findex'):
-            self.config._findex = value    
     @property
     def logger(self):
         """Return the logger for this class."""
         return logging.getLogger(__name__)
+
+    @property
+    def paths(self):
+        """Access to paths configuration."""
+        return self.config.paths
+
+    @property
+    def app_data(self):
+        """Access to application data."""
+        return self.config.app_data
+
+    @property
+    def spec_data(self):
+        """Access to specification data."""
+        return self.config.spec_data
+
+    @property
+    def source_names(self):
+        """Access to source names."""
+        return self.config.source_names
+
+    @property
+    def ds_index(self):
+        """Get the current data source index."""
+        return self._ds_index
+
+    @ds_index.setter
+    def ds_index(self, value):
+        """Set the data source index and update config if needed."""
+        self._ds_index = value
+        # Also update config if it has the attribute
+        if hasattr(self.config, "_ds_index"):
+            self.config._ds_index = value
+
+    @property
+    def findex(self):
+        """Get the current file index."""
+        return self._findex
+
+    @findex.setter
+    def findex(self, value):
+        """Set the file index and update config if needed."""
+        self._findex = value
+        # Also update config if it has the attribute
+        if hasattr(self.config, "_findex"):
+            self.config._findex = value
 
     @property
     def integrator(self):
@@ -127,6 +136,7 @@ class ConfigManager:
         if self._units is None:
             try:
                 from eviz.lib.data.units import Units
+
                 self._units = Units(self)
             except Exception as e:
                 self.logger.error(f"Error initializing Units: {e}")
@@ -140,7 +150,7 @@ class ConfigManager:
             self._pipeline = DataPipeline(self)
         return self._pipeline
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Return a dictionary representation of all configuration objects."""
         return {
             "input_config": self.input_config.to_dict(),
@@ -154,92 +164,319 @@ class ConfigManager:
 
     def __getattr__(self, name):
         """
-        Dynamically access attributes from the underlying config objects or the Config object.
+        Dynamically access attributes from the underlying config objects.
+
+        This method is called only when an attribute is not found through normal lookup.
+        It searches for the attribute in the config objects in a specific order.
+
+        Parameters
+        ----------
+            name
+                The name of the attribute to look up
+
+        Returns
+        -------
+            The value of the attribute if found
+        Raises
+        ------
+            AttributeError
+                If the attribute is not found in any config object
         """
         # Check if the attribute exists in this instance directly
-        # (This is needed to avoid recursion for attributes like a_list and b_list)
         if name in self.__dict__:
             return self.__dict__[name]
 
+        # Check in config first
         if hasattr(self.config, name):
             return getattr(self.config, name)
 
-        for config in [self.input_config, self.output_config, self.system_config, self.history_config]:
+        # Then check in other config objects
+        for config in [
+            self.input_config,
+            self.output_config,
+            self.system_config,
+            self.history_config,
+        ]:
             if hasattr(config, name):
                 return getattr(config, name)
 
-        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+        raise AttributeError(
+            f"'{self.__class__.__name__}' object has no attribute '{name}'"
+        )
+
+    def should_overlay_plots(self, field_name, plot_type):
+        """
+        Determine if comparison plots for this field should be overlaid on the same axes.
+
+        Parameters
+        ----------
+            field_name : str
+                The name of the field
+            plot_type : str
+                The type of plot (e.g., 'yz', 'xt')
+
+        Returns
+        -------
+            bool
+                True if plots should be overlaid, False otherwise
+        """
+        # Only consider overlaying for profile plot, box plots, and time series
+        if plot_type not in ["yz", "xt", "bo"]:
+            return False
+
+        # Sanity check
+        is_profile = False
+        if plot_type == "yz" and field_name in self.spec_data:
+            is_profile = "profile_dim" in self.spec_data[field_name].get("yzplot", {})
+
+        # Return True if this is a profile or time series and overlay is requested
+        return (is_profile or plot_type == "xt" or plot_type == "bo") and self.overlay
+
+    def get_file_format(self, file_path: str) -> Optional[str]:
+        """
+        Get the format for a specific file.
+
+        Parameters
+        ----------
+            file_path : str
+                The path to the file
+
+        Returns
+        -------
+            Optional[str]
+                The format or None if not specified
+        """
+        if hasattr(self.input_config, "get_format_for_file"):
+            return self.input_config.get_format_for_file(file_path)
+        return None
+
+    @property
+    def file_formats(self) -> Dict[str, str]:
+        """
+        Get a dictionary mapping file paths to their formats.
+
+        Returns
+        -------
+            Dict[str, str]
+                Dictionary mapping file paths to formats
+        """
+        if hasattr(self.input_config, "_file_format_mapping"):
+            return self.input_config._file_format_mapping
+        return {}
 
     def get_model_dim_name(self, dim_name):
         """
         Get model-specific dimension name associated with the source as defined
         in meta_coordinates.yaml.
 
-        Args:
-            dim_name (str): The dimension name to look up
+        Parameters
+        ----------
+            dim_name : str
+                The generic dimension name to look up.
 
-        Returns:
-            str or None: The model-specific dimension name, or None if not found
-        """
-        return self._get_model_dim_name(dim_name)
-
-    def _get_model_dim_name(self, dim_name):
-        """
-        Get the model-specific dimension name.
-
-        Args:
-            dim_name: Gridded dimension name
-
-        Returns:
-            str or None: Model-specific dimension name if available
+        Returns
+        -------
+            str or None
+                The model-specific dimension name, or None if not found.
         """
         source = self.source_names[self.ds_index]
+        # Try with the current ds_index first
+        result = self._get_model_dim_name_for_source(dim_name, source)
+        if result:
+            return result
 
-        if source not in self.meta_coords.get(dim_name, {}):
-            self.logger.debug(f"No meta_coords mapping for dimension '{dim_name}' and source '{source}'")
+        # If that fails, try with all sources
+        for i, src in enumerate(self.source_names):
+            if i != self.ds_index:  # Skip the one we already tried
+                result = self._get_model_dim_name_for_source(dim_name, src)
+                if result:
+                    return result
+
+        # If all else fails, try some common dimension names
+        common_dims = {
+            "xc": ["lon", "longitude", "x"],
+            "yc": ["lat", "latitude", "y"],
+            "zc": ["lev", "level", "z", "altitude", "height", "plev"],
+            "tc": ["time", "t"],
+        }
+
+        if dim_name in common_dims:
+            # Get all data sources
+            all_sources = self.pipeline.get_all_data_sources()
+            for source in all_sources.values():
+                if hasattr(source, "dataset") and source.dataset is not None:
+                    dims = list(source.dataset.dims)
+                    for common_dim in common_dims[dim_name]:
+                        if common_dim in dims:
+                            return common_dim
+
+        return None
+
+    def _get_model_dim_name_for_source(self, dim_name, source):
+        """Helper method to get model dimension name for a specific source."""
+        file_path = self._get_current_file_path(source)
+        if not file_path:
             return None
 
-        coords = self.meta_coords[dim_name][source]
+        data_source = self._get_data_source_for_file(file_path)
+        if not data_source:
+            return None
 
-        if isinstance(coords, str) and ',' not in coords:
-             self.logger.debug(f"Found direct mapping for '{dim_name}' in source '{source}': '{coords}'")
-             return coords
+        dims = self._get_available_dimensions(data_source)
+        if not dims:
+            return None
 
-        coord_candidates = coords.split(',') if isinstance(coords, str) else [coords.get('dim')] if isinstance(coords, dict) and 'dim' in coords else []
+        if dim_name not in self.meta_coords:
+            return None
+        if source not in self.meta_coords[dim_name]:
+            return None
 
-        file_path = None
-        try:
-            # Assuming app_data.inputs is a list of dictionaries
-            if self.findex is not None and self.findex < len(self.app_data.inputs):
-                 file_entry = self.app_data.inputs[self.findex]
-                 file_path = os.path.join(file_entry.get('location', ''), file_entry.get('name', ''))
-        except Exception as e:
-            self.logger.debug(f"Could not get file path for ds_index {self.ds_index}, findex {self.findex}: {e}")
-            for entry in self.app_data.inputs:
-                if entry.get('source_name') == source:
-                    file_path = os.path.join(entry.get('location', ''), entry.get('name', ''))
-                    break
-
-        if file_path:
-            data_source = self.pipeline.get_data_source(file_path)
-
-            if data_source and hasattr(data_source, 'dataset') and data_source.dataset is not None:
-                available_dims = list(data_source.dataset.dims.keys())
-                self.logger.debug(f"Available dimensions in dataset for {file_path}: {available_dims}")
-
-                self.logger.debug(f"Coordinate candidates for '{dim_name}': {coord_candidates}")
-                for coord in coord_candidates:
-                    if coord and coord in available_dims:
-                        self.logger.debug(f"Found matching coordinate: {coord}")
-                        return coord
-                return None
-            else:
-                 self.logger.debug(f"No data source or dataset loaded for file: {file_path}")
-                 return None
+        if source in ["wrf", "lis"]:
+            coords = self.meta_coords[dim_name][source].get("dim", "")
         else:
-            self.logger.debug(f"Could not determine file path for source '{source}' and findex {self.findex}")
-            return None 
-        
+            coords = self.meta_coords[dim_name][source]
+
+        if "," in coords:
+            coords_list = [c.strip() for c in coords.split(",")]
+            for item in coords_list:
+                if item in dims:
+                    return item
+        else:
+            return coords if coords in dims else None
+
+        return None
+
+    def get_model_dim_name_for_data(self, dim_name, data_array):
+        """
+        Get model-specific dimension name for a specific data array.
+        This method checks which of the possible dimension names actually exists
+        in the given data_array.
+
+        Parameters
+        ----------
+            dim_name : str
+                The generic dimension name to look up ('tc', 'zc', etc.)
+            data_array
+                xarray.DataArray to check dimensions against
+
+        Returns
+        -------
+            str or None
+                The model-specific dimension name that exists in data_array
+        """
+        if not hasattr(data_array, "dims"):
+            return None
+
+        source = self.source_names[self.ds_index] if self.source_names else "gridded"
+
+        if dim_name not in self.meta_coords:
+            return None
+        if source not in self.meta_coords[dim_name]:
+            return None
+
+        if source in ["wrf", "lis"]:
+            coords = self.meta_coords[dim_name][source].get("dim", "")
+        else:
+            coords = self.meta_coords[dim_name][source]
+
+        if "," in coords:
+            coords_list = [c.strip() for c in coords.split(",")]
+            for item in coords_list:
+                if item in data_array.dims:
+                    return item
+        else:
+            return coords if coords in data_array.dims else None
+
+        return None
+
+    def _get_current_file_path(self, source):
+        """
+        Get the file path for the current file index or source name.
+
+        Parameters
+        ----------
+            source : str
+                The source name to look for if file index is invalid
+
+        Returns
+        -------
+            str or None
+                The file path if found, None otherwise
+        """
+        try:
+            if self.findex is not None and self.findex < len(self.app_data.inputs):
+                file_entry = self.app_data.inputs[self.findex]
+                return os.path.join(
+                    file_entry.get("location", ""), file_entry.get("name", "")
+                )
+        except Exception as e:
+            self.logger.debug(
+                f"Could not get file path for ds_index {self.ds_index}, findex {self.findex}: {e}"
+            )
+
+        # Fallback to searching by source name
+        for entry in self.app_data.inputs:
+            if entry.get("source_name") == source:
+                return os.path.join(entry.get("location", ""), entry.get("name", ""))
+
+        self.logger.debug(
+            f"Could not determine file path for source '{source}' and findex {self.findex}"
+        )
+        return None
+
+    def _get_data_source_for_file(self, file_path):
+        """
+        Get the data source for a file path.
+
+        Parameters
+        ----------
+            file_path : str
+                The file path to get the data source for
+
+        Returns
+        -------
+            object or None
+                The data source if found, None otherwise
+        """
+        if not file_path or not self.pipeline:
+            return None
+
+        data_source = self.pipeline.get_data_source(file_path)
+        if (
+            not data_source
+            or not hasattr(data_source, "dataset")
+            or data_source.dataset is None
+        ):
+            self.logger.debug(f"No data source or dataset loaded for file: {file_path}")
+            return None
+
+        return data_source
+
+    @staticmethod
+    def _get_available_dimensions(data_source):
+        """
+        Get the available dimensions from a data source.
+
+        Parameters
+        ----------
+            data_source : object
+                The data source to get dimensions from
+
+        Returns
+        -------
+            list or None
+                The list of available dimensions if found, None otherwise
+        """
+        if (
+            not data_source
+            or not hasattr(data_source, "dataset")
+            or data_source.dataset is None
+        ):
+            return None
+
+        available_dims = list(data_source.dataset.dims.keys())
+        return available_dims
+
     def setup_comparison(self):
         """
         Set up comparison between datasets based on config settings.
@@ -248,19 +485,25 @@ class ConfigManager:
         self.a_list = []
         self.b_list = []
 
-        if not (self.input_config._compare or self.input_config._compare_diff):
+        if not (
+            self.input_config.compare
+            or self.input_config.compare_diff
+            or self.input_config.overlay
+        ):
             self.logger.debug("Comparison not enabled")
             return
 
-        compare_ids = self.input_config._compare_exp_ids
+        compare_ids = (
+            self.input_config.compare_exp_ids or self.input_config.overlay_exp_ids or []
+        )
         if not compare_ids:
             return
 
         # Create a mapping of exp_ids to their indices
         exp_id_indices = {}
         for i, entry in enumerate(self.app_data.inputs):
-            if 'exp_id' in entry:
-                exp_id_indices[entry['exp_id']] = i
+            if "exp_id" in entry:
+                exp_id_indices[entry["exp_id"]] = i
 
         # Process all comparison IDs
         for i, exp_id in enumerate(compare_ids):
@@ -273,285 +516,790 @@ class ConfigManager:
             else:
                 self.logger.warning(f"Could not find entry for exp_id: {exp_id}")
 
-        self.logger.info(f"Comparison setup: a_list={self.a_list}, b_list={self.b_list}")
-
     def get_file_index(self, filename):
         """
         Get the file index associated with the filename.
 
-        Args:
-            filename: The exact filename to search for
+        Parameters
+        ----------
+            filename : str
+                The exact filename to search for
 
-        Returns:
-            int: Index of the file in app_data.inputs, or 0 if not found
+        Returns
+        -------
+            int
+                Index of the file in app_data.inputs, or 0 if not found
         """
+        if not filename:
+            self.logger.warning("Empty filename provided, returning 0")
+            return 0
+
         for i, entry in enumerate(self.app_data.inputs):
-            # Use exact matching or path-aware matching
-            # Ensure 'filename' key exists before accessing
-            if 'filename' in entry and (filename == entry['filename'] or os.path.basename(filename) == os.path.basename(entry['filename'])):
+            # Check if 'filename' key exists before accessing
+            if "filename" in entry and (
+                filename == entry["filename"]
+                or os.path.basename(filename) == os.path.basename(entry["filename"])
+            ):
                 return i
-        self.logger.warning(f"File index not found for filename: {filename}, returning 0")
+
+        self.logger.warning(
+            f"File index not found for filename: {filename}, returning 0"
+        )
         return 0
 
-
     def get_levels(self, to_plot, plot_type):
-        """ Get model levels to plot from YAML specs file"""
-        levels = u.get_nested_key_value(self.spec_data, [to_plot, plot_type, 'levels'])
-        if not levels:
-            return []
-        else:
-            return levels
+        """
+        Get model levels to plot from YAML specs file.
+
+        Parameters
+        ----------
+            to_plot : str
+                The field to plot
+            plot_type : str
+                The type of plot
+
+        Returns
+        -------
+            list
+                The levels to plot, or an empty list if not found
+        """
+        levels = u.get_nested_key_value(self.spec_data, [to_plot, plot_type, "levels"])
+        return levels if levels else []
 
     def get_file_description(self, file):
-        """ Get user-defined file description (default: None)"""
+        """
+        Get user-defined file description.
+
+        Parameters
+        ----------
+            file : int or str
+                The file index or name
+
+        Returns
+        -------
+            str or None
+                The file description if found, None otherwise
+        """
         try:
-            return self.input_config.file_list[file]['description']
+            return self.input_config.file_list[file]["description"]
         except (KeyError, IndexError, TypeError) as e:
-            self.logger.debug(f'Unable to get file description: {e}')
+            self.logger.debug(f"Unable to get file description: {e}")
             return None
 
     def get_file_exp_name(self, i):
-        """ Get user-defined experiment name associated with the input file (default None)"""
+        """
+        Get user-defined experiment name associated with the input file.
+
+        Parameters
+        ----------
+            i : int
+                The file index
+
+        Returns
+        -------
+            str or None
+                The experiment name if found, None otherwise
+        """
         try:
-            return self.input_config.file_list[i]['exp_name']
+            return self.input_config.file_list[i]["exp_name"]
         except Exception as e:
-            self.logger.debug(f'key error {e}, returning default')
+            self.logger.debug(f"Key error {e}, returning default")
             return None
 
     def get_file_exp_id(self, i):
-        """ Get user-defined experiment ID associated with the input file (default None)
-        If an expid is set, then it will be used to compare with another expid, as set in compare field
+        """
+        Get user-defined experiment ID associated with the input file.
+        If an expid is set, then it will be used to compare with another expid, as set in compare field.
+
+        Parameters
+        ----------
+            i : int
+                The file index
+
+        Returns
+        -------
+            str or None
+                The experiment ID if found, None otherwise
         """
         try:
-            return self.input_config.file_list[i]['exp_id']
+            return self.input_config.file_list[i]["exp_id"]
         except Exception as e:
-            self.logger.debug(f'key error {e}, returning default')
+            self.logger.debug(f"Key error {e}, returning default")
             return None
 
-    @staticmethod
-    def get_dim_names(pid):
+    def get_dim_names(self, pid):
+        """
+        Get dimension names for a specific plot type.
+
+        Parameters
+        ----------
+            pid : str
+                The plot ID
+
+        Returns
+        -------
+            tuple
+                A tuple of (dim1, dim2) dimension names
+        """
         dim1, dim2 = None, None
-        if 'yz' in pid:
-            dim1, dim2 = 'lat', 'lev'
-        elif 'xt' in pid:
-            dim1, dim2 = 'time', None
-        elif 'tx' in pid:
-            dim1, dim2 = 'lon', 'time'
+        if "yz" in pid:
+            dim1, dim2 = self.get_model_dim_name("yc"), self.get_model_dim_name("zc")
+        elif "xt" in pid:
+            dim1, dim2 = self.get_model_dim_name("tc"), None
+        elif "tx" in pid:
+            dim1, dim2 = self.get_model_dim_name("xc"), self.get_model_dim_name("tc")
         else:
-            dim1, dim2 = 'lon', 'lat'
+            dim1, dim2 = self.get_model_dim_name("xc"), self.get_model_dim_name("yc")
         return dim1, dim2
 
-
     def get_model_attr_name(self, attr_name):
-        """ Get model-specific attribute name associated with the source as defined
-            in meta_attributes.yaml
         """
-        if self.ds_index < len(self.source_names):
-            source = self.source_names[self.ds_index]
-            if attr_name in self.meta_attrs and source in self.meta_attrs[attr_name]:
-                return self.meta_attrs[attr_name][source]
-            else:
-                self.logger.debug(f"No meta_attrs mapping for attribute '{attr_name}' and source '{source}'")
-                return None
-        else:
-            self.logger.debug(f"ds_index {self.ds_index} out of bounds for source_names {self.source_names}")
+        Get model-specific attribute name associated with the source as defined
+        in meta_attributes.yaml.
+
+        Parameters
+        ----------
+            attr_name : str
+                The attribute name to look up
+
+        Returns
+        -------
+            str or None
+                The model-specific attribute name, or None if not found
+        """
+        if self.ds_index >= len(self.source_names):
+            self.logger.debug(
+                f"ds_index {self.ds_index} out of bounds for source_names {self.source_names}"
+            )
             return None
 
+        source = self.source_names[self.ds_index]
+        if attr_name in self.meta_attrs and source in self.meta_attrs[attr_name]:
+            return self.meta_attrs[attr_name][source]
+        else:
+            self.logger.debug(
+                f"No meta_attrs mapping for attribute '{attr_name}' and source '{source}'"
+            )
+            return None
 
-    """Expose Config object attributes"""
-    @property
-    def app_data(self):
-        return self.config.app_data
+    def register_plot_type(self, field_name, plot_type):
+        """Register the plot type for a field."""
+        if not hasattr(self, "_plot_type_registry"):
+            self._plot_type_registry = {}
+        self._plot_type_registry[field_name] = plot_type
 
-    @property
-    def spec_data(self):
-        return self.config.spec_data
+    def get_plot_type(self, field_name, default="xy"):
+        """Get the plot type for a field."""
+        if (
+            hasattr(self, "_plot_type_registry")
+            and field_name in self._plot_type_registry
+        ):
+            return self._plot_type_registry[field_name]
+        return default
+
+    def get_file_index_by_filename(self, filename: str) -> int:
+        """Return the file_index associated with a filename from map_params.
+
+        Parameters
+        ----------
+            filename
+                The filename to search for
+
+        Returns
+        -------
+            The file_index if found, or -1 if the filename is not found
+        """
+        for params in self.config.map_params.values():
+            if params["filename"] == filename:
+                return params["file_index"]
+        return -1
+
+    # Properties that delegate to config objects
+    # These are defined explicitly to provide better documentation and type hints
 
     @property
     def map_params(self):
+        """Access to map parameters."""
         return self.config.map_params
 
     @property
-    def source_names(self):
-        return self.config.source_names
+    def overlay(self):
+        """Flag indicating if overlay mode is active."""
+        return self.input_config.overlay
 
     @property
     def compare(self):
-        return self.input_config._compare
+        """Flag indicating if comparison mode is active."""
+        return self.input_config.compare
 
     @property
     def compare_diff(self):
-        return self.input_config._compare_diff
+        """Flag indicating if difference comparison mode is active."""
+        return self.input_config.compare_diff
 
     @property
     def extra_diff_plot(self):
-        return self.input_config._extra_diff_plot
+        """Flag indicating if extra difference plots should be generated."""
+        return self.input_config.extra_diff_plot
+
+    @property
+    def shared_cbar(self):
+        """Use a shared colorbar in comparison plots."""
+        return self.input_config.shared_cbar
+
+    @property
+    def add_legend(self):
+        """Add legend to the box plots"""
+        return self.input_config.add_legend
+
+    @property
+    def box_colors(self):
+        """List of colors used in box plots"""
+        return self.input_config.box_colors
+
+    @property
+    def output_backend(self):
+        """The backend to use for plotting."""
+        return self.output_config.backend
 
     @property
     def cmap(self):
-        return self.input_config._cmap
+        """The colormap to use for plotting."""
+        return self.input_config.cmap
 
     @property
     def use_cartopy(self):
-        return self.input_config._use_cartopy
+        """Flag indicating if cartopy should be used for plotting."""
+        return self.input_config.use_cartopy
 
     @property
     def have_specs_yaml_file(self):
+        """Flag indicating if a specs YAML file exists."""
         return self.config._specs_yaml_exists
 
     @property
-    def ds_index(self):
-        # Access ds_index from the config object
-        return self.config._ds_index
-
-    @ds_index.setter
-    def ds_index(self, value):
-        # Set ds_index on the config object
-        self.config._ds_index = value
-
-    @property
-    def findex(self):
-        # Access findex from the config object
-        return self.config._findex
-
-    @findex.setter
-    def findex(self, value):
-        # Set findex on the config object
-        self.config._findex = value
-
-
-    @property
     def meta_coords(self):
+        """Access to metadata for coordinate systems."""
         return self.config.meta_coords
 
     @property
     def meta_attrs(self):
+        """Access to metadata for attributes."""
         return self.config.meta_attrs
 
     @property
     def species_db(self):
+        """Access to the database of chemical species information."""
         return self.config.species_db
 
     @property
     def trop_height_file_list(self):
+        """Access to the list of tropopause height files."""
         return self.input_config._trop_height_file_list
 
     @property
     def sphum_conv_file_list(self):
+        """Access to the list of specific humidity conversion files."""
         return self.input_config._sphum_conv_file_list
 
     @property
     def use_trop_height(self):
-        return self.input_config._use_trop_height
+        """Flag indicating if tropopause height should be used."""
+        return self.input_config.use_trop_height
 
     @use_trop_height.setter
     def use_trop_height(self, value):
-        self.input_config._use_trop_height = value
+        """Set the use_trop_height flag."""
+        self.input_config.use_trop_height = value
 
     @property
     def use_sphum_conv(self):
-        return self.input_config._use_sphum_conv
+        """Flag indicating if specific humidity conversion should be used."""
+        return self.input_config.use_sphum_conv
+
+    @property
+    def filename_id(self):
+        """Access to the filename identifier."""
+        return self.output_config.filename_id
+
+    @property
+    def filename(self):
+        """Access to the custom filename."""
+        return self.output_config.filename
 
     @property
     def add_logo(self):
-        # This attribute seems to be missing in the provided code, defaulting to False
-        return getattr(self.config, '_add_logo', False)
+        """Flag indicating if a logo should be added to plots."""
+        return self.output_config.add_logo
 
     @property
     def print_to_file(self):
-        return self.input_config._print_to_file
+        """Flag indicating if output should be printed to a file."""
+        return self.output_config.print_to_file
 
     @property
     def output_dir(self):
-        return self.input_config._output_dir
+        """The directory to write output files to."""
+        return self.output_config.output_dir
 
     @property
     def print_format(self):
-        return self.input_config._print_format
+        """The format to use for printing output."""
+        return self.output_config.print_format
 
     @property
     def make_gif(self):
-        return self.input_config._make_gif
+        """Flag indicating if GIFs should be generated."""
+        return self.output_config.make_gif
 
     @property
     def gif_fps(self):
-        return self.input_config._gif_fps
+        """The frames per second to use for GIFs."""
+        return self.output_config.gif_fps
 
     @property
     def make_pdf(self):
-        return self.input_config._make_pdf
+        """Flag indicating if PDFs should be generated."""
+        return self.output_config.make_pdf
 
     @property
     def mpl_style(self):
-        return self.input_config._mpl_style
+        """The matplotlib style to use for plotting."""
+        return self.output_config.mpl_style
 
     @property
     def print_basic_stats(self):
-        return self.input_config._print_basic_stats
+        """Flag indicating if basic statistics should be printed."""
+        return self.output_config.print_basic_stats
+
+    @property
+    def fig_style(self):
+        """Variable indicating what figure style to use for plotting."""
+        return self.output_config.fig_style
+
+    @property
+    def output_dpi(self):
+        """Variable indicating what DPI value to use for plotting."""
+        return self.output_config.dpi
 
     @property
     def use_mp_pool(self):
-        return self.input_config._use_mp_pool
+        """Flag indicating if multiprocessing should be used."""
+        return self.system_config.use_mp_pool
 
     @property
     def archive_web_results(self):
-        return self.input_config._archive_web_results
+        """Flag indicating if web results should be archived."""
+        return self.system_config.archive_web_results
 
     @property
     def to_plot(self):
+        """The fields to plot."""
         return self.input_config._to_plot
 
     @property
-    def compare_exp_ids(self):
-        return self.input_config._compare_exp_ids
+    def correlation(self):
+        """Flag indicating if correlation plots are to be created."""
+        return self.input_config.correlation
 
-    # Added properties for pindex, axindex, ax_opts, level, time_level, real_time
-    # These seem to be state variables used during plotting, better managed elsewhere
-    # but keeping them for now to match the original code's usage pattern.
+    @property
+    def correlation_method(self):
+        """The correlation method to use."""
+        return self.input_config._method
+
+    @property
+    def time_corr(self):
+        """Flag indicating if time correlation is to be created."""
+        return self.input_config.time_corr
+
+    @property
+    def space_corr(self):
+        """Flag indicating if space correlation is to be created."""
+        return self.input_config.space_corr
+
+    @property
+    def overlay_exp_ids(self):
+        """The experiment IDs to overlay."""
+        return self.input_config.overlay_exp_ids
+
+    @property
+    def compare_exp_ids(self):
+        """The experiment IDs to compare."""
+        return self.input_config.compare_exp_ids
+
+    # State variables used during plotting
     @property
     def pindex(self):
-        return getattr(self.config, '_pindex', 0)
+        """The current plot index."""
+        return getattr(self.config, "_pindex", 0)
 
     @pindex.setter
     def pindex(self, value):
+        """Set the current plot index."""
         self.config._pindex = value
 
     @property
     def axindex(self):
-        return getattr(self.config, '_axindex', 0)
+        """The current axis index."""
+        return getattr(self.config, "_axindex", 0)
 
     @axindex.setter
     def axindex(self, value):
+        """Set the current axis index."""
         self.config._axindex = value
 
     @property
     def ax_opts(self):
-        return getattr(self.config, '_ax_opts', {})
+        """The current axis options."""
+        return getattr(self.config, "_ax_opts", {})
 
     @ax_opts.setter
     def ax_opts(self, value):
+        """Set the current axis options."""
         self.config._ax_opts = value
 
     @property
     def level(self):
-        return getattr(self.config, '_level', None)
+        """The current vertical level."""
+        return getattr(self.config, "_level", None)
 
     @level.setter
     def level(self, value):
+        """Set the current vertical level."""
         self.config._level = value
 
     @property
     def time_level(self):
-        return getattr(self.config, '_time_level', 0)
+        """The current time level."""
+        return getattr(self.config, "_time_level", 0)
 
     @time_level.setter
     def time_level(self, value):
+        """Set the current time level."""
         self.config._time_level = value
 
     @property
     def real_time(self):
-        return getattr(self.config, '_real_time', None)
+        """The human-readable representation of the current time."""
+        return getattr(self.config, "_real_time", None)
 
     @real_time.setter
     def real_time(self, value):
+        """Set the human-readable representation of the current time."""
         self.config._real_time = value
+
+    def set_domain_info(self, dataset, filename: str = None):
+        """
+        Extract and store generic domain information from an xarray.Dataset.
+
+        This method analyzes the dataset to determine domain characteristics such as:
+        - Whether the data is regional vs global
+        - Coordinate information (lon/lat ranges, central points)
+        - Grid type and spacing
+        - Domain extent
+
+        Parameters
+        ----------
+            dataset
+                xarray.Dataset to analyze
+            filename
+                Optional filename for caching domain info per file
+        """
+        if dataset is None:
+            self.logger.warning("Cannot extract domain info from None dataset")
+            return
+
+        self.logger.debug(f"set_domain_info called with dataset type: {type(dataset)}")
+
+        # Use filename as key if provided, otherwise use a generic key
+        key = filename if filename else "default"
+
+        try:
+            domain_info = self._extract_domain_characteristics(dataset)
+            self._domain_info[key] = domain_info
+
+            self.logger.debug(f"Extracted domain info for {key}: {domain_info}")
+
+        except Exception as e:
+            self.logger.error(f"Error extracting domain info: {e}")
+            # Set safe defaults
+            self._domain_info[key] = {
+                "is_regional": False,
+                "extent": None,
+                "central_lon": 0.0,
+                "central_lat": 0.0,
+                "grid_type": "regular",
+                "has_2d_coords": False,
+            }
+
+    def _extract_domain_characteristics(self, dataset):
+        """
+        Extract domain characteristics from an xarray Dataset.
+
+        Returns
+        -------
+            dict
+                Dictionary containing domain characteristics
+        """
+        domain_info = {
+            "is_regional": False,
+            "extent": None,
+            "central_lon": 0.0,
+            "central_lat": 0.0,
+            "grid_type": "regular",
+            "has_2d_coords": False,
+            "lon_coords": None,
+            "lat_coords": None,
+        }
+
+        # Find longitude and latitude coordinates
+        lon_coords, lat_coords = self._find_coordinate_variables(dataset)
+
+        self.logger.debug(f"Dataset coords: {list(dataset.coords.keys())}")
+        # self.logger.debug(f"Dataset data_vars: {list(dataset.data_vars.keys()) if hasattr(dataset, 'data_vars') else 'N/A'}")
+        self.logger.debug(f"Found lon_coords: {lon_coords}, lat_coords: {lat_coords}")
+
+        if lon_coords is None or lat_coords is None:
+            self.logger.warning(
+                "Could not find longitude/latitude coordinates in dataset"
+            )
+            return domain_info
+
+        domain_info["lon_coords"] = lon_coords
+        domain_info["lat_coords"] = lat_coords
+
+        # Get coordinate data
+        lon_data = dataset[lon_coords].values
+        lat_data = dataset[lat_coords].values
+
+        # Check if coordinates are 2D (common in regional/curvilinear grids)
+        has_2d_coords = len(lon_data.shape) == 2 and len(lat_data.shape) == 2
+        domain_info["has_2d_coords"] = has_2d_coords
+
+        if has_2d_coords:
+            # For 2D coordinates, flatten to get extents
+            lon_min, lon_max = np.nanmin(lon_data), np.nanmax(lon_data)
+            lat_min, lat_max = np.nanmin(lat_data), np.nanmax(lat_data)
+            domain_info["grid_type"] = "curvilinear"
+        else:
+            # For 1D coordinates
+            lon_min, lon_max = np.nanmin(lon_data), np.nanmax(lon_data)
+            lat_min, lat_max = np.nanmin(lat_data), np.nanmax(lat_data)
+
+            # Check if grid spacing is regular
+            if len(lon_data) > 2 and len(lat_data) > 2:
+                lon_diffs = np.diff(lon_data)
+                lat_diffs = np.diff(lat_data)
+
+                # If spacing is not regular, mark as irregular
+                if not (
+                    np.allclose(lon_diffs, lon_diffs[0], rtol=1e-3)
+                    and np.allclose(lat_diffs, lat_diffs[0], rtol=1e-3)
+                ):
+                    domain_info["grid_type"] = "irregular"
+
+        # Determine if regional based on coverage
+        lon_range = lon_max - lon_min
+        lat_range = lat_max - lat_min
+
+        # Heuristics for regional vs global:
+        # - Global data typically spans close to 360° in longitude and ~180° in latitude
+        # - Regional data has more limited coverage
+        is_regional = (lon_range < 300) or (lat_range < 150)
+
+        # Additional checks for regional data
+        if not is_regional:
+            # Check if data covers poles (typical of global data)
+            covers_poles = lat_min < -80 and lat_max > 80
+            # Check if data wraps around longitude (typical of global data)
+            wraps_longitude = lon_range > 350
+
+            is_regional = not (covers_poles or wraps_longitude)
+
+        domain_info["is_regional"] = is_regional
+
+        # Calculate extent and central points
+        domain_info["extent"] = [lon_min, lon_max, lat_min, lat_max]
+        domain_info["central_lon"] = (lon_min + lon_max) / 2.0
+        domain_info["central_lat"] = (lat_min + lat_max) / 2.0
+
+        return domain_info
+
+    def _find_coordinate_variables(self, dataset):
+        """
+        Find longitude and latitude coordinate variables in the dataset.
+
+        Returns
+        -------
+            tuple
+                (lon_coord_name, lat_coord_name) or (None, None) if not found
+        """
+        lon_names = ["lon", "longitude", "x", "XLONG", "LONGITUDE"]
+        lat_names = ["lat", "latitude", "y", "XLAT", "LATITUDE"]
+
+        lon_coord = None
+        lat_coord = None
+
+        # Check coordinates first - use exact matching to avoid false positives
+        for coord_name in dataset.coords:
+            coord_lower = coord_name.lower()
+            if any(coord_lower == ln.lower() for ln in lon_names):
+                lon_coord = coord_name
+            elif any(coord_lower == ln.lower() for ln in lat_names):
+                lat_coord = coord_name
+
+        # If not found in coordinates, check data variables (important for WRF)
+        if lon_coord is None or lat_coord is None:
+            for var_name in dataset.data_vars:
+                var_lower = var_name.lower()
+                if lon_coord is None and any(
+                    ln.lower() == var_lower for ln in lon_names
+                ):
+                    lon_coord = var_name
+                elif lat_coord is None and any(
+                    ln.lower() == var_lower for ln in lat_names
+                ):
+                    lat_coord = var_name
+
+        # Additional check for exact WRF coordinate names if still not found
+        if lon_coord is None and "XLONG" in dataset.data_vars:
+            lon_coord = "XLONG"
+        if lat_coord is None and "XLAT" in dataset.data_vars:
+            lat_coord = "XLAT"
+
+        return lon_coord, lat_coord
+
+    def get_domain_info(self, filename: str = None) -> Dict[str, Any]:
+        """
+        Get domain information for a dataset.
+
+        Parameters
+        ----------
+            filename
+                Optional filename to get specific domain info
+
+        Returns
+        -------
+            dict
+                Domain information dictionary
+        """
+        key = filename if filename else "default"
+
+        if key in self._domain_info:
+            return self._domain_info[key]
+
+        # Return safe defaults if no domain info is available
+        return {
+            "is_regional": False,
+            "extent": None,
+            "central_lon": 0.0,
+            "central_lat": 0.0,
+            "grid_type": "regular",
+            "has_2d_coords": False,
+            "lon_coords": None,
+            "lat_coords": None,
+        }
+
+    @property
+    def is_regional(self) -> bool:
+        """
+        Get whether the current dataset is regional.
+
+        Returns
+        -------
+            bool
+                True if the dataset is regional, False if global
+        """
+        domain_info = self.get_domain_info()
+        return domain_info.get("is_regional", False)
+
+    @property
+    def domain_extent(self) -> Optional[List[float]]:
+        """
+        Get the domain extent [lon_min, lon_max, lat_min, lat_max].
+
+        Returns
+        -------
+            list or None
+                Domain extent or None if not available
+        """
+        domain_info = self.get_domain_info()
+        return domain_info.get("extent")
+
+    @property
+    def central_longitude(self) -> float:
+        """
+        Get the central longitude of the domain.
+
+        Returns
+        -------
+            float
+                Central longitude
+        """
+        domain_info = self.get_domain_info()
+        return domain_info.get("central_lon", 0.0)
+
+    @property
+    def central_latitude(self) -> float:
+        """
+        Get the central latitude of the domain.
+
+        Returns
+        -------
+            float
+                Central latitude
+        """
+        domain_info = self.get_domain_info()
+        return domain_info.get("central_lat", 0.0)
+
+    @property
+    def has_2d_coordinates(self) -> bool:
+        """
+        Get whether the dataset has 2D coordinate arrays.
+
+        Returns
+        -------
+            bool
+                True if coordinates are 2D (curvilinear), False if 1D
+        """
+        domain_info = self.get_domain_info()
+        return domain_info.get("has_2d_coords", False)
+
+    @property
+    def grid_type(self) -> str:
+        """
+        Get the grid type ('regular', 'irregular', or 'curvilinear').
+
+        Returns
+        -------
+            str
+                Grid type
+        """
+        domain_info = self.get_domain_info()
+        return domain_info.get("grid_type", "regular")
+
+    @property
+    def longitude_coordinate_name(self) -> Optional[str]:
+        """
+        Get the name of the longitude coordinate variable.
+
+        Returns
+        -------
+            str or None
+                Longitude coordinate name
+        """
+        domain_info = self.get_domain_info()
+        return domain_info.get("lon_coords")
+
+    @property
+    def latitude_coordinate_name(self) -> Optional[str]:
+        """
+        Get the name of the latitude coordinate variable.
+
+        Returns
+        -------
+            str or None
+                Latitude coordinate name
+        """
+        domain_info = self.get_domain_info()
+        return domain_info.get("lat_coords")

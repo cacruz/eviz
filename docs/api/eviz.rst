@@ -1,6 +1,11 @@
 eviz package
 ============
 
+.. automodule:: eviz
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Subpackages
 -----------
 
@@ -9,12 +14,3 @@ Subpackages
 
    eviz.lib
    eviz.models
-
-Module contents
----------------
-
-.. automodule:: eviz
-   :members:
-   :show-inheritance:
-   :undoc-members:
-   :noindex:

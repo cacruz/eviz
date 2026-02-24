@@ -1,0 +1,33 @@
+inputs:
+   - name         : wrfout_d01_2015-07-11_12:00:00
+     location     : ${HOME}/data/eviz/wrf
+     exp_name: nu-wrf-noahmp
+     exp_id: nu-wrf-noahmp
+     to_plot:
+       ALBEDO: xy
+       EMISS: xy
+       HFX: xy
+       LH: xy
+       QFX: xy
+       GRDFLX: xy
+       SWDOWN: xy
+       TSK: xy
+       T2: xy
+       Q2: xy
+       TSLB: xy
+       SMOIS: xy
+       PSFC: xy
+       U: xy,yz
+       T: xy,yz
+#       V: xy,yz
+       PB: xy
+       RI_SEPA: xt
+       
+outputs:
+    output_dir: ${HOME}/scratch/eviz/output/wrf
+    print_to_file: yes
+
+system_opts:
+    use_mp_pool: no
+    archive_web_results: no
+

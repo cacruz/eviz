@@ -1,0 +1,15 @@
+air:
+  xyplot:
+    line_contours: 'no'
+    levels:
+      0: []
+slp:
+  xyplot:
+    line_contours: 'no'
+    levels:
+      0: []
+uwnd:
+  xyplot:
+    line_contours: 'no'
+    levels:
+      0: []

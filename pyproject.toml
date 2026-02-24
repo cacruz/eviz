@@ -28,38 +28,33 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3 :: Only",
 ]
+dependencies = [
+    "xesmf>=0.7.1",
+    "matplotlib>=3.8.2",
+    "cartopy==0.22.0",
+    "cftime>=1.6.3",
+    "dask==2024.2.1",
+    "h5py==3.7.0",
+    "netCDF4==1.6.3",
+    "numpy==1.24.4",
+    "pandas==1.5.3",
+    "pyhdf==0.11.3",
+    "pyproj==3.6.1",
+    "pyyaml>=6.0.1",
+    "pyviz_comms==3.0.1",
+    "scipy==1.13.0",
+    "scikit-learn==1.5.2",
+    "xarray==0.21.1",
+    "pydap==3.4.0",
+    "streamlit>=1.37.0",
+    "email-validator>=2.2.0",
+    "python-dotenv>=1.0.1"
+]
 
 [project.urls]
-"Repository" = "https://github.com/cacruz/eviz"
-"Documentation" = "https://cacruz.github.io/eviz/"
-
-# We want:
-# https://github.com/astg/eviz
-# https://astg.github.io/visualization/eviz/
-
-dependencies = [
-    'xesmf>=0.7.1',
-    'matplotlib >=3.8.2',
-    'cartopy==0.22.0',
-    'cftime>=1.6.3',
-    'dask==2024.2.1',
-    'h5py==3.7.0',
-    'netcdf4==1.6.3',
-    'numpy==1.24.4',
-    'geckodriver',
-    'pandas==1.5.3',
-    'pyhdf==0.11.3',
-    'pyproj==3.6.1',
-    'pyyaml>=6.0.1',
-    'pyviz_comms==3.0.1',
-    'scipy==1.13.0',
-    'sklearn==1.5.2',
-    'xarray==0.21.1',
-    'pydap==3.4.0',
-    'streamlit>=1.37.0',
-    'email-validator>=2.2.0',
-    'python-dotenv>=1.0.1',
-]
+Repository = "https://github.com/cacruz/eviz"
+Documentation = "https://cacruz.github.io/eviz/"
+Issues = "https://github.com/cacruz/eviz/issues"
 
 [project.optional-dependencies]
 dev = [

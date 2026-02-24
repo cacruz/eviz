@@ -1,45 +1,20 @@
 eviz.lib.data.sources package
 =============================
 
+.. automodule:: eviz.lib.data.sources
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Submodules
 ----------
 
-eviz.lib.data.sources.base module
----------------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: eviz.lib.data.sources.base
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-eviz.lib.data.sources.csv module
---------------------------------
-
-.. automodule:: eviz.lib.data.sources.csv
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-eviz.lib.data.sources.grib module
----------------------------------
-
-.. automodule:: eviz.lib.data.sources.grib
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-eviz.lib.data.sources.hdf5 module
----------------------------------
-
-.. automodule:: eviz.lib.data.sources.hdf5
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-eviz.lib.data.sources.netcdf module
------------------------------------
-
-.. automodule:: eviz.lib.data.sources.netcdf
-   :members:
-   :show-inheritance:
-   :undoc-members:
+   eviz.lib.data.sources.base
+   eviz.lib.data.sources.csv
+   eviz.lib.data.sources.grib
+   eviz.lib.data.sources.hdf5
+   eviz.lib.data.sources.netcdf
+   eviz.lib.data.sources.zarr

@@ -1,0 +1,22 @@
+inputs:
+   - name         : wrfout_2Dfields
+     location     : ${HOME}/data/eviz/gridded
+     to_plot:
+       TSK: xy
+       ALBEDO: xy
+       TSLB: xy
+       SMOIS: xy
+       HFX: xy
+       LH: xy
+       EMISS: xy
+       QFX: xy
+       GRDFLX: xy
+       SWDOWN: xy
+       T2: xy
+       Q2: xy
+
+outputs:
+    output_dir: ${HOME}/scratch/eviz/output/gridded_wrf
+    print_to_file: yes
+
+

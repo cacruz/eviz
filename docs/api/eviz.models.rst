@@ -1,6 +1,11 @@
 eviz.models package
 ===================
 
+.. automodule:: eviz.models
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Subpackages
 -----------
 
@@ -13,35 +18,11 @@ Subpackages
 Submodules
 ----------
 
-eviz.models.base module
------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: eviz.models.base
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-eviz.models.root module
------------------------
-
-.. automodule:: eviz.models.root
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-eviz.models.root\_factory module
---------------------------------
-
-.. automodule:: eviz.models.root_factory
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: eviz.models
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   eviz.models.base
+   eviz.models.gridded_source
+   eviz.models.obs_source
+   eviz.models.source_base
+   eviz.models.source_factory

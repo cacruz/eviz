@@ -1,16 +1,17 @@
 import logging
-from dataclasses import dataclass, field
-from typing import List, Optional, Tuple
-import numpy as np
-from scipy.interpolate import interp1d
-import xarray as xr
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Optional
 
-from typing import TYPE_CHECKING
+import numpy as np
+import xarray as xr
+from scipy.interpolate import interp1d
+
 if TYPE_CHECKING:
     from eviz.lib.config.config_manager import ConfigManager
-from eviz.lib.data.utils import get_dst_attribute
-from eviz.lib import const as constants
+
+from eviz.lib import constants as constants
 from eviz.lib.data.sources import DataSource
+from eviz.lib.data.utils import get_dst_attribute
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class DataProcessor:
     """Data processing stage of the pipeline.
-    
+
     This class handles all data processing operations including:
     - Basic data validation and standardization
     - Coordinate standardization
@@ -27,8 +28,8 @@ class DataProcessor:
     - Overlays (tropopause height, specific humidity)
     - Data interpolation and regridding
     """
-    config_manager: Optional['ConfigManager'] = None
-    data2d_list: List = field(default_factory=list, init=False)
+
+    config_manager: Optional["ConfigManager"] = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -36,209 +37,108 @@ class DataProcessor:
 
     def __post_init__(self):
         """Post-initialization setup."""
-        self.logger.info("Start init")
-    
+        self.logger.debug("Start init")
+        self.tropp = None
+        self.tropp_conversion = None
+        self.trop_ok = False
+
     def process_data_source(self, data_source: DataSource) -> DataSource:
         """Process a data source.
-        
-        Args:
-            data_source: The data source to process
-            
-        Returns:
+
+        Parameters
+        ----------
+            data_source
+                The data source to process
+
+        Returns
+        -------
             The processed data source
         """
-        self.logger.debug("Processing data source")
-        
         if not data_source.validate_data():
             self.logger.error("Data validation failed")
             return data_source
 
-        # Basic processing
-        data_source.dataset = self._process_dataset(data_source.dataset)
-        
-        # Apply advanced processing if config_manager is available
-        if self.config_manager:
-            data_source = self._apply_advanced_processing(data_source)
-        
-        return data_source
-    
-    def _process_dataset(self, dataset: xr.Dataset) -> xr.Dataset:
-        """Process an Xarray dataset.
-        
-        Args:
-            dataset: The dataset to process
-            
-        Returns:
-            The processed dataset
-        """
-        if dataset is None:
-            return None
-        
-        dataset = self._standardize_coordinates(dataset)
-        dataset = self._handle_missing_values(dataset)
-        dataset = self._apply_unit_conversions(dataset)
-        
-        return dataset
-    
-    def _standardize_coordinates(self, dataset: xr.Dataset) -> xr.Dataset:
-        """Standardize coordinate names and values.
-        
-        Args:
-            dataset: The dataset to process
-            
-        Returns:
-            The processed dataset
-        """
-        coord_mappings = {
-            'latitude': 'lat',
-            'longitude': 'lon',
-            'level': 'lev',
-            'height': 'lev',
-            'depth': 'lev',
-            'pressure': 'lev',
-            'time_bnds': 'time_bounds',
-            'lat_bnds': 'lat_bounds',
-            'lon_bnds': 'lon_bounds',
-        }
-        
-        rename_dict = {}
-        for old_name, new_name in coord_mappings.items():
-            if old_name in dataset.coords and new_name not in dataset.coords:
-                rename_dict[old_name] = new_name
-        
-        if rename_dict:
-            dataset = dataset.rename(rename_dict)
-            self.logger.debug(f"Renamed coordinates: {rename_dict}")
-        
-        # Ensure latitude is in the range [-90, 90]
-        if 'lat' in dataset.coords:
-            lat_values = dataset.coords['lat'].values
-            if np.any(lat_values > 90) or np.any(lat_values < -90):
-                self.logger.warning("Latitude values outside the range [-90, 90]")
-                lat_values = np.clip(lat_values, -90, 90)
-                dataset = dataset.assign_coords(lat=lat_values)
-                self.logger.debug("Normalized latitude values to the range [-90, 90]")
-        
-        # Ensure longitude is in the range [-180, 180] or [0, 360]
-        if 'lon' in dataset.coords:
-            lon_values = dataset.coords['lon'].values
-            if np.any(lon_values > 360) or np.any(lon_values < -180):
-                self.logger.warning("Longitude values outside the range [-180, 180] or [0, 360]")
-                lon_values = ((lon_values + 180) % 360) - 180
-                dataset = dataset.assign_coords(lon=lon_values)
-                self.logger.debug("Normalized longitude values to the range [-180, 180]")
-        
-        return dataset
-    
-    def _handle_missing_values(self, dataset: xr.Dataset) -> xr.Dataset:
-        """Handle missing values in the dataset.
-        
-        Args:
-            dataset: The dataset to process
-            
-        Returns:
-            The processed dataset
-        """
-        # Replace NaN values with the _FillValue attribute if available
-        for var_name, var in dataset.data_vars.items():
-            if '_FillValue' in var.attrs:
-                fill_value = var.attrs['_FillValue']
-                if np.isnan(fill_value):
-                    continue  # Skip if the fill value is already NaN
-                
-                # Replace NaN values with the fill value
-                var_data = var.values
-                var_data[np.isnan(var_data)] = fill_value
-                dataset[var_name] = xr.DataArray(var_data, dims=var.dims, coords=var.coords, attrs=var.attrs)
-                self.logger.debug(f"Replaced NaN values with fill value {fill_value} for variable {var_name}")
-        
-        return dataset
-    
-    def _apply_unit_conversions(self, dataset: xr.Dataset) -> xr.Dataset:
-        """Apply unit conversions to the dataset.
-        
-        Args:
-            dataset: The dataset to process
-            
-        Returns:
-            The processed dataset
-        """
-        # Apply common unit conversions
-        for var_name, var in dataset.data_vars.items():
-            if 'units' not in var.attrs:
-                continue
-            
-            units = var.attrs['units'].lower()
-            
-            # Convert temperature from Kelvin to Celsius if needed
-            if units == 'k' and var_name.lower() in ['temp', 'temperature', 'air_temperature']:
-                var_data = var.values - 273.15
-                dataset[var_name] = xr.DataArray(var_data, dims=var.dims, coords=var.coords, attrs=var.attrs)
-                dataset[var_name].attrs['units'] = 'C'
-                self.logger.debug(f"Converted temperature from Kelvin to Celsius for variable {var_name}")
-            
-            # Convert pressure from hPa to Pa if needed
-            elif units == 'hpa' and var_name.lower() in ['pressure', 'air_pressure', 'surface_pressure']:
-                var_data = var.values * 100
-                dataset[var_name] = xr.DataArray(var_data, dims=var.dims, coords=var.coords, attrs=var.attrs)
-                dataset[var_name].attrs['units'] = 'Pa'
-                self.logger.debug(f"Converted pressure from hPa to Pa for variable {var_name}")
-        
-        return dataset
+        # Process the dataset with the model_name from the data source
+        data_source.dataset = self._process_dataset(
+            data_source.dataset, data_source.model_name
+        )
 
-    def _apply_advanced_processing(self, data_source: DataSource) -> DataSource:
-        """Apply advanced processing operations if config_manager is available.
-        
-        Args:
-            data_source: The data source to process
-            
-        Returns:
+        # Extract metadata after processing
+        # self._extract_metadata(data_source.dataset, data_source)
+
+        # TODO: remove this
+        if self.config_manager:
+            data_source = self._apply_geos_processing(data_source)
+
+        return data_source
+
+    def _apply_geos_processing(self, data_source: DataSource) -> DataSource:
+        """Apply GEOS processing operations if requested.
+
+        Parameters
+        ----------
+            data_source
+                The data source to process
+
+        Returns
+        -------
             The processed data source
         """
         if not self.config_manager:
             return data_source
 
         # Apply tropopause height processing if configured
-        if hasattr(self.config_manager, 'use_trop_height') and self.config_manager.use_trop_height:
+        if (
+            hasattr(self.config_manager, "use_trop_height")
+            and self.config_manager.use_trop_height
+        ):
             data_source = self._apply_tropopause_height(data_source)
 
         # Apply specific humidity conversion if configured
-        if hasattr(self.config_manager, 'use_sphum_conv') and self.config_manager.use_sphum_conv:
+        if (
+            hasattr(self.config_manager, "use_sphum_conv")
+            and self.config_manager.use_sphum_conv
+        ):
             data_source = self._apply_sphum_conversion(data_source)
 
         return data_source
 
-    def _apply_tropopause_height(self, data_source: DataSource) -> DataSource:
+    def _apply_tropopause_height(self, data_source: DataSource):
         """Apply tropopause height processing.
-        
-        Args:
-            data_source: The data source to process
-            
-        Returns:
+
+        Parameters
+        ----------
+            data_source
+                The data source to process
+
+        Returns
+        -------
             The processed data source
         """
-        if not hasattr(self.config_manager, 'trop_height_file_list'):
+        self.logger.info("Applying tropopause height overlay")
+        data_source = None
+        if not hasattr(self.config_manager, "trop_height_file_list"):
             return data_source
 
-        findex = getattr(self.config_manager, 'findex', 0)
+        findex = getattr(self.config_manager, "findex", 0)
         if findex not in self.config_manager.trop_height_file_list:
             return data_source
 
         try:
             # Get tropopause configuration
             trop_config = self.config_manager.trop_height_file_list[findex]
-            exp_id = trop_config['exp_id']
-            field_exp_id = self.config_manager.file_list[findex]['exp_id']
-            
+            exp_id = trop_config["exp_id"]
+            field_exp_id = self.config_manager.file_list[findex]["exp_id"]
+
             if exp_id != field_exp_id:
                 return data_source
 
             # Process tropopause data
-            trop_filename = trop_config['filename']
+            trop_filename = trop_config["filename"]
             self.logger.debug(f"Processing {trop_filename}...")
 
             with xr.open_dataset(trop_filename) as f:
-                trop_field = trop_config['trop_field_name']
+                trop_field = trop_config["trop_field_name"]
                 tropp = f.data_vars.get(trop_field)
                 if tropp is None:
                     return data_source
@@ -247,15 +147,13 @@ class DataProcessor:
                 tropp = tropp.isel(time=0)
 
                 # Handle units conversion
-                units = get_dst_attribute(tropp, 'units')
+                units = get_dst_attribute(tropp, "units")
                 conversion_factor = 1.0
-                if units == 'Pa':
+                if units == "Pa":
                     conversion_factor = 1 / 100.0
-                elif units == 'hPa':
+                elif units == "hPa":
                     conversion_factor = 1.0
-
-                # Add processed tropopause data to dataset
-                data_source.dataset['tropopause'] = tropp * conversion_factor
+                data_source = tropp * conversion_factor
 
         except Exception as e:
             self.logger.error(f"Error processing tropopause height: {e}")
@@ -264,36 +162,39 @@ class DataProcessor:
 
     def _apply_sphum_conversion(self, data_source: DataSource) -> DataSource:
         """Apply specific humidity conversion.
-        
-        Args:
-            data_source: The data source to process
-            
-        Returns:
+
+        Parameters
+        ----------
+            data_source
+                The data source to process
+
+        Returns
+        -------
             The processed data source
         """
-        radionuclides = ['Be10', 'Be10s', 'Be7', 'Be7s', 'Pb210', 'Rn222']
+        radionuclides = ["Be10", "Be10s", "Be7", "Be7s", "Pb210", "Rn222"]
         to_convert = set(self.config_manager.to_plot).intersection(set(radionuclides))
-        
+
         if not to_convert:
             return data_source
 
-        ds_index = getattr(self.config_manager, 'ds_index', 0)
-        ds_meta = getattr(self.config_manager, 'data_source', {})
+        ds_index = getattr(self.config_manager, "ds_index", 0)
+        ds_meta = getattr(self.config_manager, "data_source", {})
 
-        if not ds_meta.get('sphum_conv_meta'):
+        if not ds_meta.get("sphum_conv_meta"):
             return data_source
 
         try:
             # Get specific humidity data
-            sphum_meta = ds_meta['sphum_conv_meta'][ds_index]
-            if sphum_meta['exp_name'] != ds_meta['exp_name']:
+            sphum_meta = ds_meta["sphum_conv_meta"][ds_index]
+            if sphum_meta["exp_name"] != ds_meta["exp_name"]:
                 return data_source
 
-            sphum_filename = sphum_meta['filename']
+            sphum_filename = sphum_meta["filename"]
             self.logger.debug(f"Processing {sphum_filename}...")
 
             with xr.open_dataset(sphum_filename) as f:
-                sphum_field = sphum_meta['sphum_field_name']
+                sphum_field = sphum_meta["sphum_field_name"]
                 specific_hum = f.data_vars.get(sphum_field)
                 if specific_hum is None:
                     specific_hum = 0.0  # assume dry air conditions
@@ -302,149 +203,875 @@ class DataProcessor:
 
             # Convert each radionuclide
             for species_name in to_convert:
-                self._convert_radionuclide_units(data_source, species_name, specific_hum, 'mol mol-1')
-
+                self._convert_radionuclide_units(
+                    data_source, species_name, specific_hum, "mol mol-1"
+                )
         except Exception as e:
             self.logger.error(f"Error processing specific humidity: {e}")
-            
+
         return data_source
 
-    def _convert_radionuclide_units(self, data_source: DataSource, species_name: str, 
-                                  specific_hum: xr.DataArray, target_units: str) -> None:
+    def _convert_radionuclide_units(
+        self,
+        data_source: DataSource,
+        species_name: str,
+        specific_hum: xr.DataArray,
+        target_units: str,
+    ) -> None:
         """Convert radionuclide units using specific humidity.
-        
-        Args:
-            data_source: The data source containing the species data
-            species_name: Name of the species to convert
-            specific_hum: Specific humidity data
-            target_units: Target units for conversion
+
+        Parameters
+        ----------
+            data_source
+                The data source containing the species data
+            species_name
+                Name of the species to convert
+            specific_hum
+                Specific humidity data
+            target_units
+                Target units for conversion
         """
         try:
             ds_index = self.config_manager.data_source.get_ds_index()
-            
+
             # Skip if already in target units
             if self.config_manager.data_source.data_unit_is_mol_per_mol(
-                self.config_manager.data_source.datasets[ds_index]['vars'][species_name]):
+                self.config_manager.data_source.datasets[ds_index]["vars"][species_name]
+            ):
                 return
 
             self.logger.debug(f"Converting {species_name} units to {target_units}")
 
             # Get molecular weight
             if species_name not in self.config_manager.species_db:
-                self.logger.error(f"Species {species_name} not found in species database")
+                self.logger.error(
+                    f"Species {species_name} not found in species database"
+                )
                 return
-                
+
             mw_g = self.config_manager.species_db[species_name].get("MW_g")
             if not mw_g:
-                self.logger.error(f"Molecular weight not found for species {species_name}")
+                self.logger.error(
+                    f"Molecular weight not found for species {species_name}"
+                )
                 return
 
             # Perform conversion
-            mw_air = constants.MW_AIR_g  # g/mole
-            rn_arr = self.config_manager.datasets[ds_index]['vars'][species_name]
-            
+            mw_air = constants.MW_AIR_G  # g/mole
+            rn_arr = self.config_manager.datasets[ds_index]["vars"][species_name]
+
             # Convert using specific humidity
-            data = (rn_arr / (1. - specific_hum)) * (mw_air / mw_g)
+            data = (rn_arr / (1.0 - specific_hum)) * (mw_air / mw_g)
 
             # Create new DataArray with converted data
             rn_new = xr.DataArray(
-                data, name=rn_arr.name, coords=rn_arr.coords, 
-                dims=rn_arr.dims, attrs=rn_arr.attrs
+                data,
+                name=rn_arr.name,
+                coords=rn_arr.coords,
+                dims=rn_arr.dims,
+                attrs=rn_arr.attrs,
             )
             rn_new.attrs["units"] = target_units
 
             # Update the dataset
-            self.config_manager.data_source.datasets[ds_index]['ptr'][rn_arr.name] = rn_new
+            self.config_manager.data_source.datasets[ds_index]["ptr"][
+                rn_arr.name
+            ] = rn_new
 
         except Exception as e:
             self.logger.error(f"Error converting {species_name}: {e}")
 
-    def regrid(self, data1: xr.DataArray, data2: xr.DataArray, 
-               dim1_name: str, dim2_name: str) -> Tuple[xr.DataArray, xr.DataArray]:
-        """Regrid two data arrays to a common grid.
-        
-        Args:
-            data1: First data array
-            data2: Second data array
-            dim1_name: Name of first dimension
-            dim2_name: Name of second dimension
-            
-        Returns:
-            Tuple of regridded data arrays
+    def _process_dataset(
+        self, dataset: xr.Dataset, model_name: str = None
+    ) -> Optional[xr.Dataset]:
+        """Process a Xarray dataset.
+
+        Parameters
+        ----------
+            dataset
+                The dataset to process
+
+        Returns
+        -------
+            The processed dataset
         """
-        # Determine target grid (use the coarser grid)
-        if data1.size < data2.size:
-            target = data1
-            to_regrid = data2
+        if dataset is None:
+            return None
+
+        # Skip all processing for WRF and LIS models to avoid coordinate issues
+        if model_name in ["wrf", "lis"]:
+            self.logger.debug(f"Skipping all dataset processing for model {model_name}")
+            return dataset
+
+        # Apply GISS-specific post-processing which includes coordinate standardization
+        if model_name == "giss":
+            dataset = self._apply_giss_post_processing(dataset)
+            # Skip regular coordinate standardization since GISS post-processing handles it
         else:
-            target = data2
-            to_regrid = data1
+            dataset = self._standardize_coordinates(dataset, model_name)
+        dataset = self._normalize_longitude(dataset)
+        dataset = self._handle_missing_values(dataset)
+        dataset = self._apply_unit_conversions(dataset)
 
-        # Regrid along first dimension
-        regridded = self._regrid(to_regrid, target, dim1_name, dim2_name, regrid_dims=(1, 0))
-        
-        # Regrid along second dimension
-        regridded = self._regrid(regridded, target, dim1_name, dim2_name, regrid_dims=(0, 1))
+        return dataset
 
-        return (target, regridded) if data1.size < data2.size else (regridded, target)
+    def _normalize_longitude(self, data, target="-180_180", lon_name=None):
+        """Normalize longitude coordinates in an xarray Dataset or DataArray.
 
-    def _regrid(self, ref_arr: xr.DataArray, target: xr.DataArray, 
-                dim1_name: str, dim2_name: str, regrid_dims: Tuple[int, int]) -> xr.DataArray:
-        """Regrid a data array to match a target grid along specified dimensions.
-        
-        Args:
-            ref_arr: Array to regrid
-            target: Target grid
-            dim1_name: Name of first dimension
-            dim2_name: Name of second dimension
-            regrid_dims: Tuple indicating which dimensions to regrid
-            
-        Returns:
-            Regridded data array
+        Parameters
+        ----------
+            data : xr.Dataset or xr.DataArray
+                Input data
+            target : str
+                Either '-180_180' or '0_360'. Defaults to '-180_180'
+            lon_name : str, optional
+                Name of longitude dimension. If None, auto-detect
+
+        Returns
+        -------
+            xr.Dataset or xr.DataArray
+                Data with normalized longitudes
         """
-        new_arr = ref_arr
+        # Auto-detect longitude coordinate if not specified
+        if lon_name is None:
+            lon_name = self._find_longitude_coordinate(data)
+            if lon_name is None:
+                self.logger.debug("No longitude coordinate found for normalization")
+                return data
 
-        if regrid_dims[0]:
-            new_arr = xr.apply_ufunc(
-                self._interp, new_arr,
-                input_core_dims=[[dim2_name]],
-                output_core_dims=[[dim2_name]],
-                exclude_dims={dim2_name},
-                kwargs={'x_src': ref_arr[dim2_name],
-                       'x_dest': target.coords[dim2_name].values,
-                       'fill_value': "extrapolate"},
-                dask='allowed', 
-                vectorize=True
+        # Check if it's in coordinates or data variables (WRF has XLONG/XLAT as data vars)
+        if lon_name not in data.coords and lon_name not in data.data_vars:
+            raise ValueError(f"Longitude coordinate '{lon_name}' not found.")
+
+        # Skip normalization for multi-dimensional coordinate arrays (like WRF)
+        if lon_name in data.data_vars:
+            lon_data = data[lon_name]
+            if len(lon_data.dims) > 1:
+                self.logger.debug(
+                    f"Skipping longitude normalization for multi-dimensional coordinate {lon_name}"
+                )
+                return data
+
+        lon = data[lon_name]
+        lon_vals = lon.values
+
+        # Determine current convention
+        is_0360 = np.all((lon_vals >= 0) & (lon_vals <= 360))
+        is_m180_180 = np.any(lon_vals < 0)
+
+        # No change needed
+        if (target == "0_360" and is_0360) or (target == "-180_180" and is_m180_180):
+            return data
+
+        # Apply normalization
+        if target == "-180_180":
+            lon_new = ((lon_vals + 180) % 360) - 180
+        elif target == "0_360":
+            lon_new = lon_vals % 360
+        else:
+            raise ValueError("target must be '-180_180' or '0_360'")
+
+        # Assign and sort longitudes
+        data = data.assign_coords({lon_name: lon_new})
+        data = data.sortby(lon_name)
+
+        return data
+
+    def _find_longitude_coordinate(self, data):
+        """
+        Find longitude coordinate variable in the dataset.
+
+        Parameters
+        ----------
+            data
+                xr.Dataset or xr.DataArray
+
+        Returns
+        -------
+            str or None
+                Name of longitude coordinate, or None if not found
+        """
+        # List of common longitude names (same as in ConfigManager)
+        lon_names = ["lon", "longitude", "x", "XLONG", "LONGITUDE", "Longitude"]
+
+        # Check coordinates first
+        for coord_name in data.coords:
+            coord_lower = coord_name.lower()
+            if any(ln.lower() in coord_lower for ln in lon_names):
+                return coord_name
+
+        # If not found in coordinates, check data variables
+        if hasattr(data, "data_vars"):
+            for var_name in data.data_vars:
+                var_lower = var_name.lower()
+                if any(ln.lower() in var_lower for ln in lon_names):
+                    return var_name
+
+        return None
+
+    def _is_wrf_like_dataset(self, dataset: xr.Dataset) -> bool:
+        """
+        Detect if a dataset is WRF-like (has WRF-style coordinates).
+
+        Parameters
+        ----------
+            dataset
+                xarray Dataset to check
+
+        Returns
+        -------
+            bool
+                True if dataset appears to be WRF-like
+        """
+        # Check for WRF-specific indicators
+        wrf_indicators = [
+            # WRF-specific dimensions
+            "south_north" in dataset.dims,
+            "west_east" in dataset.dims,
+            # WRF-specific coordinate variables
+            "XLONG" in dataset.data_vars or "XLONG" in dataset.coords,
+            "XLAT" in dataset.data_vars or "XLAT" in dataset.coords,
+            # WRF-specific global attributes
+            hasattr(dataset, "attrs")
+            and any(attr.startswith("WRF") for attr in dataset.attrs.keys()),
+            hasattr(dataset, "attrs")
+            and "TITLE" in dataset.attrs
+            and "WRF" in str(dataset.attrs.get("TITLE", "")),
+        ]
+
+        # If at least 2 indicators are present, assume it's WRF-like
+        return sum(wrf_indicators) >= 2
+
+    def _extract_metadata(self, dataset: xr.Dataset, data_source: DataSource) -> None:
+        """Extract metadata from the dataset and store it in the data source.
+
+        Parameters
+        ----------
+            dataset
+                The dataset to extract metadata from
+            data_source
+                The data source to store metadata in
+        """
+        if dataset is None:
+            return
+
+        # Extract global attributes
+        data_source.metadata["global_attrs"] = dict(dataset.attrs)
+
+        # Extract dimension information
+        data_source.metadata["dimensions"] = {
+            dim: dataset.dims[dim] for dim in dataset.dims
+        }
+
+        # Extract variable information
+        data_source.metadata["variables"] = {}
+        for var_name, var in dataset.data_vars.items():
+            data_source.metadata["variables"][var_name] = {
+                "dims": var.dims,
+                "attrs": dict(var.attrs),
+                "dtype": str(var.dtype),
+                "shape": var.shape,
+            }
+
+            # Add some basic statistics for numerical variables
+            try:
+                if hasattr(var, "dtype") and np.issubdtype(var.dtype, np.number):
+                    data_source.metadata["variables"][var_name]["stats"] = {
+                        "min": float(var.min().values),
+                        "max": float(var.max().values),
+                        "mean": float(var.mean().values),
+                        "std": float(var.std().values),
+                    }
+            except Exception as e:
+                self.logger.debug(f"Could not compute statistics for {var_name}: {e}")
+
+    def _standardize_coordinates(
+        self, dataset: xr.Dataset, model_name: str = None
+    ) -> xr.Dataset:
+        """
+        Standardize dimension names in the dataset.
+
+        This method renames dimensions to standard names (lon, lat, lev, time)
+        regardless of their original names in the source data.
+
+        Parameters
+        ----------
+            dataset
+                xarray Dataset to rename dimensions in
+
+        Returns
+        -------
+            xarray Dataset with standardized dimension names
+        """
+        self.logger.debug(f"Standardizing coordinates for model name {model_name}")
+
+        # Skip renaming for WRF and LIS models
+        if model_name in ["wrf", "lis"]:
+            self.logger.debug(
+                f"Skipping coordinate standardization for model {model_name}"
             )
-            new_arr.coords[dim2_name] = target.coords[dim2_name]
+            return dataset
 
-        elif regrid_dims[1]:
-            new_arr = xr.apply_ufunc(
-                self._interp, new_arr,
-                input_core_dims=[[dim1_name]],
-                output_core_dims=[[dim1_name]],
-                exclude_dims={dim1_name},
-                kwargs={'x_src': ref_arr[dim1_name],
-                       'x_dest': target.coords[dim1_name].values,
-                       'fill_value': "extrapolate"},
-                dask='allowed', 
-                vectorize=True
+        # Auto-detect WRF-like files and skip standardization
+        if self._is_wrf_like_dataset(dataset):
+            self.logger.debug(
+                "Detected WRF-like dataset, skipping coordinate standardization"
             )
-            new_arr.coords[dim1_name] = target.coords[dim1_name]
+            return dataset
 
-        return new_arr
+        available_dims = list(dataset.dims)
+
+        xc = self._get_model_dim_name("xc", available_dims, model_name)
+        yc = self._get_model_dim_name("yc", available_dims, model_name)
+        zc = self._get_model_dim_name("zc", available_dims, model_name)
+        tc = self._get_model_dim_name("tc", available_dims, model_name)
+
+        rename_dict = {}
+
+        # Add mappings only for dimensions that exist and need renaming
+        if xc and xc != "lon" and xc in available_dims:
+            rename_dict[xc] = "lon"
+
+        if yc and yc != "lat" and yc in available_dims:
+            rename_dict[yc] = "lat"
+
+        if zc and zc != "lev" and zc in available_dims:
+            rename_dict[zc] = "lev"
+
+        if tc and tc != "time" and tc in available_dims:
+            rename_dict[tc] = "time"
+
+        if rename_dict:
+            self.logger.debug(f"Renaming dimensions: {rename_dict}")
+            try:
+                dataset = dataset.rename(rename_dict)
+            except Exception as e:
+                self.logger.error(f"Error renaming dimensions: {e}")
+
+        return dataset
+
+    def _get_model_dim_name(
+        self,
+        gridded_dim_name,
+        available_dims=None,
+        model_name=None,
+        config_manager=None,
+    ):
+        """
+        Get the model-specific dimension name for a gridded dimension.
+
+        Parameters
+        ----------
+            gridded_dim_name : str
+                GriddedSource dimension name (e.g., 'xc', 'yc', 'zc', 'tc')
+            available_dims : list, optional
+                List of available dimensions in the dataset
+            model_name : str, optional
+                Name of the model
+            config_manager : ConfigManager, optional
+                Configuration manager to use
+
+        Returns
+        -------
+            str or None
+                The model-specific dimension name if found, otherwise None
+        """
+        cm = config_manager or self.config_manager
+
+        if not cm:
+            self.logger.warning("No config_manager available to get dimension mappings")
+            return None
+
+        if not hasattr(cm, "meta_coords"):
+            self.logger.warning("No meta_coords available in config_manager")
+            return None
+
+        meta_coords = cm.meta_coords
+
+        if gridded_dim_name not in meta_coords:
+            self.logger.warning(f"No mapping found for dimension '{gridded_dim_name}'")
+            return None
+
+        self.logger.debug(
+            f"Looking for model '{model_name}' in meta_coords['{gridded_dim_name}']"
+        )
+        self.logger.debug(
+            f"Available models for {gridded_dim_name}: {list(meta_coords[gridded_dim_name].keys())}"
+        )
+
+        if not model_name or model_name not in meta_coords[gridded_dim_name]:
+            # Try to use a default model if available
+            if "gridded" in meta_coords[gridded_dim_name]:
+                self.logger.debug(
+                    f"Using 'gridded' mapping for model '{model_name}' and dimension '{gridded_dim_name}'"
+                )
+                model_name = "gridded"
+            else:
+                self.logger.warning(
+                    f"No mapping found for model '{model_name}' and dimension '{gridded_dim_name}'"
+                )
+                return None
+
+        coords = meta_coords[gridded_dim_name][model_name]
+
+        if isinstance(coords, list):
+            for coord in coords:
+                if available_dims and coord in available_dims:
+                    return coord
+            return coords[0] if coords else None
+
+        elif isinstance(coords, dict):
+            if "dim" in coords:
+                if available_dims:
+                    if "," in coords["dim"]:
+                        dim_candidates = coords["dim"].split(",")
+                        for dim in dim_candidates:
+                            if dim in available_dims:
+                                return dim
+                        return None
+                    # Single dimension name
+                    return coords["dim"] if coords["dim"] in available_dims else None
+                return coords["dim"]
+
+            if "coords" in coords:
+                # For coordinate names
+                return coords["coords"]
+            return None
+
+        elif isinstance(coords, str):
+            # If coords is a string, handle comma-separated list of possible dimension names
+            if "," in coords:
+                coord_candidates = coords.split(",")
+                if available_dims:
+                    for coord in coord_candidates:
+                        if coord in available_dims:
+                            return coord
+                    # No matching dimension found
+                    return None
+                return coord_candidates[0]
+            return coords
+
+        self.logger.warning(f"Unexpected type for coords: {type(coords)}")
+        return None
+
+    def _handle_missing_values(self, dataset: xr.Dataset) -> xr.Dataset:
+        """Handle missing values in the dataset.
+
+        Parameters
+        ----------
+            dataset
+                The dataset to process
+
+        Returns
+        -------
+            The processed dataset
+        """
+        # Replace NaN values with the _FillValue attribute if available
+        for var_name, var in dataset.data_vars.items():
+            if "_FillValue" in var.attrs:
+                fill_value = var.attrs["_FillValue"]
+                if np.isnan(fill_value):
+                    continue  # Skip if the fill value is already NaN
+
+                # Replace NaN values with the fill value
+                var_data = var.values
+                var_data[np.isnan(var_data)] = fill_value
+                dataset[var_name] = xr.DataArray(
+                    var_data, dims=var.dims, coords=var.coords, attrs=var.attrs
+                )
+                self.logger.debug(
+                    f"Replaced NaN values with fill value {fill_value} for variable {var_name}"
+                )
+
+        return dataset
+
+    def _apply_unit_conversions(self, dataset: xr.Dataset) -> xr.Dataset:
+        """Apply unit conversions to the dataset.
+
+        Parameters
+        ----------
+            dataset
+                The dataset to process
+
+        Returns
+        -------
+            The processed dataset
+        """
+        # Apply common unit conversions
+        for var_name, var in dataset.data_vars.items():
+            if "units" not in var.attrs:
+                continue
+
+            units = var.attrs["units"].lower()
+
+            # Convert temperature from Kelvin to Celsius if needed
+            if units == "k" and var_name.lower() in [
+                "temp",
+                "temperature",
+                "air_temperature",
+            ]:
+                var_data = var.values - 273.15
+                dataset[var_name] = xr.DataArray(
+                    var_data, dims=var.dims, coords=var.coords, attrs=var.attrs
+                )
+                dataset[var_name].attrs["units"] = "C"
+                self.logger.debug(
+                    f"Converted temperature from Kelvin to Celsius for variable {var_name}"
+                )
+
+            # Convert pressure from hPa to Pa if needed
+            elif units == "hpa" and var_name.lower() in [
+                "pressure",
+                "air_pressure",
+                "surface_pressure",
+            ]:
+                var_data = var.values * 100
+                dataset[var_name] = xr.DataArray(
+                    var_data, dims=var.dims, coords=var.coords, attrs=var.attrs
+                )
+                dataset[var_name].attrs["units"] = "Pa"
+                self.logger.debug(
+                    f"Converted pressure from hPa to Pa for variable {var_name}"
+                )
+
+        return dataset
+
+    def regrid(
+        self,
+        d1: xr.DataArray,
+        d2: xr.DataArray,
+        dims: tuple = None,
+        method: str = "linear",
+        extrapolate: bool = True,
+    ) -> xr.DataArray:
+        """
+        Regrid one of the two input arrays to match the other's grid, based on resolution.
+
+        Parameters
+        ----------
+            d1
+                First data array.
+            d2
+                Second data array.
+            dims
+                Tuple of (dim1, dim2), the coordinate dimension names.
+            method
+                Interpolation method ('linear', 'nearest').
+            extrapolate
+                Whether to allow extrapolation.
+
+        Returns
+        -------
+            Regridded version of d2 that matches d1's grid.
+        """
+        if dims is None:
+            common_dims = set(d1.dims).intersection(set(d2.dims))
+            if len(common_dims) >= 2:
+                dims = list(common_dims)[:2]
+            else:
+                dims = (d1.dims[0], d1.dims[1])
+
+        dim1, dim2 = dims
+
+        self.logger.debug(f"Regridding with dimensions {dim1}, {dim2}")
+        self.logger.debug(f"d1 shape: {d1.shape}, dims: {d1.dims}")
+        self.logger.debug(f"d2 shape: {d2.shape}, dims: {d2.dims}")
+
+        if len(d1.dims) != len(d2.dims):
+
+            if len(d1.dims) < len(d2.dims):
+                self.logger.debug(
+                    f"d1 has fewer dimensions ({len(d1.dims)}) than d2 ({len(d2.dims)})"
+                )
+
+                extra_dims = [dim for dim in d2.dims if dim not in d1.dims]
+
+                for dim in extra_dims:
+                    if dim in d2.dims and d2[dim].size > 0:
+                        d2 = d2.isel({dim: 0})
+
+                d2 = d2.squeeze()
+
+            else:
+                self.logger.debug(
+                    f"d2 has fewer dimensions ({len(d2.dims)}) than d1 ({len(d1.dims)})"
+                )
+
+                extra_dims = [dim for dim in d1.dims if dim not in d2.dims]
+
+                for dim in extra_dims:
+                    if dim in d1.dims and d1[dim].size > 0:
+                        d1 = d1.isel({dim: 0})
+
+                d1 = d1.squeeze()
+
+        # Compute resolution for each dimension to determine which grid to use as target
+        def mean_resolution(da, dim):
+            coords = da.coords[dim].values
+            return np.mean(np.abs(np.diff(coords)))
+
+        try:
+            d1_res = mean_resolution(d1, dim1) * mean_resolution(d1, dim2)
+            d2_res = mean_resolution(d2, dim1) * mean_resolution(d2, dim2)
+
+            # Regrid d2 to match d1's grid (we always want to keep d1's grid)
+            d2_on_d1 = self._regrid(
+                d2, d1, dims=(dim1, dim2), method=method, extrapolate=extrapolate
+            )
+
+            self.logger.debug(
+                f"Regridded d2 shape: {d2_on_d1.shape}, dims: {d2_on_d1.dims}"
+            )
+
+            if d1.shape != d2_on_d1.shape:
+                self.logger.warning(
+                    f"Shape mismatch after regridding: d1 {d1.shape} vs d2_on_d1 {d2_on_d1.shape}"
+                )
+                # Try to align the arrays
+                d1, d2_on_d1 = xr.align(d1, d2_on_d1, join="inner")
+                self.logger.debug(
+                    f"After alignment: d1 {d1.shape}, d2_on_d1 {d2_on_d1.shape}"
+                )
+
+            return d2_on_d1
+
+        except Exception as e:
+            self.logger.error(f"Error during regridding: {e}")
+            return xr.zeros_like(d1)
+
+    def _regrid(
+        self,
+        source: xr.DataArray,
+        target: xr.DataArray,
+        dims: tuple,
+        method: str = "linear",
+        extrapolate: bool = True,
+    ) -> xr.DataArray:
+        """
+        Regrid a data array to match the grid of another.
+
+        Parameters
+        ----------
+            source
+                The data array to regrid.
+            target
+                The target grid (another data array).
+            dims
+                Tuple of (dim1, dim2) representing the coordinate names (e.g., ('lat', 'lon')).
+            method
+                Interpolation method ('linear', 'nearest').
+            extrapolate
+                Whether to extrapolate beyond source bounds.
+
+        Returns
+        -------
+            Regridded DataArray.
+        """
+        dim1, dim2 = dims
+
+        if dim1 not in source.dims or dim2 not in source.dims:
+            self.logger.error(
+                f"Source array missing required dimensions {dim1} or {dim2}"
+            )
+            return xr.zeros_like(target)
+
+        if dim1 not in target.dims or dim2 not in target.dims:
+            self.logger.error(
+                f"Target array missing required dimensions {dim1} or {dim2}"
+            )
+            return xr.zeros_like(target)
+
+        new_coords = {
+            dim1: target.coords[dim1].values,
+            dim2: target.coords[dim2].values,
+        }
+
+        for coord_name, coord_values in source.coords.items():
+            if coord_name not in [dim1, dim2] and coord_name not in new_coords:
+                new_coords[coord_name] = coord_values
+
+        try:
+            temp = source.interp({dim2: target.coords[dim2]}, method=method)
+            result = temp.interp({dim1: target.coords[dim1]}, method=method)
+            result = result.transpose(*target.dims)
+            return result
+
+        except Exception as e:
+            self.logger.error(f"Error during interpolation: {e}")
+            return xr.zeros_like(target)
 
     @staticmethod
-    def _interp(y_src: np.ndarray, x_src: np.ndarray, x_dest: np.ndarray, **kwargs) -> np.ndarray:
-        """Interpolate data to new coordinates.
-        
-        Args:
-            y_src: Source data values
-            x_src: Source coordinates
-            x_dest: Target coordinates
-            **kwargs: Additional arguments for interp1d
-            
-        Returns:
-            Interpolated data
+    def _interp_1d(
+        y_src: np.ndarray,
+        x_src: np.ndarray,
+        x_dest: np.ndarray,
+        method: str = "linear",
+        extrapolate: bool = True,
+    ) -> np.ndarray:
+        fill = "extrapolate" if extrapolate else None
+        return interp1d(
+            x_src, y_src, kind=method, fill_value=fill, bounds_error=not extrapolate
+        )(x_dest)
+
+    def compute_difference(
+        self, d1: xr.DataArray, d2: xr.DataArray, method: str = "difference"
+    ) -> xr.DataArray:
         """
-        return interp1d(x_src, y_src, **kwargs)(x_dest)
+        Compute the difference between two data arrays.
+
+        Parameters
+        ----------
+            d1
+                First data array
+            d2
+                Second data array
+            method
+                Method to compute difference ('difference', 'percd', 'percc', 'ratio')
+
+        Returns
+        -------
+            DataArray containing the computed difference
+        """
+        if d1.shape != d2.shape:
+            self.logger.warning(
+                f"Shape mismatch in compute_difference: d1 {d1.shape} vs d2 {d2.shape}"
+            )
+
+            try:
+                d1, d2 = xr.align(d1, d2, join="inner")
+                self.logger.debug(f"After alignment: d1 {d1.shape}, d2 {d2.shape}")
+            except Exception as e:
+                self.logger.error(f"Error aligning arrays: {e}")
+                return xr.zeros_like(d1)
+
+        try:
+            if method == "percd":
+                # Percent difference
+                return abs(d1 - d2) / ((d1 + d2) / 2.0) * 100
+            elif method == "percc":
+                # Percent change
+                return ((d1 - d2) / d2) * 100
+            elif method == "ratio":
+                # Ratio
+                return d1 / d2
+            else:
+                # Simple difference
+                return d1 - d2
+        except Exception as e:
+            self.logger.error(f"Error computing difference: {e}")
+            return xr.zeros_like(d1)
+
+    def _apply_giss_post_processing(self, dataset: xr.Dataset) -> xr.Dataset:
+        """Apply GISS ModelE-specific post-processing to add coordinate arrays.
+
+        GISS ModelE files have a unique structure with dimensions (im, jm, lm, ntimemax)
+        but no coordinate arrays. This method creates synthetic coordinate arrays and renames
+        dimensions to standard names in one step.
+
+        Parameters
+        ----------
+            dataset
+                Raw GISS dataset
+
+        Returns
+        -------
+            Dataset with synthetic coordinate arrays added and dimensions renamed
+        """
+        self.logger.info(
+            "Applying GISS ModelE post-processing to add coordinate arrays"
+        )
+
+        # Create synthetic coordinate arrays and rename dimensions simultaneously
+        coords_to_add = {}
+        rename_dict = {}
+
+        # Longitude coordinate (im -> lon)
+        if "im" in dataset.dims:
+            im_size = dataset.dims["im"]
+            # Standard global longitude grid: 0 to 360-dx
+            lon_values = np.linspace(0, 360 - 360 / im_size, im_size)
+            coords_to_add["lon"] = ("im", lon_values)
+            rename_dict["im"] = "lon"
+            self.logger.debug(
+                f"Created longitude coordinate: {im_size} points, range {lon_values.min():.1f} to {lon_values.max():.1f}"
+            )
+
+        # Latitude coordinate (jm -> lat)
+        if "jm" in dataset.dims:
+            jm_size = dataset.dims["jm"]
+            # Standard global latitude grid: -90 to 90
+            lat_values = np.linspace(-90 + 90 / jm_size, 90 - 90 / jm_size, jm_size)
+            coords_to_add["lat"] = ("jm", lat_values)
+            rename_dict["jm"] = "lat"
+            self.logger.debug(
+                f"Created latitude coordinate: {jm_size} points, range {lat_values.min():.1f} to {lat_values.max():.1f}"
+            )
+
+        # Vertical coordinate (lm -> lev)
+        if "lm" in dataset.dims:
+            lm_size = dataset.dims["lm"]
+            # Use level indices as pressure levels (could be improved with actual values)
+            lev_values = np.arange(1, lm_size + 1)
+            coords_to_add["lev"] = ("lm", lev_values)
+            rename_dict["lm"] = "lev"
+            self.logger.debug(f"Created level coordinate: {lm_size} levels")
+
+        # Time coordinate - create a simple singleton time coordinate for GISS data
+        # Most GISS variables represent single time slices, not time series
+        if "ntimemax" in dataset.dims:
+            # Just rename the dimension, don't worry about the coordinate array for now
+            rename_dict["ntimemax"] = "time"
+            self.logger.debug("Will rename ntimemax dimension to time")
+
+        # Add the coordinate arrays first
+        if coords_to_add:
+            dataset = dataset.assign_coords(coords_to_add)
+            self.logger.info(
+                f"Added {len(coords_to_add)} coordinate arrays: {list(coords_to_add.keys())}"
+            )
+
+        # Then rename dimensions
+        if rename_dict:
+            dataset = dataset.rename(rename_dict)
+            self.logger.info(f"Renamed dimensions: {rename_dict}")
+
+        return dataset
+
+    def _add_singleton_time_dimension(self, dataset: xr.Dataset) -> xr.Dataset:
+        """Add singleton time dimension to variables that should have it but don't.
+
+        For GISS data, some variables like 't' are 3D (lev, lat, lon) but represent
+        a single time slice. For plotting purposes, we need to add a time dimension.
+
+        Parameters
+        ----------
+            dataset
+                Dataset to process
+
+        Returns
+        -------
+            Dataset with time dimensions added where appropriate
+        """
+        variables_to_process = []
+
+        for var_name, var in dataset.data_vars.items():
+            # Check if variable has spatial dimensions but no time dimension
+            has_spatial = any(dim in var.dims for dim in ["lev", "lat", "lon"])
+            has_time = "time" in var.dims
+
+            if has_spatial and not has_time:
+                # This is likely a 3D spatial variable that represents a time slice
+                variables_to_process.append(var_name)
+
+        if variables_to_process:
+            self.logger.debug(
+                f"Adding singleton time dimension to variables: {variables_to_process}"
+            )
+            for var_name in variables_to_process:
+                # Add a singleton time dimension
+                dataset[var_name] = dataset[var_name].expand_dims({"time": 1})
+                self.logger.debug(
+                    f"Added singleton time dimension to variable {var_name}"
+                )
+
+        return dataset

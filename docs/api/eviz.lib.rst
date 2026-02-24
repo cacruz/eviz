@@ -1,39 +1,27 @@
 eviz.lib package
 ================
 
+.. automodule:: eviz.lib
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
 
-   eviz.lib.data
    eviz.lib.autoviz
    eviz.lib.config
+   eviz.lib.data
+   eviz.lib.models
 
 Submodules
 ----------
 
-eviz.lib.const module
----------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: eviz.lib.const
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-eviz.lib.utils module
----------------------
-
-.. automodule:: eviz.lib.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: eviz.lib
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   eviz.lib.constants
+   eviz.lib.utils

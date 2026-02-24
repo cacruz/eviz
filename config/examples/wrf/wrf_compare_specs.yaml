@@ -1,0 +1,205 @@
+# WRF field-specific configuration
+# --------------------------------
+# Fields will always be plotted in a 2D Cartesian plane (i.e. an "XY graph")
+# even though they may be 3D or 4D fields. However, plots may be generated
+# using abscissa and ordinate values other than X and Y given that it is often
+# desirable to plot using  other dimensions. For example and "YZ plot" is one
+# where the abscissas and ordinates correspond to the y-values and the z-values
+# of the data dimensions respectively. Thus, the following "XY graphs" are possible:
+#   XYplot : the basic lat-lon plot, at a given time level
+#   YZplot : generally a zonal mean, at a given time level
+#   pTplot : a time series plot
+#            where p = X, Y, or Z, at a given p' value and p' is some
+#            orthogonal dimension
+
+
+
+U:
+    #time: 4
+    yzplot:
+        contours:
+
+    xyplot:
+        levels:
+            1000:
+          #[-5, 0, 1, 2, 4, 6, 8, 10, 12, 15, 20, 25, 40, 50]
+            #500: [200, 225, 250, 275, 280, 285, 290, 295, 300]
+V:
+    #time: 4
+    yzplot:
+        contours:
+
+    xyplot:
+        levels:
+            1000:
+          #[-5, 0, 1, 2, 4, 6, 8, 10, 12, 15, 20, 25, 40, 50]
+            #500: [200, 225, 250, 275, 280, 285, 290, 295, 300]
+
+T:
+    yzplot:
+#        profile_dim: yc
+        zrange: [1000, 0.1]
+#        zscale: log
+        contours:
+    xyplot:
+        levels:
+            1000:
+            #500: [200, 225, 250, 275, 280, 285, 290, 295, 300]
+    xtplot:
+        times: all
+        grid: yes
+
+PB:
+    #time: 4
+    yzplot:
+        contours:
+
+    xyplot:
+        levels:
+            1000:
+            #500: [200, 225, 250, 275, 280, 285, 290, 295, 300]
+
+SMOIS:
+    xyplot:
+        cmap: RdBu
+        time_lev: 8
+        levels:
+            0: [0., 0.045, 0.09, 0.13, 0.18, 0.22, 0.27, 0.32, 0.36, 0.41, 0.46, 0.5]
+TSLB:
+    xyplot:
+        cmap: coolwarm
+        time_lev: 8
+        levels:
+            0:
+ALBEDO:
+    xyplot:
+        time_lev: 4
+        levels:
+            0:
+EMISS:
+    xtplot:
+        times: all
+        grid: yes
+    xyplot:
+        time_lev: 4
+        levels:
+            0:
+TSK:
+    xtplot:
+        times: all
+        grid: yes
+
+    xyplot:
+        time_lev: 4
+#        projection: albers
+        levels:
+            0:
+#        contours: [280, 282, 284, 286, 288, 290, 292, 294, 296, 298, 300, 302, 304]
+        #contours: [270, 275, 280, 285, 290, 295, 300, 305, 310, 315, 320]
+T2:
+    xtplot:
+        times: all
+        grid: yes
+
+    xyplot:
+        cmap: coolwarm
+        time_lev: 8
+        levels:
+            0:
+
+HFX:
+    xyplot:
+        time_lev: 4
+        levels:
+            0:
+QFX:
+    xyplot:
+        time_lev: 4
+        levels:
+            0:
+GRDFLX:
+    xyplot:
+        time_lev: 4
+        levels:
+            0:
+SWDOWN:
+    xyplot:
+        time_lev: 4
+        levels:
+            0:
+RI_SEPA:
+    name: Precipitation rate
+    xyplot:
+        line_contours: false
+        cmap: PuBu
+#        cmap_set_over: white
+#        cmap_set_under: white
+        time_lev: all
+        levels:
+#            0: [0,10,20,30,40,50,60,70,80,90,100]
+            0: [0,1,2,3,4,5,10,20,30,40,50]
+
+RAINC:
+    name: Accumulated Total Cumulus Precipitation
+    xyplot:
+        line_contours: false
+        cmap: PuBu
+        time_lev: all
+        levels:
+            0: [0, 20, 40, 60, 80, 100, 120, 140, 160]
+#[0, 5, 10, 25, 40, 55, 70, 85, 100, 115, 130]
+
+T22:
+    name: Surface Temperature
+    units: C
+    xyplot:
+        line_contours: false
+        cmap: coolwarm
+#        cmap_set_over: white
+#        cmap_set_under: white
+        time_lev: all
+        levels:
+            0: [25, 25.5, 26, 26.5, 27, 27.5, 28, 28.5, 29, 29.5, 30]
+#[270, 280, 290, 292, 294, 296, 298, 300, 303, 306, 309, 312, 315]
+
+Q2:
+    xyplot:
+        time_lev: 4
+        levels:
+            0:
+#    name: Surface Moisture
+#    xyplot:
+#        cbar_sci_notation: True 
+#        line_contours: false
+#        cmap: GnBu
+#        time_lev: all
+#        levels:
+#            0: [0.015, 0.0175, 0.020, 0.021, 0.0215, 0.022, 0.0225, 0.023, 0.0235, 0.024]
+#[0, 0.001, 0.005, 0.01, 0.012, 0.014, 0.016, 0.018, 0.02, 0.03, 0.05]
+
+LH:
+    xyplot:
+        time_lev: 4
+        levels:
+            0:
+#    xyplot:
+#        cmap: Spectral
+#        time_lev: all
+#        levels:
+#            0:
+#        contours: []
+
+PSFC:
+    name: Surface Pressure
+    unitconversion: 1e-2
+    units: mb
+    xyplot:
+        line_contours: false
+        cmap: Spectral
+        cmap_set_over: white
+        cmap_set_under: white
+        time_lev: all
+        levels:
+            0: [900, 910, 920, 930, 940, 950, 960, 970, 975, 980, 985, 990, 995]
+
+

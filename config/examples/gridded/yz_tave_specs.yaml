@@ -1,0 +1,5 @@
+T:
+  yzplot:
+    tave: yes
+    zrange: [1000, 0.1]
+    zscale: log

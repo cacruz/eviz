@@ -1,0 +1,71 @@
+SMOIS:
+    xyplot:
+        cmap: RdBu
+        time_lev: 8
+        levels:
+            0: [0., 0.045, 0.09, 0.13, 0.18, 0.22, 0.27, 0.32, 0.36, 0.41, 0.46, 0.5]
+TSLB:
+    xyplot:
+        cmap: coolwarm
+        time_lev: 8
+        levels:
+            0:
+ALBEDO:
+    xyplot:
+        time_lev: 4
+        levels:
+            0:
+EMISS:
+    xyplot:
+        time_lev: 4
+        levels:
+            0:
+TSK:
+    xyplot:
+        time_lev: 4
+#        projection: albers
+        levels:
+            0:
+#        contours: [280, 282, 284, 286, 288, 290, 292, 294, 296, 298, 300, 302, 304]
+        #contours: [270, 275, 280, 285, 290, 295, 300, 305, 310, 315, 320]
+T2:
+    xyplot:
+        cmap: coolwarm
+        time_lev: 8
+        levels:
+            0:
+
+HFX:
+    xyplot:
+        time_lev: 4
+        levels:
+            0:
+QFX:
+    xyplot:
+        time_lev: 4
+        levels:
+            0:
+GRDFLX:
+    xyplot:
+        time_lev: 4
+        levels:
+            0:
+SWDOWN:
+    xyplot:
+        time_lev: 4
+        levels:
+            0:
+
+Q2:
+    xyplot:
+        time_lev: 4
+        levels:
+            0:
+
+LH:
+    xyplot:
+        time_lev: 4
+        levels:
+            0:
+
+

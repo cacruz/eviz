@@ -2,6 +2,11 @@
 __pycache__/
 *.py[cod]
 
+# Documentation images (uploaded to GitHub releases)
+docs/examples/sample_images/*.png
+docs/examples/sample_images/*.jpg
+docs/examples/sample_images/*.gif
+
 # Distribution / packaging
 .Python
 env/
@@ -32,3 +37,4 @@ public
 Untitled*.ipynb
 *.DS_Store
 demo*
+.coverage

@@ -11,7 +11,28 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+# conf.py
 import sys
+from unittest.mock import MagicMock
+
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+
+# Mock modules that might cause import errors
+MOCK_MODULES = ['xarray', 'numpy', 'pandas']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
+# Add autodoc_type_aliases for modern type annotations
+autodoc_type_aliases = {
+    'xr.Dataset | None': 'Optional[xarray.Dataset]',
+}
+
+# Add autodoc_typehints_format to handle modern type annotations
+autodoc_typehints_format = 'fully-qualified'
 
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('..'))
@@ -37,8 +58,14 @@ extensions = [
     'sphinx.ext.autodoc',  # autodocument
     'sphinx.ext.napoleon',  # google and numpy doc string support
     'sphinx.ext.mathjax',  # latex rendering of equations using MathJax
+    'sphinx.ext.viewcode',  # add links to view code
+    'sphinx.ext.intersphinx',  # link to other projects
+    'sphinx.ext.autosummary',  # generate summary tables
+    'sphinx.ext.doctest',  # test code examples
+    'sphinx.ext.githubpages',  # publish to GitHub pages
+    'myst_parser',
+    'sphinxcontrib.mermaid',
 ]
-# 'sphinx.ext.viewcode',  # add links to view code
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -62,9 +89,47 @@ html_theme = 'sphinx_rtd_theme'
 
 # -- Napoleon autodoc options -------------------------------------------------
 napoleon_numpy_docstring = True
-napoleon_google_docstring = True
 napoleon_use_ivar = True
 napoleon_include_init_with_doc = True
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = True
+napoleon_use_admonition_for_examples = False
+napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_references = False
+napoleon_use_param = True
+napoleon_use_rtype = True
+napoleon_preprocess_types = True
+napoleon_type_aliases = None
+napoleon_attr_annotations = True
+
+# -- Autodoc options ----------------------------------------------------------
+autodoc_default_options = {
+    'members': True,
+    'member-order': 'bysource',
+    'special-members': '__init__',
+    'undoc-members': False,
+    'exclude-members': '__weakref__',
+    'show-inheritance': True,
+}
+
+# Generate autosummary even if no references
+autosummary_generate = False  # Disabled to avoid import issues
+autosummary_imported_members = False
+
+# Document __init__ methods
+autoclass_content = 'both'
+
+# -- Intersphinx mapping ------------------------------------------------------
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/', None),
+    'matplotlib': ('https://matplotlib.org/stable/', None),
+    'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
+    'xarray': ('https://docs.xarray.dev/en/stable/', None),
+    'cartopy': ('https://scitools.org.uk/cartopy/docs/latest/', None),
+    'dask': ('https://docs.dask.org/en/stable/', None),
+}
 
 # -- Other settings -----------------------------------------------------------
 
@@ -74,9 +139,22 @@ html_logo = 'static/ASTG_logo_simple.png'
 html_theme_options = {
     'logo_only': False,
     'prev_next_buttons_location': 'bottom',
-    'style_external_links': False,
-    'style_nav_header_background': '#175762'
+    'style_external_links': True,
+    'style_nav_header_background': '#175762',
+    'collapse_navigation': False,
+    'sticky_navigation': True,
+    'navigation_depth': 4,
+    'includehidden': True,
+    'titles_only': False,
 }
+
+# Add custom CSS
+html_static_path = ['static']
+html_css_files = ['custom.css']
+
+# Show source link
+html_show_sourcelink = True
+html_copy_source = True
 
 # Allows to build the docs with a minimal environment without warnings about missing packages
 autodoc_mock_imports = [
@@ -108,6 +186,4 @@ autodoc_mock_imports = [
     'PIL',
 ]
 
-suppress_warnings = ['autosectionlabel.*']
-# Ignore duplicate object descriptions
-suppress_warnings.append('app.add_directive')
+suppress_warnings = ['autosectionlabel.*', 'app.add_directive']

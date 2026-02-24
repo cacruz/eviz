@@ -1,0 +1,25 @@
+# Example categorical data configuration for penguins dataset
+inputs:
+- name: penguins.csv
+  location: ${HOME}/data/eviz/categorical
+  data_type: categorical
+  specs_file: config/examples/categorical/penguins_specs.yaml
+  to_plot:
+    scatter:
+      x: bill_length_mm
+      y: bill_depth_mm
+      color: species
+    box:
+      y: bill_length_mm
+      by: species
+
+outputs:
+  output_dir: ${HOME}/scratch/eviz/output/categorical
+  make_pdf: false
+  print_format: png
+  print_to_file: yes
+  make_gif: no
+
+system_opts:
+  archive_web_results: false
+  use_mp_pool: false

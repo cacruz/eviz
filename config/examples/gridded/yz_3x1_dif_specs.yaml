@@ -1,0 +1,17 @@
+diff_prop: &DIFF_PROP
+    diff_percd: [ -500., -50., -10., -5., -0.5, 0.5, 5., 10., 50., 500. ]
+    diff_percc: [ -500., -50., -10., -5., -0.5, 0.5, 5., 10., 50., 500. ]
+    diff_ratio: [ .5,.6,.7,.8,.9,1.0,1.1,1.2,1.3,1.4,1.5 ]
+aoa:
+    unitconversion: 1
+    units: days
+    time: 1
+    <<: *DIFF_PROP
+    yzplot:
+#        use_cmap: plasma
+        zrange: [1000, 1]
+        zscale: log  # linear, log (default), custom
+#        add_tropp_height: yes
+#        contours: [0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 150.0, 300.0, 600.0, 900.0, 1000.0, 1100.0, 1200.0, 1300.0, 1400.0, 1500.0, 1600.0]
+        contours: [0, 50, 150, 300, 600, 900, 1000, 1250, 1400, 1500, 1600]
+        diffcontours: [-100.0, -80.0, -60.0, -40.0, -20.0, 0.0, 20.0, 40.0, 60.0, 80.0, 100.0]

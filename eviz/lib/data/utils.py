@@ -1,126 +1,160 @@
-import numpy as np
-import dask
+import glob
 import logging
-import eviz.lib.const as constants
+import os
+from datetime import datetime
+
+import dask
+import numpy as np
+import xarray as xr
+from dateutil.relativedelta import relativedelta
+
+import eviz.lib.constants as constants
 
 dask.config.set({"array.slicing.split_large_chunks": False})
-
 
 logger = logging.getLogger(__name__)
 
 
 def apply_conversion(config, data2d, name):
-    """ Apply a unit conversion based on SPECS file entries
+    """Apply a unit conversion based on SPECS file entries
 
-    Parameters:
+    Parameters
+    ----------
         config (ConfigManager) configuration object
         data2d (DataArray) with original units
         name (str)
 
-    Returns:
+    Returns
+    -------
         data2d (DataArray) with target units
-
     For single-plots, we rely on specs file to determine the units and unit conversion factor
     For comparison plots, we rely on the "target" units specified in the specs file and the unit
     conversion is provided by the Units conversion module.
     """
-    logger.debug(f"apply_conversion input for {name}: shape={data2d.shape}, dims={data2d.dims}")
-    try:
-        logger.debug(f"apply_conversion input stats: min={data2d.min().values}, max={data2d.max().values}")
-    except Exception as e:
-        logger.warning(f"Could not compute min/max for {name}: {e}")
+    d_temp = data2d.copy()
 
     # Check if spec_data exists and contains the field name
-    if not hasattr(config, 'spec_data') or config.spec_data is None:
+    if not hasattr(config, "spec_data") or config.spec_data is None:
         logger.warning(f"No spec_data found in config for {name}")
         return data2d
-    
+
     if name not in config.spec_data:
         logger.warning(f"Field {name} not found in spec_data")
         return data2d
-        
+
     # A user specifies units AND unitconversion factor:
-    if 'units' in config.spec_data[name] and 'unitconversion' in config.spec_data[name]:
-        logger.info(f"Applying unit conversion with factor: {config.spec_data[name]['unitconversion']}")
+    if "units" in config.spec_data[name] and "unitconversion" in config.spec_data[name]:
         if "AOA" in name.upper():
-            data2d = data2d / np.timedelta64(1, 'ns') / 1000000000 / 86400
+            data2d = data2d / np.timedelta64(1, "ns") / 1000000000 / 86400
         else:
-            data2d = data2d * float(config.spec_data[name]['unitconversion'])
+            data2d = data2d * float(config.spec_data[name]["unitconversion"])
     # A user specifies units AND no unitconversion factor, in that case we use units module
-    elif 'units' in config.spec_data[name] and 'unitconversion' not in config.spec_data[name]:
-        logger.debug(f"Using units module for conversion to: {config.spec_data[name]['units']}")
+    elif (
+        "units" in config.spec_data[name]
+        and "unitconversion" not in config.spec_data[name]
+    ):
         # If field name is a chemical species...
-        if hasattr(config, 'species_db') and config.species_db and name in config.species_db.keys():
-            data2d = config.units.convert_chem(data2d, name, config.spec_data[name]['units'])
+        if (
+            hasattr(config, "species_db")
+            and config.species_db
+            and name in config.species_db.keys()
+        ):
+            data2d = config.units.convert_chem(
+                data2d, name, config.spec_data[name]["units"]
+            )
         else:
-            # Check if units attribute exists in config
-            if hasattr(config, 'units') and config.units:
+            if hasattr(config, "units") and config.units:
                 try:
-                    data2d = config.units.convert(data2d, name, config.spec_data[name]['units'])
+                    data2d = config.units.convert(
+                        data2d, name, config.spec_data[name]["units"]
+                    )
                 except Exception as e:
-                    logger.error(f"Error converting units for {name}: {e}")
-                    # If conversion fails, just return the original data
-                    logger.warning(f"Returning original data for {name} without unit conversion")
+                    logger.debug(f"Error converting units for {name}: {e}")
+                    logger.debug(
+                        f"Returning original data for {name} without unit conversion"
+                    )
             else:
                 logger.warning(f"No units module found in config for {name}")
     else:
         # Special hack for AOA metadump specs
         if "AOA" in name.upper():
-            data2d = data2d / np.timedelta64(1, 'ns') / 1000000000 / 86400
+            data2d = data2d / np.timedelta64(1, "ns") / 1000000000 / 86400
         msg = f"No units found for {name}. Will use the given 'dataset' units."
         logger.debug(msg)
-    
-    try:
-        logger.debug(f"apply_conversion output for {name}: shape={data2d.shape}, dims={data2d.dims}")
-        logger.debug(f"apply_conversion output stats: min={data2d.min().values}, max={data2d.max().values}")
-    except Exception as e:
-        logger.warning(f"Could not compute min/max for output {name}: {e}")
-    
+
+    data2d.attrs = d_temp.attrs.copy()
     return data2d
 
 
 def apply_mean(config, d, level=None):
-    """ Compute various averages over coordinates """
+    """Compute various averages over coordinates"""
+    d_temp = d.copy()
     if level:
-        if level == 'all':
-            data2d = d.mean(dim=config.get_model_dim_name('zc'))
+        if level == "all":
+            data2d = d_temp.mean(dim=config.get_model_dim_name("zc"))
         else:
-            if len(d.dims) == 3:
-                data2d = d.mean(dim=config.get_model_dim_name('tc'))
+            if len(d_temp.dims) == 3:
+                data2d = d_temp.mean(dim=config.get_model_dim_name("tc"))
             else:  # 4D array - we need to select a level
-                lev_to_plot = int(np.where(d.coords[config.get_model_dim_name('zc')].values == level)[0])
+                lev_to_plot = int(
+                    np.where(
+                        d_temp.coords[config.get_model_dim_name("zc")].values == level
+                    )[0]
+                )
                 logger.debug("Level to plot:" + str(lev_to_plot))
                 # select level
-                data2d = d.isel(lev=lev_to_plot)
-                data2d = data2d.mean(dim=config.get_model_dim_name('tc'))
+                data2d = d_temp.isel(lev=lev_to_plot)
+                data2d = data2d.mean(dim=config.get_model_dim_name("tc"))
     else:
-        if len(d.dims) == 3:
-            data2d = d.mean(dim=config.get_model_dim_name('tc'))
+        if len(d_temp.dims) == 3:
+            data2d = d_temp.mean(dim=config.get_model_dim_name("tc"))
         else:
-            d = d.mean(dim=config.get_model_dim_name('xc'))
-            data2d = d.mean(dim=config.get_model_dim_name('tc'))
+            d_temp = d_temp.mean(dim=config.get_model_dim_name("xc"))
+            data2d = d_temp.mean(dim=config.get_model_dim_name("tc"))
 
-    data2d.attrs = d.attrs.copy()  # retain units
-    return data2d.squeeze()
-
-
-def apply_zsum(config, data2d):
-    """ Sum over vertical levels (column sum)"""
-    data2d_zsum = data2d.sum(dim='lev')
-    data2d_zsum.attrs = data2d.attrs.copy()
-    return data2d_zsum.squeeze()
+    data2d.attrs = d.attrs.copy()  # retain attributes
+    return apply_conversion(config, data2d, data2d.name)
 
 
-def grid_cell_areas(lon1d, lat1d, radius=constants.R_EARTH_m):
-    """ Calculate grid cell areas given 1D arrays of longitudes and latitudes
+def apply_zsum(config, data3d, name):
+    """Sum over vertical levels (column sum)"""
+    d_temp = data3d.copy()
+    try:
+        is_chem = hasattr(config, "species_db") and name in config.species_db
+        if (
+            is_chem
+            and "units" in config.spec_data[name]
+            and "unitconversion" not in config.spec_data[name]
+        ):
+            data2d_zsum = config.units.convert_chem(
+                d_temp, name, config.spec_data[name]["units"]
+            )
+            data2d_zsum.attrs = data3d.attrs.copy()
+            return data2d_zsum
+        else:
+            data2d_zsum = d_temp.sum(dim="lev")
+    except:
+        logger.error(f"Could not apply zsum for {name}")
+        return None
+    data2d_zsum.attrs = data3d.attrs.copy()
+    return apply_conversion(config, data2d_zsum, data2d_zsum.name)
+
+
+def grid_cell_areas(lon1d, lat1d, radius=constants.R_EARTH_M):
+    """Calculate grid cell areas given 1D arrays of longitudes and latitudes
     for a planet with the given radius.
 
-    Args:
-        lon1d (ndarray): Array of longitude points [degrees] of shape (M,)
-        lat1d (ndarray): Array of latitude points [degrees] of shape (M,)
-        radius (float, optional): Radius of the planet [metres] (currently assumed spherical)
+    Parameters
+    ----------
+        lon1d : ndarray
+            Array of longitude points [degrees] of shape (M,)
+        lat1d : ndarray
+            Array of latitude points [degrees] of shape (M,)
+        radius : float, optional
+            Radius of the planet [metres] (currently assumed spherical)
 
-    Returns:
+    Returns
+    -------
         Array of grid cell areas [metres**2] of shape (M, N).
     """
     lon_bounds_radian = np.deg2rad(_guess_bounds(lon1d))
@@ -144,25 +178,30 @@ def _quadrant_area(radian_lat_bounds, radian_lon_bounds, radius_of_earth):
     The calculations are done at 64 bit precision and the returned array
     will be of type numpy.float64.
 
-    Args:
-        radian_lat_bounds:  Array of latitude bounds (radians) of shape (M, 2)
-        radian_lon_bounds:  Array of longitude bounds (radians) of shape (N, 2)
-        radius_of_earth: Radius of the Earth (currently assumed spherical)
+    Parameters
+    ----------
+        radian_lat_bounds
+            Array of latitude bounds (radians) of shape (M, 2)
+        radian_lon_bounds
+            Array of longitude bounds (radians) of shape (N, 2)
+        radius_of_earth
+            Radius of the Earth (currently assumed spherical)
 
-    Returns:
+    Returns
+    -------
         Array of grid cell areas of shape (M, N).
     """
     # ensure pairs of bounds
     if (
-            radian_lat_bounds.shape[-1] != 2
-            or radian_lon_bounds.shape[-1] != 2
-            or radian_lat_bounds.ndim != 2
-            or radian_lon_bounds.ndim != 2
+        radian_lat_bounds.shape[-1] != 2
+        or radian_lon_bounds.shape[-1] != 2
+        or radian_lat_bounds.ndim != 2
+        or radian_lon_bounds.ndim != 2
     ):
         raise ValueError("Bounds must be [n,2] array")
 
     # fill in a new array of areas
-    radius_sqr = radius_of_earth ** 2
+    radius_sqr = radius_of_earth**2
     radian_lat_64 = radian_lat_bounds.astype(np.float64)
     radian_lon_64 = radian_lon_bounds.astype(np.float64)
 
@@ -175,15 +214,19 @@ def _quadrant_area(radian_lat_bounds, radian_lon_bounds, radius_of_earth):
 
 
 def _guess_bounds(points, bound_position=0.5):
-    """ Guess bounds of grid cells.
+    """Guess bounds of grid cells.
 
     Simplified function from iris.coord.Coord.
 
-    Args:
-        points (ndarray): Array of grid points of shape (N,).
-        bound_position (float): Bounds offset relative to the grid cell centre.
+    Parameters
+    ----------
+        points : ndarray
+            Array of grid points of shape (N,).
+        bound_position : float
+            Bounds offset relative to the grid cell centre.
 
-    Returns:
+    Returns
+    -------
         Array of shape (N, 2).
     """
     diffs = np.diff(points)
@@ -196,16 +239,24 @@ def _guess_bounds(points, bound_position=0.5):
     return np.array([min_bounds, max_bounds]).transpose()
 
 
-def calc_spatial_mean(xr_da, lon_name="longitude", lat_name="latitude", radius=constants.R_EARTH_m):
-    """ Calculate spatial mean of xarray.DataArray with grid cell weighting.
+def calc_spatial_mean(
+    xr_da, lon_name="longitude", lat_name="latitude", radius=constants.R_EARTH_M
+):
+    """Calculate spatial mean of xarray.DataArray with grid cell weighting.
 
-    Args:
-        xr_da (xarray.DataArray): Data to average
-        lon_name (str, optional): Name of x-coordinate
-        lat_name (str, optional): Name of y-coordinate
-        radius (float):  Radius of the planet (in meters)
+    Parameters
+    ----------
+        xr_da : xarray.DataArray
+            Data to average
+        lon_name : str, optional
+            Name of x-coordinate
+        lat_name : str, optional
+            Name of y-coordinate
+        radius : float
+            Radius of the planet (in meters)
 
-    Returns:
+    Returns
+    -------
         Spatially averaged xarray.DataArray.
     """
     lon = xr_da[lon_name].values
@@ -217,16 +268,24 @@ def calc_spatial_mean(xr_da, lon_name="longitude", lat_name="latitude", radius=c
     return (xr_da * aw_factor).mean(dim=[lon_name, lat_name])
 
 
-def calc_spatial_integral(xr_da, lon_name="longitude", lat_name="latitude", radius=constants.R_EARTH_m):
-    """ Calculate spatial integral of xarray.DataArray with grid cell weighting.
+def calc_spatial_integral(
+    xr_da, lon_name="longitude", lat_name="latitude", radius=constants.R_EARTH_M
+):
+    """Calculate spatial integral of xarray.DataArray with grid cell weighting.
 
-    Args:
-        xr_da: xarray.DataArray Data to average
-        lon_name: str, optional Name of x-coordinate
-        lat_name: str, optional Name of y-coordinate
-        radius: float Radius of the planet [metres], currently assumed spherical (not important anyway)
+    Parameters
+    ----------
+        xr_da
+            xarray.DataArray Data to average
+        lon_name
+            str, optional Name of x-coordinate
+        lat_name
+            str, optional Name of y-coordinate
+        radius
+            float Radius of the planet [metres]
 
-    Returns:
+    Returns
+    -------
         Spatially averaged xarray.DataArray.
     """
     lon = xr_da[lon_name].values
@@ -238,8 +297,7 @@ def calc_spatial_integral(xr_da, lon_name="longitude", lat_name="latitude", radi
 
 
 def get_file_ptr(data_dir, file_pat=None):
-    """ Use xarray.open_mfdataset to read multiple files
-    """
+    """Use xarray.open_mfdataset to read multiple files"""
     if file_pat:
         pattern = os.path.join(data_dir, file_pat)
         print("Opening ", pattern)
@@ -251,27 +309,26 @@ def get_file_ptr(data_dir, file_pat=None):
             return None
 
 
-import xarray as xr
-import os
-import glob
-
-
 def read_multiple_netcdf_in_directory(directory_path):
     """
-    Reads all NetCDF files in a specified directory using xarray and returns a combined xarray Dataset.
+    Reads all NetCDF files in a specified directory using xarray and returns a combined
+    xarray Dataset.
 
-    Parameters:
+    Parameters
+    ----------
     directory_path (str): The path to the directory containing NetCDF files to read.
 
-    Returns:
-    xarray.Dataset: The combined dataset contained in the NetCDF files.
+    Returns
+    -------
+    xarray.Dataset
+        The combined dataset contained in the NetCDF files.
     """
     try:
-        file_paths = glob.glob(os.path.join(directory_path, '*.nc'))
+        file_paths = glob.glob(os.path.join(directory_path, "*.nc"))
         if not file_paths:
             raise FileNotFoundError("No NetCDF files found in the directory.")
 
-        dataset = xr.open_mfdataset(file_paths, combine='by_coords')
+        dataset = xr.open_mfdataset(file_paths, combine="by_coords")
         return dataset
     except Exception as e:
         print(f"An error occurred while reading the NetCDF files: {e}")
@@ -282,14 +339,17 @@ def read_multiple_netcdf(file_paths):
     """
     Reads multiple NetCDF files using xarray and returns a combined xarray Dataset.
 
-    Parameters:
+    Parameters
+    ----------
     file_paths (list of str): A list of paths to the NetCDF files to read.
 
-    Returns:
-    xarray.Dataset: The combined dataset contained in the NetCDF files.
+    Returns
+    -------
+    xarray.Dataset
+        The combined dataset contained in the NetCDF files.
     """
     try:
-        dataset = xr.open_mfdataset(file_paths, combine='by_coords')
+        dataset = xr.open_mfdataset(file_paths, combine="by_coords")
         return dataset
     except Exception as e:
         print(f"An error occurred while reading the NetCDF files: {e}")
@@ -300,11 +360,14 @@ def read_netcdf(file_path):
     """
     Reads a NetCDF file using xarray and returns an xarray Dataset.
 
-    Parameters:
+    Parameters
+    ----------
     file_path (str): The path to the NetCDF file to read.
 
-    Returns:
-    xarray.Dataset: The dataset contained in the NetCDF file.
+    Returns
+    -------
+    xarray.Dataset
+        The dataset contained in the NetCDF file.
     """
     try:
         dataset = xr.open_dataset(file_path)
@@ -315,13 +378,17 @@ def read_netcdf(file_path):
 
 
 def get_dst_attribute(xr_dst, attr_name):
-    """ Get an attribute value from a Xarray Dataset or DataArray
+    """Get an attribute value from a Xarray Dataset or DataArray
 
-      Args:
-         xr_dst: Xarray Dataset or DataArray
-         attr_name: attribute name
-      Returns:
-         Attribute value or None if the attribute does not exist.
+    Parameters
+    ----------
+       xr_dst
+           Xarray Dataset or DataArray
+       attr_name
+           attribute name
+    Returns
+    -------
+       Attribute value or None if the attribute does not exist.
     """
     try:
         return xr_dst.attrs[attr_name]
@@ -330,27 +397,28 @@ def get_dst_attribute(xr_dst, attr_name):
 
 
 def compute_means(xr_dst, means):
-    """ Computer average over a dataArray (or dataset)
+    """Computer average over a dataArray (or dataset)
 
-        means can be
-            '1D' = daily
-            '1M' = monthly
-            'QS-JAN' = seasonal (JFM, AMJ, JAS and OND)
-            'DS-DEC' = seasonal (DJF, MAM, JJA and SON)
-            '1A' = annual
+      means can be
+          '1D' = daily
+          '1M' = monthly
+          'QS-JAN' = seasonal (JFM, AMJ, JAS and OND)
+          'DS-DEC' = seasonal (DJF, MAM, JJA and SON)
+          '1A' = annual
 
-      Returns:
-           the time average of a Xarray Dataset or DataArray.
-
+    Returns
+    -------
+         the time average of a Xarray Dataset or DataArray.
     """
     return xr_dst.resample(time=means).mean()
 
 
 def compute_mean_over_dim(xr_dst, mean_dim, field_name=None):
-    """ Computer average over a dataArray (or dataset) dimension
+    """Computer average over a dataArray (or dataset) dimension
         mean_dim can be 'Time', 'x', 'y',  or a tuple of dimensions etc.
 
-    Returns:
+    Returns
+    -------
         the average of a Xarray Dataset or DataArray over a specified dimension
     """
     if field_name is not None:
@@ -360,11 +428,12 @@ def compute_mean_over_dim(xr_dst, mean_dim, field_name=None):
 
 
 def compute_std_over_dim(xr_dst, std_dim, field_name=None):
-    """ Computer standard deviation over a dataArray (or dataset) dimension
-        std_dim can be 'Time', 'x', 'y',  or a tuple of dimensions etc.
+    """Computer standard deviation over a dataArray (or dataset) dimension
+      std_dim can be 'Time', 'x', 'y',  or a tuple of dimensions etc.
 
-      Returns:
-           the standard deviation of a Xarray Dataset or DataArray over a specified dimension
+    Returns
+    -------
+         the standard deviation of a Xarray Dataset or DataArray over a specified dimension
     """
     if field_name is not None:
         return xr_dst[field_name].std(dim=std_dim)
@@ -376,37 +445,42 @@ def sum_over_lev(data_array):
     """
     Sums over all lev layers in the given xarray DataArray to get a 2D lat-lon result.
 
-    Parameters:
+    Parameters
+    ----------
     data_array (xarray.DataArray): The input data array defined on lon, lat, and lev dimensions.
 
-    Returns:
-    xarray.DataArray: The resulting 2D data array after summing over the lev dimension.
+    Returns
+    -------
+    xarray.DataArray
+        The resulting 2D data array after summing over the lev dimension.
     """
     # Sum over the 'lev' dimension
-    result_array = data_array.sum(dim='lev')
+    result_array = data_array.sum(dim="lev")
     return result_array
+
 
 """
 Internal utilities for managing datetime objects and strings
 Adopted from GCpy - with minor modifications
 
 """
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
-import numpy as np
 
 
 def get_timestamp_string(date_array):
     """
     Convenience function returning the datetime timestamp based on the given input
 
-    Parameters:
+    Parameters
+    ----------
         date_array: array
             Array of integers corresponding to [year, month, day, hour, minute, second].
             Any integers not provided will be padded accordingly
-    Returns:
-        date_str: string
-            string in datetime format (eg. 2019-01-01T00:00:00Z)
+    Returns
+    -------
+        date_str
+            string
+            string in datetime format (eg. 2019-01-01T00
+                00:00Z)
     """
     # converts single integer to array for cases when only year is given
     date_array = [date_array] if isinstance(date_array, int) else date_array
@@ -427,12 +501,15 @@ def get_timestamp_string(date_array):
 def add_months(start_date, n_months):
     """
 
-    Parameters:
+    Parameters
+    ----------
         start_date: numpy.datetime64
             numpy datetime64 object
         n_months: integer
-    Returns:
-        new_date: numpy.datetime64
+    Returns
+    -------
+        new_date
+            numpy.datetime64
             numpy datetime64 object with exactly n_months added to the date
     """
     new_date = start_date.astype(datetime) + relativedelta(months=n_months)
@@ -443,15 +520,71 @@ def is_full_year(start_date, end_date):
     """
     Verifies if two dates are a full year starting Jan 1.
 
-    Parameters:
+    Parameters
+    ----------
         start_date: numpy.datetime64
             numpy datetime64 object
         end_date: numpy.datetime64
             numpy datetime64 object
-    Returns: boolean
+
+    Returns
+    -------
+    boolean
     """
     return (
         add_months(start_date, 12) == end_date
         and start_date.astype(datetime).month == 1
         and start_date.astype(datetime).day == 1
     )
+
+
+def subset_region(data: xr.DataArray, extent: list) -> xr.DataArray:
+    lon_min, lon_max, lat_min, lat_max = extent
+
+    # Find latitude coordinate name (support both standard and WRF naming)
+    lat_coord_name = None
+    lon_coord_name = None
+
+    for coord_name in data.coords:
+        if coord_name.lower() in ["lat", "latitude"]:
+            lat_coord_name = coord_name
+        elif coord_name.lower() in ["lon", "longitude"]:
+            lon_coord_name = coord_name
+        elif "xlat" in coord_name.lower():
+            lat_coord_name = coord_name
+        elif "xlong" in coord_name.lower():
+            lon_coord_name = coord_name
+
+    if not lat_coord_name or not lon_coord_name:
+        # If we can't find standard coordinate names, return data unchanged
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.warning(
+            f"Could not find lat/lon coordinates in {list(data.coords.keys())}, skipping region subset"
+        )
+        return data
+
+    lat_coord = data.coords[lat_coord_name]
+
+    # Handle 2D coordinates (like WRF) vs 1D coordinates
+    if lat_coord.ndim > 1:
+        # For 2D coordinates, we can't easily do coordinate-based slicing
+        # For now, return the data unchanged
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.debug(
+            f"Skipping region subset for 2D coordinates ({lat_coord_name}, {lon_coord_name})"
+        )
+        return data
+    else:
+        # For 1D coordinates, proceed with normal slicing
+        if lat_coord[0] > lat_coord[-1]:
+            lat_slice = slice(lat_max, lat_min)
+        else:
+            lat_slice = slice(lat_min, lat_max)
+
+        return data.sel(
+            {lon_coord_name: slice(lon_min, lon_max), lat_coord_name: lat_slice}
+        )

@@ -1,0 +1,8 @@
+T:
+  xyplot:
+    time_lev: 3
+    line_contours: no
+    extent: conus
+    projection: lambert
+    levels:
+      500: []

@@ -1,21 +1,16 @@
 eviz.lib.data.factory package
 =============================
 
+.. automodule:: eviz.lib.data.factory
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Submodules
 ----------
 
-eviz.lib.data.factory.registry module
--------------------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: eviz.lib.data.factory.registry
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-eviz.lib.data.factory.source\_factory module
---------------------------------------------
-
-.. automodule:: eviz.lib.data.factory.source_factory
-   :members:
-   :show-inheritance:
-   :undoc-members:
+   eviz.lib.data.factory.registry
+   eviz.lib.data.factory.source_factory

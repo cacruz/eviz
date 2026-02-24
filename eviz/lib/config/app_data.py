@@ -1,10 +1,11 @@
 from dataclasses import dataclass, field
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 @dataclass
 class AppData:
     """Data class for application-level configuration."""
+
     inputs: Dict[str, Any] = field(default_factory=dict)
     for_inputs: Dict[str, Any] = field(default_factory=dict)
     outputs: Dict[str, Any] = field(default_factory=dict)

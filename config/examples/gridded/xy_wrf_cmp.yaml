@@ -1,0 +1,42 @@
+inputs:
+   - name         : wrfout_d01_2015-07-11_12:00:00.wrf-arw
+     location     : ${HOME}/data/eviz/wrf
+     exp_name: wrf-arw
+     exp_id: wrf-noah
+     to_plot:
+#       TSK: xy
+#       T2: xy
+       Q2: xy
+   - name         : wrfout_d01_2015-07-11_12:00:00
+     location     : ${HOME}/data/eviz/wrf
+     exp_name: nu-wrf-noahmp
+     exp_id: nu-wrf-noahmp
+     to_plot:
+#       TSK: xy
+#       T2: xy
+       Q2: xy
+   - name         : wrfout_d01_2015-07-11_12:00:00.wrf-arw-nmp
+     location     : ${HOME}/data/eviz/wrf
+     exp_name: wrf-noahmp
+     exp_id: wrf-noahmp
+     to_plot:
+#       TSK: xy
+#       T2: xy
+       Q2: xy
+for_inputs:
+    compare:
+      ids: wrf-noah,wrf-noahmp,nu-wrf-noahmp
+    shared_cbar: true
+
+outputs:
+    output_dir: ${HOME}/scratch/eviz/output/gridded_wrf
+    print_to_file: yes
+
+
+
+
+#dark_background
+#fivethirtyeight
+#seaborn-v0_8
+#eviz/lib/templates/hurricane.mplstyle
+

@@ -3,9 +3,7 @@ import pytest
 import numpy as np
 import xarray as xr
 from unittest.mock import Mock, patch
-from datetime import datetime
 import eviz.lib.data.utils as utils
-import eviz.lib.const as constants
 
 # Fixtures
 @pytest.fixture
@@ -55,6 +53,7 @@ def test_apply_mean_3d():
     da = xr.DataArray(data, coords=coords, dims=['time', 'lat', 'lon'])
     config = Mock()
     config.get_model_dim_name = Mock(return_value='time')
+    config.spec_data = {}  # Empty dict so the 'in' check works
     
     result = utils.apply_mean(config, da)
     assert result.dims == ('lat', 'lon')

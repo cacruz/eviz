@@ -1,38 +1,25 @@
 eviz.lib.autoviz package
 ========================
 
+.. automodule:: eviz.lib.autoviz
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   eviz.lib.autoviz.plotting
+
 Submodules
 ----------
 
-eviz.lib.autoviz.figure module
-------------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: eviz.lib.autoviz.figure
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-eviz.lib.autoviz.plotter module
--------------------------------
-
-.. automodule:: eviz.lib.autoviz.plotter
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-eviz.lib.autoviz.base module
-----------------------------
-
-.. automodule:: eviz.lib.autoviz.base
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :noindex:
-
-eviz.lib.autoviz.utils module
------------------------------
-
-.. automodule:: eviz.lib.autoviz.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   eviz.lib.autoviz.base
+   eviz.lib.autoviz.figure
+   eviz.lib.autoviz.utils

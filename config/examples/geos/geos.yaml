@@ -1,0 +1,35 @@
+inputs:
+   - name : MERRA2_400.inst3_3d_asm_Np.2020110*.nc4
+     location: ${HOME}/data/eviz/merra2
+     description: Ocean DAS
+     to_plot:
+          T: xy
+          U: xy,yz
+          V: xy,yz
+
+   - name         : MERRA2_400.inst6_3d_ana_Np.20211123.nc4
+     location     : ${HOME}/data/eviz/merra2
+     exp_name    : MERRA2_400.inst6_3d_ana_Np
+     exp_id    : MERRA2_400
+     to_plot       :
+         O3: xy,yz
+         SLP: xy
+
+outputs:
+    output_dir: ${HOME}/scratch/eviz/output/geos
+    print_to_file: yes
+    print_format: jpg
+    print_basic_stats: yes
+    #make_gif: yes
+    #gif_fps: 2
+
+history:
+    use_history: no
+    history_dir: /discover/nobackup/ccruz/data/eviz/sample_data/geos_history
+    history_collection: tavg24_3d_dat_Np
+    history_year: 2010
+    history_month: 1
+    history_season: ANN
+    history_to_plot:
+
+

@@ -1,0 +1,56 @@
+This directory contains the following:
+
+examples/
+meta_attributes.yaml
+meta_coordinates.yaml
+README  << this file
+reference_rcParams.txt
+sample_app.yaml
+sample_specs.yaml
+species_database.yaml
+
+First, sample_app.yaml and sample_specs.yaml contains descriptions
+of all the options available in the APP and SPECS files.
+
+The files
+    meta_attributes.yaml
+    meta_coordinates.yaml
+    species_database.yaml
+are YAML-file configurations used by Eviz. They should not be modifed.
+
+
+The file reference_rcParams.txt contains a list of all the available
+Matplotlib "rcParams" that can be used in the SPECS file to cutomize plots.
+
+The examples/ subdirectory contains all the sample YAML configurations
+used in the online Eviz users guide. Those configurations represent
+the data source types that EViz supports.
+
+Note that the config files specify the location of the data as well
+as the output path of the visualizations. Both of these paths
+are assumed to be in the $HOME directory of the user. The data 
+is in
+
+$HOME/data/eviz  (multiple subdirectories will be here)
+
+the output is in
+
+$HOME/scratch/eviz/output  (multiple subdirectories will be here).
+
+In the APP YAML file, these paths are specified as follows:
+
+inputs:
+   - name     : ${HOME}/data/eviz/airnow/HourlyAQObs*
+     description: 25 μm particulate matter
+     reader   : csv
+     to_plot  :
+        PM25: sc
+
+outputs:
+    output_dir: ${HOME}/scratch/eviz/output/airnow
+    print_to_file: yes
+
+
+Change ${HOME} to whatever path works in your case. This can (and should) 
+be done via environment variables.
+

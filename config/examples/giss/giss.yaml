@@ -1,0 +1,13 @@
+inputs:
+# GISS ModelE configuration for EViz
+# This handles GISS ModelE NetCDF files with unique dimension structure (im, jm, lm, ntimemax)
+   - name: 1JUL1981.rsfE04F102_2010_QUOCA_PSV_NINTa4.nc
+     location: ${HOME}/data/eviz/giss
+     to_plot:
+#        p: xy
+        t: yz
+
+outputs:
+    output_dir: ${HOME}/scratch/eviz/output/giss
+    print_to_file: yes
+    print_format: jpg
