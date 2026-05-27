@@ -2,10 +2,14 @@
 EVIZ: An Easy to Use Earth Modeling System Visualization Tool
 =============================================================
 
-`EViz` is a comprehensive Python-based visualization library designed specifically for 
-Earth System Modelers. It processes a wide variety of model-generated output formats 
-and produces high-quality diagnostic plots for data analysis and validation. EViz serves 
-as an essential validation tool for earth system model data, offering both command-line and 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.20417921.svg
+   :target: https://doi.org/10.5281/zenodo.20417921
+   :alt: DOI
+
+`EViz` is a comprehensive Python-based visualization library designed specifically for
+Earth System Modelers. It processes a wide variety of model-generated output formats
+and produces high-quality diagnostic plots for data analysis and validation. EViz serves
+as an essential validation tool for earth system model data, offering both command-line and
 interactive visualization capabilities.
 
 Features
@@ -33,19 +37,31 @@ Documentation
 For comprehensive documentation, tutorials, and examples, please visit our documentation site:
 https://cacruz.github.io/eviz
 
-For questions, comments, bug reports or feature requests please use the issues section: https://github.com/cacruz/eviz-dev/issues on Github. 
-
 Contributing
 ------------
-We welcome contributions! Please see our `Contributing Guide <https://github.com/cacruz/eviz-dev/blob/main/CONTRIBUTING.rst>`_  for details on how to submit pull requests, report issues, or request features.
+We welcome contributions! Please see our `Contributing Guide <https://github.com/cacruz/eviz/blob/main/CONTRIBUTING.rst>`_  for details on how to submit pull requests, report issues, or request features.
 
 Support
 -------
-For questions, comments, bug reports, or feature requests, please use the issues section on GitLab.
+For questions, comments, bug reports, or feature requests, please use the `issues section <https://github.com/cacruz/eviz/issues>`_ on GitHub.
+
+Citation
+--------
+If you use EViz in your research, please cite it using the DOI:
+
+.. code-block:: text
+
+    Cruz, C. A., Raghunandan, D., & Valenti, V. EViz: Earth System Model Visualization
+    Toolkit. https://doi.org/10.5281/zenodo.20417921
+
+Code of Conduct
+---------------
+This project follows the `Contributor Covenant Code of Conduct <https://github.com/cacruz/eviz/blob/main/CODE_OF_CONDUCT.md>`_.
+By participating, you are expected to uphold this code.
 
 License
 -------
-Eviz is distributed under the Apache license.  Please read the LICENSE document located in the root folder.
+EViz is distributed under the Apache 2.0 license. Please read the LICENSE document located in the root folder.
 
 Acknowledgments
 ---------------
