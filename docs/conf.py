@@ -38,9 +38,8 @@ sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
-about = {}
-with open('../eviz/__about__.py', "r") as fp:
-    exec(fp.read(), about)
+from eviz import __version__
+about = {"__version__": __version__}
 
 project = 'EViz'
 author = 'EViz Developers'
