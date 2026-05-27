@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "EViz: Earth System Model Visualization Toolkit"
+authors:
+  - family-names: Cruz
+    given-names: Carlos A.
+    email: carlos.a.cruz@nasa.gov
+    affiliation: "SSAI Inc / NASA Goddard Space Flight Center"
+  - family-names: Raghunandan
+    given-names: Deepthi
+    email: deepthi.raghunandan@nasa.gov
+    affiliation: "SSAI Inc / NASA Goddard Space Flight Center"
+  - family-names: Valenti
+    given-names: Vanessa
+    email: vvalenti@student.ubc.ca
+    affiliation: NASA Goddard Space Flight Center
+repository-code: "https://github.com/cacruz/eviz"
+url: "https://cacruz.github.io/eviz/"
+license: Apache-2.0
+version: "0.9.4"
+doi: 10.5281/zenodo.20417921
+date-released: "2026-02-24"
+keywords:
+  - visualization
+  - earth system model
+  - climate
+  - atmospheric science
+  - netcdf
+  - scientific computing
+  - python

@@ -6,17 +6,19 @@ on:
     # Run workflow only if these files change
     paths:
       - 'docs/**'
-      - 'README.md'
+      - 'README.rst'
       - 'environment.yaml'
-      - 'src/**'
+      - 'pyproject.toml'
+      - 'eviz/**'
       - 'tests/**'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'docs/**'
-      - 'README.md'
+      - 'README.rst'
       - 'environment.yaml'
-      - 'src/**'
+      - 'pyproject.toml'
+      - 'eviz/**'
       - 'tests/**'
 
 jobs:
@@ -56,7 +58,9 @@ jobs:
     runs-on: ubuntu-latest
     container: continuumio/miniconda3:latest
     needs: test
-    if: github.ref == 'refs/heads/main'
+    if: |
+      github.ref == 'refs/heads/main' &&
+      (needs.test.result == 'success' || needs.test.result == 'skipped')
     steps:
       - uses: actions/checkout@v4
             

@@ -7,15 +7,18 @@ name = "eviz"
 description = "EViz: Earth System Model Visualization Toolkit"
 dynamic = ["version"]
 authors = [ { name = "EViz Contributors" }]
-maintainers = [{ name="Carlos Cruz", email="carlos.a.cruz@nasa.gov" }, ]
+maintainers = [{ name = "Carlos Cruz", email = "carlos.a.cruz@nasa.gov" }, ]
 readme = "README.rst"
 keywords = [
     "visualization",
     "interactive",
     "eviz",
+    "earth system model",
+    "climate",
+    "atmospheric science",
 ]
 license = {file = "LICENSE"}
-requires-python = ">=3.10.14"
+requires-python = ">=3.10"
 classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
@@ -27,34 +30,40 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering :: Atmospheric Science",
+    "Topic :: Scientific/Engineering :: Visualization",
 ]
 dependencies = [
     "xesmf>=0.7.1",
     "matplotlib>=3.8.2",
-    "cartopy==0.22.0",
+    "cartopy>=0.22.0",
     "cftime>=1.6.3",
-    "dask==2024.2.1",
-    "h5py==3.7.0",
-    "netCDF4==1.6.3",
-    "numpy==1.24.4",
-    "pandas==1.5.3",
-    "pyhdf==0.11.3",
-    "pyproj==3.6.1",
+    "dask>=2024.2.0",
+    "h5py>=3.7.0",
+    "netCDF4>=1.6.3",
+    "numpy>=1.24.4",
+    "pandas>=1.5.3",
+    "pyhdf>=0.11.3",
+    "pyproj>=3.6.1",
     "pyyaml>=6.0.1",
-    "pyviz_comms==3.0.1",
-    "scipy==1.13.0",
-    "scikit-learn==1.5.2",
-    "xarray==0.21.1",
-    "pydap==3.4.0",
+    "pyviz_comms>=3.0.1",
+    "scipy>=1.13.0",
+    "scikit-learn>=1.5.2",
+    "xarray>=0.21.1",
+    "pydap>=3.4.0",
     "streamlit>=1.37.0",
     "email-validator>=2.2.0",
     "python-dotenv>=1.0.1"
 ]
 
 [project.urls]
-Repository = "https://github.com/cacruz/eviz"
+Homepage = "https://github.com/cacruz/eviz"
 Documentation = "https://cacruz.github.io/eviz/"
-Issues = "https://github.com/cacruz/eviz/issues"
+Source = "https://github.com/cacruz/eviz"
+"Bug Tracker" = "https://github.com/cacruz/eviz/issues"
+Changelog = "https://github.com/cacruz/eviz/blob/main/CHANGELOG.md"
+Contributing = "https://github.com/cacruz/eviz/blob/main/CONTRIBUTING.rst"
+"Code of Conduct" = "https://github.com/cacruz/eviz/blob/main/CODE_OF_CONDUCT.md"
 
 [project.optional-dependencies]
 dev = [
@@ -69,22 +78,23 @@ docs = [
   "sphinx-autobuild >=2024.4.16",
   "sphinx-autodoc-typehints",
   "sphinx-design",
-  "sphinx-autodoc-typehints",
   "sphinx_rtd_theme",
 ]
-all = ["eviz[dev]", "eviz[docs]"]
 
 [tool.flit.sdist]
 include = [
-  "eviz*",
-  "config/*",
+  "eviz",
+  "eviz/**",
+  "config/**",
   "CHANGELOG.md",
+  "CITATION.cff",
+  "CODE_OF_CONDUCT.md",
   "CONTRIBUTING.rst",
   "LICENSE",
-  "Makefile",
   "README.rst"
 ]
-exclude = ["test*"]
+
+exclude = ["tests/**"]
 
 [tool.deptry.package_module_name_map]
 "scikit-learn" = "sklearn"

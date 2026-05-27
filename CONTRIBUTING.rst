@@ -9,7 +9,7 @@ How You Can Contribute
 
 **1. Report Bugs or Request Features**
 
-- Use the GitHub Issues page: https://github.com/cacruz/eviz-dev/issues
+- Use the GitHub Issues page: https://github.com/cacruz/eviz/issues
 - Please include as much detail as possible:
   - Steps to reproduce bugs
   - Screenshots or error messages
@@ -64,7 +64,7 @@ Clone the repository and set up the development environment:
 
 .. code-block:: bash
 
-    git clone https://github.com/cacruz/eviz-dev.git
+    git clone https://github.com/cacruz/eviz.git
     cd eviz-dev
     conda env create -f environment.yaml
     conda activate viz
@@ -75,6 +75,7 @@ This installs `eviz` in editable mode along with dev dependencies.
 Community Guidelines
 ---------------------
 
+Please review and follow our `Code of Conduct <https://github.com/cacruz/eviz/blob/main/CODE_OF_CONDUCT.md>`_.
 Be respectful and constructive in your feedback and communication.
 
 Still Have Questions?
@@ -82,5 +83,5 @@ Still Have Questions?
 
 Open an issue or reach out through the project's GitHub Discussions if enabled.
 
-We’re excited to work with you!
+We're excited to work with you!
 

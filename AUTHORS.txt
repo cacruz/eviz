@@ -4,13 +4,13 @@ Credits
 
 Core Development
 ----------------
-* Carlos Cruz <carlos.a.cruz@nasa.gov> 
-* Deepthi Raghunandan <deepthi.raghunandan@nasa.gov>
-* Vanessa Valenti <vanessa.valentu@nasa.gov>
+* Carlos Cruz <carlos.a.cruz@nasa.gov> — SSAI Inc / NASA Goddard Space Flight Center
+* Deepthi Raghunandan <deepthi.raghunandan@nasa.gov> — SSAI Inc / NASA Goddard Space Flight Center
+* Vanessa Valenti <vvalenti@student.ubc.ca> — formerly NASA Goddard Space Flight Center
 
 Contributors
 ------------
 * Anna Boone
 * Aarav Khanna
 * Deon Kouatchou-Ngongang
-* Jules Kouatchou <jules.r.kouatchou@nasa.go>
+* Jules Kouatchou
