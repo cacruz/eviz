@@ -40,12 +40,6 @@ Contents
    examples/index
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Architecture Guide:
-   
-   tutorial/index
-
-.. toctree::
    :maxdepth: 3
    :caption: API Reference:
 
