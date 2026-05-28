@@ -588,20 +588,28 @@ class DataProcessor:
 
         meta_coords = cm.meta_coords
 
-        if gridded_dim_name not in meta_coords:
-            self.logger.warning(f"No mapping found for dimension '{gridded_dim_name}'")
-            return None
+        # Support dotted paths into nested sections (e.g. "extra.bc")
+        if "." in gridded_dim_name:
+            section, slot = gridded_dim_name.split(".", 1)
+            if section not in meta_coords or not isinstance(meta_coords[section], dict):
+                self.logger.warning(f"No section '{section}' in meta_coords")
+                return None
+            if slot not in meta_coords[section]:
+                self.logger.warning(f"No slot '{slot}' in meta_coords['{section}']")
+                return None
+            slot_map = meta_coords[section][slot]
+        else:
+            if gridded_dim_name not in meta_coords:
+                self.logger.warning(f"No mapping found for dimension '{gridded_dim_name}'")
+                return None
+            slot_map = meta_coords[gridded_dim_name]
 
         self.logger.debug(
             f"Looking for model '{model_name}' in meta_coords['{gridded_dim_name}']"
         )
-        self.logger.debug(
-            f"Available models for {gridded_dim_name}: {list(meta_coords[gridded_dim_name].keys())}"
-        )
 
-        if not model_name or model_name not in meta_coords[gridded_dim_name]:
-            # Try to use a default model if available
-            if "gridded" in meta_coords[gridded_dim_name]:
+        if not model_name or model_name not in slot_map:
+            if "gridded" in slot_map:
                 self.logger.debug(
                     f"Using 'gridded' mapping for model '{model_name}' and dimension '{gridded_dim_name}'"
                 )
@@ -612,7 +620,7 @@ class DataProcessor:
                 )
                 return None
 
-        coords = meta_coords[gridded_dim_name][model_name]
+        coords = slot_map[model_name]
 
         if isinstance(coords, list):
             for coord in coords:
@@ -629,24 +637,19 @@ class DataProcessor:
                             if dim in available_dims:
                                 return dim
                         return None
-                    # Single dimension name
                     return coords["dim"] if coords["dim"] in available_dims else None
                 return coords["dim"]
-
             if "coords" in coords:
-                # For coordinate names
                 return coords["coords"]
             return None
 
         elif isinstance(coords, str):
-            # If coords is a string, handle comma-separated list of possible dimension names
             if "," in coords:
                 coord_candidates = coords.split(",")
                 if available_dims:
                     for coord in coord_candidates:
                         if coord in available_dims:
                             return coord
-                    # No matching dimension found
                     return None
                 return coord_candidates[0]
             return coords

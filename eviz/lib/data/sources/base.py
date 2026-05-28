@@ -230,7 +230,8 @@ class DataSource(ABC):
         Parameters
         ----------
             gridded_dim_name : str
-                GriddedSource dimension name (e.g., 'xc', 'yc', 'zc', 'tc')
+                GriddedSource dimension name (e.g., 'xc', 'yc', 'zc', 'tc') or a
+                dotted path into an extra slot (e.g., 'extra.bc').
             available_dims : list, optional
                 List of available dimensions in the dataset
 
@@ -238,15 +239,6 @@ class DataSource(ABC):
         -------
             str or None
                 The model-specific dimension name if found, otherwise None
-        This method maps standard dimension names ('xc', 'yc', 'zc', 'tc') to their
-        model-specific equivalents using the configuration's meta_coords mapping.
-        It handles various formats of dimension specifications including strings,
-        lists, and dictionaries.
-        The method supports fallback to default mappings when model-specific mappings
-        are not available, and can filter the results based on available dimensions
-        in the dataset.
-        This is a key utility for working with datasets from different models that
-        may use different naming conventions for the same conceptual dimensions.
         """
         if not hasattr(self, "config_manager") or not self.config_manager:
             self.logger.warning("No config_manager available to get dimension mappings")
@@ -257,15 +249,27 @@ class DataSource(ABC):
             return None
 
         meta_coords = self.config_manager.meta_coords
-        if gridded_dim_name not in meta_coords:
-            self.logger.warning(f"No mapping found for dimension '{gridded_dim_name}'")
-            return None
+
+        # Support dotted paths into nested sections (e.g. "extra.bc")
+        if "." in gridded_dim_name:
+            section, slot = gridded_dim_name.split(".", 1)
+            if section not in meta_coords or not isinstance(meta_coords[section], dict):
+                self.logger.warning(f"No section '{section}' in meta_coords")
+                return None
+            if slot not in meta_coords[section]:
+                self.logger.warning(f"No slot '{slot}' in meta_coords['{section}']")
+                return None
+            slot_map = meta_coords[section][slot]
+        else:
+            if gridded_dim_name not in meta_coords:
+                self.logger.warning(f"No mapping found for dimension '{gridded_dim_name}'")
+                return None
+            slot_map = meta_coords[gridded_dim_name]
 
         model_name = self.model_name
 
-        if not model_name or model_name not in meta_coords[gridded_dim_name]:
-            # Try to use a default model if available
-            if "gridded" in meta_coords[gridded_dim_name]:
+        if not model_name or model_name not in slot_map:
+            if "gridded" in slot_map:
                 self.logger.debug(
                     f"Using 'gridded' mapping for model '{model_name}' "
                     f"and dimension '{gridded_dim_name}'"
@@ -278,8 +282,11 @@ class DataSource(ABC):
                 )
                 return None
 
-        coords = meta_coords[gridded_dim_name][model_name]
+        coords = slot_map[model_name]
+        return self._resolve_coord_value(coords, available_dims, gridded_dim_name)
 
+    def _resolve_coord_value(self, coords, available_dims, dim_label=""):
+        """Resolve a coord spec (str, list, or dict) against available_dims."""
         if isinstance(coords, list):
             for coord in coords:
                 if available_dims and coord in available_dims:
@@ -290,17 +297,13 @@ class DataSource(ABC):
             if "dim" in coords:
                 if available_dims:
                     if "," in coords["dim"]:
-                        dim_candidates = coords["dim"].split(",")
-                        for dim in dim_candidates:
+                        for dim in coords["dim"].split(","):
                             if dim in available_dims:
                                 return dim
                         return None
-                    # Single dimension name
                     return coords["dim"] if coords["dim"] in available_dims else None
                 return coords["dim"]
-
             if "coords" in coords:
-                # For coordinate names
                 return coords["coords"]
             return None
 
@@ -311,10 +314,26 @@ class DataSource(ABC):
                     for coord in coord_candidates:
                         if coord in available_dims:
                             return coord
-                    # No matching dimension found
                     return None
                 return coord_candidates[0]
             return coords
 
-        self.logger.warning(f"Unexpected type for coords: {type(coords)}")
+        self.logger.warning(f"Unexpected type for coords of '{dim_label}': {type(coords)}")
         return None
+
+    def _get_extra_dim_names(self, available_dims=None):
+        """Return a dict mapping each extra slot name to its resolved dimension name.
+
+        Returns
+        -------
+            dict[str, str | None]
+                e.g. {'bc': 'bnds', 'bounds': None}
+        """
+        if not hasattr(self, "config_manager") or not self.config_manager:
+            return {}
+        meta_coords = getattr(self.config_manager, "meta_coords", {})
+        extra_section = meta_coords.get("extra", {})
+        return {
+            slot: self._get_model_dim_name(f"extra.{slot}", available_dims)
+            for slot in extra_section
+        }

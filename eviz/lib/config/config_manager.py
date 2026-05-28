@@ -326,15 +326,29 @@ class ConfigManager:
         if not dims:
             return None
 
-        if dim_name not in self.meta_coords:
-            return None
-        if source not in self.meta_coords[dim_name]:
-            return None
-
-        if source in ["wrf", "lis"]:
-            coords = self.meta_coords[dim_name][source].get("dim", "")
+        # Support dotted paths into nested sections (e.g. "extra.bc")
+        if "." in dim_name:
+            section, slot = dim_name.split(".", 1)
+            if section not in self.meta_coords or slot not in self.meta_coords[section]:
+                return None
+            slot_map = self.meta_coords[section][slot]
         else:
-            coords = self.meta_coords[dim_name][source]
+            if dim_name not in self.meta_coords:
+                return None
+            slot_map = self.meta_coords[dim_name]
+
+        if source not in slot_map:
+            if "gridded" not in slot_map:
+                return None
+            source = "gridded"
+
+        if source in ["wrf", "lis"] and isinstance(slot_map[source], dict):
+            coords = slot_map[source].get("dim", "")
+        else:
+            coords = slot_map[source]
+
+        if not isinstance(coords, str):
+            return None
 
         if "," in coords:
             coords_list = [c.strip() for c in coords.split(",")]

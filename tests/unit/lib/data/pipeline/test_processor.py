@@ -215,3 +215,82 @@ class TestDataProcessor:
                 for k in range(4):
                     # Not implemented yet
                     pass
+
+
+_EXTRA_META_COORDS = {
+    'xc': {'gridded': 'lon,longitude'},
+    'yc': {'gridded': 'lat,latitude'},
+    'zc': {'gridded': 'lev,level'},
+    'tc': {'gridded': 'time'},
+    'extra': {
+        'bc': {
+            'gridded': 'bnds,band,bands',
+            'fldas':   'bnds',
+        },
+    },
+}
+
+
+class TestGetModelDimNameExtraInProcessor:
+    """Tests for extra.* dotted-path support in DataProcessor._get_model_dim_name."""
+
+    def setup_method(self):
+        self.processor = DataProcessor()
+        mock_cm = MagicMock()
+        mock_cm.meta_coords = _EXTRA_META_COORDS
+        self.processor.config_manager = mock_cm
+
+    def test_bc_returns_bnds_when_present(self):
+        result = self.processor._get_model_dim_name(
+            'extra.bc', ['time', 'lon', 'lat', 'bnds'], model_name='gridded'
+        )
+        assert result == 'bnds'
+
+    def test_bc_returns_none_when_absent(self):
+        result = self.processor._get_model_dim_name(
+            'extra.bc', ['time', 'lon', 'lat'], model_name='gridded'
+        )
+        assert result is None
+
+    def test_bc_matches_band_alias(self):
+        result = self.processor._get_model_dim_name(
+            'extra.bc', ['time', 'lon', 'lat', 'band'], model_name='gridded'
+        )
+        assert result == 'band'
+
+    def test_bc_unknown_slot_returns_none(self):
+        result = self.processor._get_model_dim_name(
+            'extra.nosuchslot', ['time', 'lon', 'lat', 'bnds'], model_name='gridded'
+        )
+        assert result is None
+
+    def test_bc_unknown_section_returns_none(self):
+        result = self.processor._get_model_dim_name(
+            'nosection.bc', ['bnds'], model_name='gridded'
+        )
+        assert result is None
+
+    def test_bc_falls_back_to_gridded_for_unknown_model(self):
+        result = self.processor._get_model_dim_name(
+            'extra.bc', ['time', 'lon', 'lat', 'bnds'], model_name='unknown_model'
+        )
+        assert result == 'bnds'
+
+    def test_bc_fldas_model_specific_entry(self):
+        result = self.processor._get_model_dim_name(
+            'extra.bc', ['time', 'lon', 'lat', 'bnds'], model_name='fldas'
+        )
+        assert result == 'bnds'
+
+    def test_standard_dims_unaffected_by_extra_section(self):
+        result = self.processor._get_model_dim_name(
+            'xc', ['lon', 'lat', 'time', 'bnds'], model_name='gridded'
+        )
+        assert result == 'lon'
+
+    def test_no_config_manager_returns_none(self):
+        self.processor.config_manager = None
+        result = self.processor._get_model_dim_name(
+            'extra.bc', ['bnds'], model_name='gridded'
+        )
+        assert result is None
