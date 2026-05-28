@@ -21,6 +21,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.5] - 2026-05-28
+
+[Compare changes](https://github.com/cacruz/eviz/compare/v0.9.4...v0.9.5)
+
+### Summary
+
+Adds an extensible extra coordinate slot system for non-standard NetCDF
+dimensions (e.g., `bnds=2` in satellite-derived files, such as FLDAS). This enables the coordinate detection step to recognize auxiliary dimensions beyond the standard xc/yc/zc/tc set.
+
+### Added
+
+- `extra:` section in `config/meta_coordinates.yaml` with two initial slots:
+  `bc` (bands: `bnds`, `band`, `bands`) and `bounds` (cell boundaries:
+  `bnds`, `bounds`, `nv`, `nbnd`). New model entries follow the existing
+  YAML pattern with no code changes required.
+- Dotted-path query support in `_get_model_dim_name()` across
+  `base.py`, `processor.py`, and `config_manager.py`
+  (e.g., `_get_model_dim_name("extra.bc", dims)`).
+- `_get_extra_dim_names(available_dims)` helper on `DataSource` returns
+  all matched extra dims as a `dict[slot, dim_name | None]` in one call.
+- `_resolve_coord_value()` helper extracted on `DataSource` to consolidate
+  the str/list/dict coord resolution logic.
+- 47 new unit tests across the three modified modules.
+
+### Deprecated
+
+### Fixed
+
+### Removed
+- Tutorial documentation
+  
+### Known Issues
+* Incomplete functionality in **hvplot** backend
+* **Units module** requires more comprehensive testing
+* **Tropopause height overlay** not working (fix in progress)
+* **GRIB class** not fully tested; may not behave as expected
+* **Style sheets** need further refinement
+
+---
+
 ## [0.9.4] - 2026-02-24
 
 [Compare changes](https://github.com/cacruz/eviz/compare/v0.9.3...v0.9.4)
