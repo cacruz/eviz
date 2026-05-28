@@ -762,13 +762,107 @@ class TestConfigManagerProperties:
         # Test filename_id property
         config_manager.output_config.filename_id = "test_id"
         assert config_manager.filename_id == "test_id"
-        
+
         # Test filename property
         config_manager.output_config.filename = "custom_name"
         assert config_manager.filename == "custom_name"
-        
+
         # Test empty values
         config_manager.output_config.filename_id = ""
         config_manager.output_config.filename = ""
         assert config_manager.filename_id == ""
         assert config_manager.filename == ""
+
+
+_EXTRA_META_COORDS_CM = {
+    'xc': {'gridded': 'lon,longitude'},
+    'yc': {'gridded': 'lat,latitude'},
+    'zc': {'gridded': 'lev,level'},
+    'tc': {'gridded': 'time'},
+    'extra': {
+        'bc': {
+            'gridded': 'bnds,band,bands',
+            'fldas':   'bnds',
+        },
+        'bounds': {
+            'gridded': 'bnds,bounds,nv,nbnd',
+        },
+    },
+}
+
+
+class TestConfigManagerExtraDimLookup:
+    """Tests for extra.* dotted-path support in ConfigManager._get_model_dim_name_for_source."""
+
+    @pytest.fixture
+    def cm_with_extra(self, mock_input_config, mock_output_config,
+                      mock_system_config, mock_history_config, mock_config):
+        mock_config.meta_coords = _EXTRA_META_COORDS_CM
+        mock_config.source_names = ['gridded']
+        cm = ConfigManager(
+            input_config=mock_input_config,
+            output_config=mock_output_config,
+            system_config=mock_system_config,
+            history_config=mock_history_config,
+            config=mock_config,
+        )
+        cm.setup_comparison = MagicMock()
+        cm.ds_index = 0
+        return cm
+
+    def _patch_internals(self, cm, dims, source='gridded'):
+        cm._get_current_file_path = MagicMock(return_value='/fake/file.nc')
+        cm._get_data_source_for_file = MagicMock(return_value=MagicMock())
+        cm._get_available_dimensions = MagicMock(return_value=dims)
+
+    def test_bc_returns_bnds_when_present(self, cm_with_extra):
+        self._patch_internals(cm_with_extra, ['time', 'lon', 'lat', 'bnds'])
+        result = cm_with_extra._get_model_dim_name_for_source('extra.bc', 'gridded')
+        assert result == 'bnds'
+
+    def test_bc_returns_none_when_absent(self, cm_with_extra):
+        self._patch_internals(cm_with_extra, ['time', 'lon', 'lat'])
+        result = cm_with_extra._get_model_dim_name_for_source('extra.bc', 'gridded')
+        assert result is None
+
+    def test_bc_matches_band_alias(self, cm_with_extra):
+        self._patch_internals(cm_with_extra, ['time', 'lon', 'lat', 'band'])
+        result = cm_with_extra._get_model_dim_name_for_source('extra.bc', 'gridded')
+        assert result == 'band'
+
+    def test_bc_falls_back_to_gridded_when_source_not_in_slot(self, cm_with_extra):
+        self._patch_internals(cm_with_extra, ['time', 'lon', 'lat', 'bnds'])
+        result = cm_with_extra._get_model_dim_name_for_source('extra.bc', 'unknown_source')
+        assert result == 'bnds'
+
+    def test_bc_fldas_source(self, cm_with_extra):
+        self._patch_internals(cm_with_extra, ['time', 'lon', 'lat', 'bnds'])
+        result = cm_with_extra._get_model_dim_name_for_source('extra.bc', 'fldas')
+        assert result == 'bnds'
+
+    def test_unknown_slot_returns_none(self, cm_with_extra):
+        self._patch_internals(cm_with_extra, ['time', 'lon', 'lat', 'bnds'])
+        result = cm_with_extra._get_model_dim_name_for_source('extra.nosuchslot', 'gridded')
+        assert result is None
+
+    def test_unknown_section_returns_none(self, cm_with_extra):
+        self._patch_internals(cm_with_extra, ['bnds'])
+        result = cm_with_extra._get_model_dim_name_for_source('nosection.bc', 'gridded')
+        assert result is None
+
+    def test_returns_none_when_no_file_path(self, cm_with_extra):
+        cm_with_extra._get_current_file_path = MagicMock(return_value=None)
+        result = cm_with_extra._get_model_dim_name_for_source('extra.bc', 'gridded')
+        assert result is None
+
+    def test_returns_none_when_no_dims(self, cm_with_extra):
+        cm_with_extra._get_current_file_path = MagicMock(return_value='/fake/file.nc')
+        cm_with_extra._get_data_source_for_file = MagicMock(return_value=MagicMock())
+        cm_with_extra._get_available_dimensions = MagicMock(return_value=None)
+        result = cm_with_extra._get_model_dim_name_for_source('extra.bc', 'gridded')
+        assert result is None
+
+    def test_standard_dim_still_works(self, cm_with_extra):
+        self._patch_internals(cm_with_extra, ['lon', 'lat', 'time'])
+        result = cm_with_extra._get_model_dim_name_for_source('xc', 'gridded')
+        assert result == 'lon'

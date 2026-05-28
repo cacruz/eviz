@@ -63,3 +63,14 @@ tc:
 spec:
     gmi: species_dim
 
+# extra (auxiliary) dimensions — non-spatial, non-temporal
+# Query with _get_model_dim_name("extra.<slot>", available_dims).
+# Extra dims are recognized but not renamed by the standardization step.
+extra:
+    # bands coordinate: multiple 2D levels in satellite-derived data (e.g. FLDAS)
+    bc:
+        gridded: bnds,band,bands
+    # cell-boundary coordinate: paired bound values for each grid cell
+    bounds:
+        gridded: bnds,bounds,nv,nbnd
+
