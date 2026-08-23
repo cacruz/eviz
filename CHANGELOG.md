@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `CITATION.cff` and `README.rst` updated with the DOI minted for v0.9.6
+  (`10.5281/zenodo.22063198`, concept DOI `10.5281/zenodo.22063197`), resolving the
+  Known Issue noted in the [0.9.6] release: the GitHub → Zenodo webhook fired
+  correctly on that release and produced a properly-versioned archive.
+
 ### Removed
 
 ### Known Issues
