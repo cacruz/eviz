@@ -17,12 +17,9 @@ EVIZ: An Easy to Use Earth Modeling System Visualization Tool
    :target: https://cacruz.github.io/eviz
    :alt: Documentation
 
-.. TODO: restore the DOI badge once v0.9.6 is released and Zenodo mints the new
-   concept DOI via the GitHub integration (see CHANGELOG.md Known Issues for v0.9.6).
-   Use the *concept* DOI/badge so it always resolves to the latest version, e.g.:
-   .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.<CONCEPT_ID>.svg
-      :target: https://doi.org/10.5281/zenodo.<CONCEPT_ID>
-      :alt: DOI
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.22063197.svg
+   :target: https://doi.org/10.5281/zenodo.22063197
+   :alt: DOI
 
 `EViz` is a comprehensive Python-based visualization library designed specifically for
 Earth System Modelers. It processes a wide variety of model-generated output formats
@@ -70,7 +67,7 @@ If you use EViz in your research, please cite it using the DOI:
 .. code-block:: text
 
     Cruz, C. A., Raghunandan, D., & Valenti, V. EViz: Earth System Model Visualization
-    Toolkit. https://doi.org/10.5281/zenodo.20417921
+    Toolkit. https://doi.org/10.5281/zenodo.22063197
 
 Code of Conduct
 ---------------

@@ -20,6 +20,7 @@ repository-code: "https://github.com/cacruz/eviz"
 url: "https://cacruz.github.io/eviz/"
 license: Apache-2.0
 version: "0.9.6"
+doi: 10.5281/zenodo.22063198
 date-released: "2026-08-22"
 keywords:
   - visualization
