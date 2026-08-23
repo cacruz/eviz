@@ -3,7 +3,6 @@ channels:
   - conda-forge
 dependencies:
   - python >=3.10,<3.14
-  - xesmf >=0.7.1
   - matplotlib >=3.8.2
   - bokeh >=3.4.0
   - cartopy ==0.22.0
@@ -20,12 +19,12 @@ dependencies:
   - pandas ==2.2
   - panel >=1.4.0
   - param >=2.0.0
-  - pyhdf ==0.11.3
+  - pillow >=10.0.0
+  - python-dateutil >=2.8.2
   - pyyaml >=6.0.1
+  - requests >=2.31.0
   - scipy ==1.13.0
   - xarray ==2024.3.0
-  - pydap ==3.4.0
-  - networkx >=3.1
   - zarr ==2.13.3
   - pygrib
   - pyviz_comms ==3.0.1
@@ -45,11 +44,19 @@ dependencies:
   - sphinx-autodoc-typehints
   - sphinx-design
   - conda-forge::scikit-learn=1.5.2
+  # Reserved for planned features, not currently imported by eviz:
+  # - xesmf        (regridding is currently done via scipy.interpolate)
+  # - pyhdf        (HDF4 support; Landsat/MOPITT currently read via the
+  #                 generic h5py-based reader, which does not handle
+  #                 classic HDF4 files)
+  # - pydap        (OpenDAP access currently goes through xarray's
+  #                 netcdf4 engine)
+  # - networkx
   - pip:
       - sphinx_rtd_theme
       - myst-parser
       - sphinxcontrib-mermaid
       - pytest-cov
       - cfgrib
-      - seaborn
+      - seaborn >=0.13.0
 

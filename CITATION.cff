@@ -7,6 +7,7 @@ authors:
     given-names: Carlos A.
     email: carlos.a.cruz@nasa.gov
     affiliation: "SSAI Inc / NASA Goddard Space Flight Center"
+    orcid: "https://orcid.org/0009-0006-8073-5307"
   - family-names: Raghunandan
     given-names: Deepthi
     email: deepthi.raghunandan@nasa.gov
@@ -18,9 +19,8 @@ authors:
 repository-code: "https://github.com/cacruz/eviz"
 url: "https://cacruz.github.io/eviz/"
 license: Apache-2.0
-version: "0.9.4"
-doi: 10.5281/zenodo.20417921
-date-released: "2026-02-24"
+version: "0.9.6"
+date-released: "2026-08-22"
 keywords:
   - visualization
   - earth system model
