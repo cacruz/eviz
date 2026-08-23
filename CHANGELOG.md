@@ -21,6 +21,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.6] - 2026-08-22
+
+[Compare changes](https://github.com/cacruz/eviz/compare/v0.9.5...v0.9.6)
+
+### Summary
+
+Housekeeping release ahead of restarting active development: fixes stale/incorrect
+metadata across the project's public release files and establishes proper Zenodo
+archival via GitHub's release integration.
+
+### Added
+
+- ORCID iD for Carlos Cruz in `CITATION.cff`.
+- `pyproject.toml` dependencies now include `holoviews`, `hvplot`, `seaborn`,
+  `datashader`, `requests`, `Pillow`, and `python-dateutil`, which `eviz/lib` imports
+  directly but which were previously undeclared, so `pip install -e .` now yields a
+  working install on its own.
+
+### Fixed
+
+- `LICENSE`: removed leftover template brackets and extended the copyright year range.
+- `CITATION.cff`: version/date were stale (pointed at 0.9.4); now tracks the current
+  release. Stale `doi:` field removed pending a correctly-versioned Zenodo record (see
+  Known Issues).
+- `CONTRIBUTING.rst`: development setup instructions cloned `eviz` but `cd`'d into
+  `eviz-dev`.
+- `CHANGELOG.md`: added the missing `[0.9.5]` compare link.
+
+### Removed
+
+- `xesmf`, `pyhdf`, `pydap`, and `networkx` dropped from `environment.yaml` and
+  `pyproject.toml`: none are imported anywhere in `eviz/` (regridding uses
+  `scipy.interpolate`; OpenDAP access uses xarray's `netcdf4` engine; HDF4 sources are
+  routed through the generic h5py-based reader). Documented as reserved-for-future in
+  a comment rather than silently dropped.
+
+### Known Issues
+
+* Incomplete functionality in **hvplot** backend
+* **Units module** requires more comprehensive testing
+* **Tropopause height overlay** not working (fix in progress)
+* **GRIB class** not fully tested; may not behave as expected
+* **Style sheets** need further refinement
+* Prior Zenodo DOIs (`10.5281/zenodo.7098329` and `10.5281/zenodo.20417921`) were
+  created manually, outside GitHub's release integration, and are not properly
+  versioned. This release is intended to be the first one archived automatically via
+  the GitHub → Zenodo webhook; the resulting concept DOI should replace both in
+  future citations.
+
+---
+
 ## [0.9.5] - 2026-05-28
 
 [Compare changes](https://github.com/cacruz/eviz/compare/v0.9.4...v0.9.5)
@@ -338,6 +389,8 @@ Releases **0.1.0 through 0.6.3** were maintained in a private repository prior t
 
 ### Version Links
 
+[0.9.6]: https://github.com/cacruz/eviz/compare/v0.9.5...v0.9.6
+[0.9.5]: https://github.com/cacruz/eviz/compare/v0.9.4...v0.9.5
 [0.9.4]: https://github.com/cacruz/eviz/compare/v0.9.3...v0.9.4
 [0.9.3]: https://github.com/cacruz/eviz/compare/v0.9.2...v0.9.3
 [0.9.2]: https://github.com/cacruz/eviz/compare/v0.9.1...v0.9.2

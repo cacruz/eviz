@@ -65,7 +65,7 @@ Clone the repository and set up the development environment:
 .. code-block:: bash
 
     git clone https://github.com/cacruz/eviz.git
-    cd eviz-dev
+    cd eviz
     conda env create -f environment.yaml
     conda activate viz
     pip install -e .[dev]
